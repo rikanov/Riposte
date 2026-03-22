@@ -1,33 +1,36 @@
 #include <jni.h>
 #include "riposte_engine.h"
+#include <android/log.h>
+#define LOG_TAG "RiposteEngine"
+#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
 
-extern "C" JNIEXPORT jintArray JNICALL
-Java_hu_riposte_game_MainActivity_getBestStep(
-        JNIEnv* env,
-        jobject thiz,
-        jintArray board,
-        jint playerID,
-        jint depth,      // ÚJ paraméter fogadása
-        jboolean riposte // ÚJ paraméter fogadása
-) {
-    // 1. A tábla lekérése a memóriából
-    jint* boardPtr = env->GetIntArrayElements(board, nullptr);
+extern "C" {
+    JNIEXPORT jobject JNICALL
+    Java_hu_riposte_game_GameViewModel_getBestStepNative(
+            JNIEnv *env,
+            jobject thiz,
+            jintArray jBoard,
+            jint playerId,
+            jint depth,
+            jboolean isRiposteAllowed) {
+        LOGI("Start function...");
+        jint *boardPtr = env->GetIntArrayElements(jBoard, nullptr);
+        int board[35];
+        for (int i = 0; i < 35; i++) board[i] = boardPtr[i];
 
-    // 2. Meghívjuk a te Engine-edet az új értékekkel
-    // A jboolean-t (bool)-ra kényszerítjük, a jint-et (uint)-ra
-    MoveData move = RiposteEngine::getBestStep(
-            boardPtr,
-            (int)playerID,
-            (uint)depth,
-            (bool)riposte
-    );
+        LOGI("Start JNI call..");
+        MoveData result = RiposteEngine::getBestStep(board, (int) playerId, (int) depth,
+                                                     (bool) isRiposteAllowed);
+        LOGI("Engine finished: from=%d, to=%d, hs=%d", result[0], result[1], result[2]);
 
-    // 3. Az eredmény (6 koordináta) visszaküldése
-    jintArray result = env->NewIntArray(6);
-    env->SetIntArrayRegion(result, 0, 6, (jint*)move.m_array);
+        env->ReleaseIntArrayElements(jBoard, boardPtr, JNI_ABORT);
 
-    // 4. Memória felszabadítása
-    env->ReleaseIntArrayElements(board, boardPtr, JNI_ABORT);
+        jclass moveDataClass = env->FindClass("hu/riposte/game/MoveData");
+        jmethodID constructor = env->GetMethodID(moveDataClass, "<init>", "(III)V");
 
-    return result;
+        return env->NewObject(moveDataClass, constructor,
+                              (jint)result[0],  // from
+                              (jint)result[1],  // to
+                              (jint)result[2]); // hotspot
+    }
 }

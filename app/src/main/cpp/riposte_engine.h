@@ -16,13 +16,14 @@ private:
     constexpr static int search(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, int alfa, int beta, const int depth) noexcept;
     constexpr static int searchRestrict(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, int alfa, int beta, const int depth) noexcept;
     constexpr static inline uint64_t ballMask(uint64_t set, int index);
-    constexpr static inline Position getCoordinates(uint64_t mask);
+    constexpr static inline int getIndex(uint64_t mask);
     constexpr static inline MoveData getCompactMoveData( const uint64_t set1, const uint64_t set2, const uint64_t hotSpot);
 
     static MoveData searchIDA(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot);
 
 public:
     RiposteEngine() = delete;
+    static void init();
     static MoveData getBestStep(const int *, const int playerID, const uint depth, const bool riposte);
 };
 

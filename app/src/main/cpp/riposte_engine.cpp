@@ -1,5 +1,4 @@
 #include "riposte_engine.h"
-#include <initializer_list>
 #include <random>
 
 constexpr static int WIN = 128;
@@ -10,6 +9,11 @@ static int allowRiposte = true;
 static inline int sgn(int x)
 {
     return (x > 0) - (x < 0);
+}
+
+void RiposteEngine::init()
+{
+    srand(time(NULL));
 }
 
 constexpr uint64_t RiposteEngine::ballMask(uint64_t set, int index)
@@ -70,10 +74,7 @@ constexpr int RiposteEngine::captureSearch(const uint64_t set1, const uint64_t s
             bestScore = score;
         }
 
-        if( alfa < score )
-        {
-            alfa = score;
-        }
+        alfa = std::max(alfa, score);
         if( score > 0 || alfa >= beta)
         {
             break;
@@ -125,14 +126,9 @@ constexpr int RiposteEngine::searchRestrict(const uint64_t set1, const uint64_t 
             continue;
         }
         const int score = -search(set2, nextSet1, hotSpot, -beta, -alfa, depth - 1);
-        if( bestScore < score)
-        {
-            bestScore = score;
-        }
-        if( alfa < score)
-        {
-            alfa = score;
-        }
+        bestScore = std::max(bestScore, score);
+        alfa = std::max(alfa, score);
+
         if( score > 0 || alfa >= beta)
         {
             break;
@@ -158,29 +154,21 @@ constexpr int RiposteEngine::search(const uint64_t set1, const uint64_t set2, co
         {
             continue;
         }
-        if( nextSet1 & hotSpot )
+        if( nextSet1 & hotSpot ) [[unlikely]]
         {
             const int score = captureSearch(nextSet1, set2, hotSpot, alfa, beta, depth);
-            if( bestScore < score)
+            bestScore = std::max(bestScore, score);
+            if( score > 0)
             {
-                bestScore = score;
-                if( bestScore > 0)
-                {
-                    break;
-                }
+                break;
             }
         }
         else
         {
             const int score = -search(set2, nextSet1, hotSpot, -beta, -alfa, depth - 1);
-            if( bestScore < score)
-            {
-                bestScore = score;
-            }
-            if( alfa < score)
-            {
-                alfa = score;
-            }
+            bestScore = std::max(bestScore, score);
+            alfa = std::max(alfa, score);
+
             if( score > 0 || alfa >= beta)
             {
                 break;
@@ -259,12 +247,11 @@ MoveData RiposteEngine::searchIDA(const uint64_t set1, const uint64_t set2, cons
     return bestMove;
 }
 
-constexpr Position RiposteEngine::getCoordinates(uint64_t mask)
+constexpr int RiposteEngine::getIndex(uint64_t mask)
 {
-    Position pos;
-    pos.x  = __builtin_clzll(mask) % 7 - 2;
-    pos.y = __builtin_clzll(mask) / 7 - 1;
-    return pos;
+    const int x  = __builtin_clzll(mask) % 7 - 2;
+    const int y = __builtin_clzll(mask) / 7 - 1;
+    return x + 5*y;
 }
 
 constexpr MoveData RiposteEngine::getCompactMoveData(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot)
@@ -272,15 +259,9 @@ constexpr MoveData RiposteEngine::getCompactMoveData(const uint64_t set1, const 
     MoveData move;
     const uint64_t from = ballMask( (set1 ^ set2) & set1, 0 );
     const uint64_t to   = ballMask( (set1 ^ set2) & set2, 0 );
-    Position fromPos = getCoordinates(from);
-    Position   toPos = getCoordinates(to );
-    Position   hsPos = getCoordinates(hotSpot);
-    move[0] = fromPos.x;
-    move[1] = fromPos.y;
-    move[2] = toPos.x;
-    move[3] = toPos.y;
-    move[4] = hsPos.x;
-    move[5] = hsPos.y;
+    move[0] = getIndex(from);
+    move[1] = getIndex( to );
+    move[2] = getIndex(hotSpot);
     return move;
 }
 
@@ -288,7 +269,6 @@ MoveData RiposteEngine::getBestStep(const int * board, const int playerID, const
 {
     maxDepth = depth;
     allowRiposte = riposte;
-    srand(time(NULL));
     uint64_t set1 = 0;
     uint64_t set2 = 0;
     uint64_t hotSpot = 0;
