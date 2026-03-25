@@ -1,169 +1,241 @@
 package hu.riposte.game
 
-import kotlinx.coroutines.launch
+import androidx.compose.runtime.*
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.compose.ui.geometry.Offset
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.PI
 import kotlin.math.sqrt
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.geometry.Offset
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import android.util.Log
 
 class GameViewModel : ViewModel() {
-    init {
-        try {
-            System.loadLibrary("riposte")
-            println("Native library loaded successfully!")
-        } catch (e: Exception) {
-            println("ERROR: Could not load native library: ${e.message}")
-        }
-    }
-    val board = mutableStateListOf<Int>().apply {
-        repeat(35) { add(0) }
-        for (i in 0..4) this[i] = 1
-        for (i in 30..34) this[i] = 2
+    val board = mutableStateListOf<Int>()
+    var playerCaptured by mutableStateOf(intArrayOf(0,0,0) )
+    var winner by mutableStateOf<String?>(null)
+    var gamePhase by mutableStateOf(GameWaitingFor.SETUP)
+    var settings by mutableStateOf(GameSettings())
 
-        this[17] = 4
-    }
-    fun resetGame() {
+    private val history = mutableListOf<GameState>()
+    private var pendingSnapshot: GameState? = null
+    private var currentPlayerId: Int = 2
+    private var afterTouche: Boolean = false
+    private var matchCount: Int = 0
+
+    init { resetBoard() }
+    fun init() { resetBoard() }
+
+    private fun resetBoard() {
+
         board.clear()
         repeat(35) { board.add(0) }
         for (i in 0..4) board[i] = 1
         for (i in 30..34) board[i] = 2
+
         board[17] = 4
 
-        playerCaptured = 0
-        aiCaptured = 0
+        playerCaptured.fill(0)
+        history.clear()
+    }
+
+    fun restartGame() {
+        resetBoard()
+        val firstPhase = when(settings.startingPlayer) {
+            StartingPlayer.PLAYER -> GameWaitingFor.MOVE_PIECE
+            StartingPlayer.AI -> GameWaitingFor.AI_MOVE
+            StartingPlayer.ALTERNATING -> if ( ++matchCount % 2 == 1) GameWaitingFor.AI_MOVE else GameWaitingFor.MOVE_PIECE
+        }
+
+        gamePhase = firstPhase
+        if (firstPhase == GameWaitingFor.AI_MOVE) aiStep()
+    }
+    fun startNewGame(newSettings: GameSettings) {
+        settings = newSettings
         winner = null
-        gamePhase = GameWaitingFor.MOVE_PIECE
+        restartGame()
     }
 
-    var playerCaptured = 0
-        private set
-    var aiCaptured = 0
-        private set
-    var winner by mutableStateOf<String?>(null)
-        private set
-    enum class GameWaitingFor{
-        AI_MOVE,
-        MOVE_PIECE,
-        TAKE_PIECE,
-        GAME_OVER
+    fun undo() {
+
+        if (gamePhase == GameWaitingFor.MOVE_PIECE && history.isNotEmpty()) {
+            val last = history.removeAt(history.size - 1)
+            board.clear()
+            board.addAll(last.snapshot)
+            playerCaptured = last.captured
+            afterTouche = last.afterTouche
+        }
     }
-    private fun endGame(message: String) {
-        winner = message
-        gamePhase = GameWaitingFor.GAME_OVER
-    }
-    var gamePhase = GameWaitingFor.MOVE_PIECE
+
     fun handleSwipe(index: Int, dragAmount: Offset) {
-        if ( gamePhase != GameWaitingFor.MOVE_PIECE || board[index] != 2) return
-
+        if (gamePhase != GameWaitingFor.MOVE_PIECE || board[index] != currentPlayerId) return
         val x = dragAmount.x
         val y = dragAmount.y
-
-        val distance = sqrt(x * x + y * y)
-        if (distance < 50f) return
-
+        if (sqrt(x * x + y * y) < 30f) return
         val angle = atan2(y, x) * 180 / PI
+        val offset = getOffsetFromAngle(angle) ?: return
 
-        val offset = when {
-            angle >= -22.5 && angle < 22.5 -> 1
-            angle >= 22.5 && angle < 67.5 -> 6
-            angle >= 67.5 && angle < 112.5 -> 5
-            angle >= 112.5 && angle < 157.5 -> 4
-            angle >= 157.5 || angle < -157.5 -> -1
-            angle >= -157.5 && angle < -112.5 -> -6
-            angle >= -112.5 && angle < -67.5 -> -5
-            angle >= -67.5 && angle < -22.5 -> -4
-            else -> return
+        pendingSnapshot = GameState(board.toList(), playerCaptured, afterTouche)
+        val targetIndex = GameLogic.calculateTargetIndex(board, index, offset)
+
+        if (targetIndex != index && (settings.riposteAllowed || ! afterTouche || board[targetIndex] != 4)) {
+            afterTouche = false
+            executeMove(index, targetIndex)
         }
-
-        movePiece(index, offset)
     }
-    private fun movePiece(index: Int, offset: Int) {
-        var currentIndex = index
-        var nextIndex = getNextIndex(currentIndex, offset)
 
-        while (nextIndex != null && board[nextIndex] % 4 == 0) {
-            currentIndex = nextIndex
-            nextIndex = getNextIndex(currentIndex, offset)
-        }
+    private fun executeMove(from: Int, to: Int) {
 
-        val hitHotSpot = board[currentIndex] == 4
-        board[index] = 0
-        board[currentIndex] = 2
-        if( hitHotSpot ) {
+        pendingSnapshot?.let { history.add(it) }
+
+        val hitTouche = board[to] == 4
+
+        board[from] = 0
+
+        board[to] = currentPlayerId
+
+        if (hitTouche) {
+
             gamePhase = GameWaitingFor.TAKE_PIECE
+
+        } else {
+
+            if (settings.gameMode == GameMode.VS_AI) {
+
+                aiStep()
+
+            } else {
+
+                currentPlayerId = if (currentPlayerId == 1) 2 else 1
+
+                gamePhase = GameWaitingFor.MOVE_PIECE
+
+            }
+
         }
-        else
-        {
-            aiStep()
-        }
+
     }
 
     fun onCellClick(index: Int) {
-        if (gamePhase == GameWaitingFor.TAKE_PIECE) {
-            if (board[index] == 1) {
-                board[index] = 4
-                playerCaptured++
+
+        if (gamePhase == GameWaitingFor.TAKE_PIECE && board[index] == 3 - currentPlayerId) {
+
+            board[index] = 4
+
+            afterTouche = true
+
+            if ( ++playerCaptured[currentPlayerId] >= 2) {
+
+                winner = "Player won"; gamePhase = GameWaitingFor.GAME_OVER; return
+
+            }
+
+
+
+
+
+            if (settings.gameMode == GameMode.VS_AI) {
+
                 aiStep()
-            }
-        }
-    }
-    private fun getNextIndex(current: Int, offset: Int): Int? {
-        val next = current + offset
 
-        if (next !in 0..34) return null
+            } else {
 
-        val currentCol = current % 5
-        val nextCol = next % 5
+                currentPlayerId = if (currentPlayerId == 1) 2 else 1
 
-        if (abs(currentCol - nextCol) > 1) return null
-
-        return next
-    }
-
-    private external fun getBestStepNative(
-        board: IntArray,
-        playerId: Int,
-        depth: Int,
-        isRiposteAllowed: Boolean
-    ): MoveData
-    fun aiStep() {
-        if (playerCaptured >= 2) {
-            endGame("Player won")
-            return
-        }
-        if(aiCaptured >= 2) {
-            return
-        }
-        gamePhase = GameWaitingFor.AI_MOVE
-        viewModelScope.launch {
-            val move = withContext(Dispatchers.Default) {
-                getBestStepNative(board.toIntArray(), playerId = 1, depth = 5, isRiposteAllowed = true)
-            }
-            applyAiMove(move)
-            if( aiCaptured >= 2 ) {
-                endGame("AI won")
-            }
-            else {
                 gamePhase = GameWaitingFor.MOVE_PIECE
+
             }
+
         }
+
     }
-    private fun applyAiMove(move: MoveData) {
-        if (board[move.to] == 4) {
-            aiCaptured++
+
+    private fun aiStep() {
+
+        gamePhase = GameWaitingFor.AI_MOVE
+
+        viewModelScope.launch {
+
+            val move = withContext(Dispatchers.Default) {
+
+                getBestStepNative(board.toIntArray(), 1, settings.difficulty, settings.riposteAllowed)
+
+            }
+
+            applyAiMove(move)
+
+            if (playerCaptured[1] >= 2) {
+
+                winner = "AI won"; gamePhase = GameWaitingFor.GAME_OVER
+
+            } else {
+
+                gamePhase = GameWaitingFor.MOVE_PIECE
+
+            }
+
         }
+
+    }
+
+    private fun applyAiMove(move: MoveData) {
+
+        if (board[move.to] == 4) {
+
+            playerCaptured[1]++
+
+            afterTouche = true;
+
+        }
+
         board[move.from] = 0
+
         board[move.to] = 1
+
         board[move.hotSpot] = 4
 
     }
+
+    private fun getOffsetFromAngle(angle: Double): Int? {
+
+        return when {
+
+            angle >= -22.5 && angle < 22.5 -> 1
+
+            angle >= 22.5 && angle < 67.5 -> 6
+
+            angle >= 67.5 && angle < 112.5 -> 5
+
+            angle >= 112.5 && angle < 157.5 -> 4
+
+            angle >= 157.5 || angle < -157.5 -> -1
+
+            angle >= -157.5 && angle < -112.5 -> -6
+
+            angle >= -112.5 && angle < -67.5 -> -5
+
+            angle >= -67.5 && angle < -22.5 -> -4
+
+            else -> null
+
+        }
+
+    }
+
+    private external fun getBestStepNative(b: IntArray, p: Int, d: Int, r: Boolean): MoveData
+
+    companion object {
+
+        init {
+
+            try { System.loadLibrary("riposte") }
+
+            catch (e: Exception) { Log.e("JNI", "Load failed: ${e.message}") }
+
+        }
+
+    }
+
 }
