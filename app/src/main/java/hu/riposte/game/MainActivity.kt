@@ -9,19 +9,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import hu.riposte.game.ui.theme.RiposteTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-
     enableEdgeToEdge()
-
     setContent {
             RiposteTheme {
+                val gameViewModel: GameViewModel = viewModel()
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Box(modifier = Modifier.padding(innerPadding)) {
-                        RiposteGameApp()
+                        RiposteGameBoard(gameViewModel)
                     }
                 }
             }

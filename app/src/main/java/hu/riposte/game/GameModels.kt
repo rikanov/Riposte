@@ -24,8 +24,30 @@ data class GameSettings(
     val riposteAllowed: Boolean = true
 )
 
-class GameState(
-    val snapshot: List<Int> = mutableStateListOf<Int>(),
-    var captured: IntArray = intArrayOf(0,0,0),
-    var afterTouche: Boolean = false
+data class Coord(val x: Int, val y: Int) {
+    fun toIndex(): Int = y * 5 + x
+    companion object {
+        fun fromIndex(index: Int): Coord = Coord(index % 5, index / 5)
+        val Invalid = Coord(-1, -1)
+    }
+}
+enum class PieceState {
+    IN_PLAY,
+    BEING_CAPTURED,
+    CAPTURED
+}
+
+data class Piece(
+    val id: Int,
+    val owner: Int,
+    var pos: Coord,
+    val state: PieceState = PieceState.IN_PLAY // A két Boolean helyett!
+)
+data class GameStateSnapshot(
+    val board: IntArray,
+    val pieces: List<Piece>, // A Piece data class, így a copy() miatt biztonságos
+    val playerCaptured: IntArray,
+    val currentPlayerId: Int,
+    val afterTouche: Boolean,
+    val gamePhase: GameWaitingFor
 )
