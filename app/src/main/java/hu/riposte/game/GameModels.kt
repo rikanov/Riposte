@@ -7,11 +7,12 @@ enum class GameWaitingFor {
     SETUP,
     MOVE_PIECE,
     TAKE_PIECE,
+    ANIMATION,
     AI_MOVE,
     GAME_OVER
 }
 enum class GameMode {
-    VS_AI, VS_PLAYER
+    VS_AI, LOCAL_MULTIPLAYER
 }
 enum class StartingPlayer {
     PLAYER, AI, ALTERNATING
@@ -50,4 +51,23 @@ data class GameStateSnapshot(
     val currentPlayerId: Int,
     val afterTouche: Boolean,
     val gamePhase: GameWaitingFor
+)
+
+
+enum class MenuScreen {
+    MAIN,
+    VS_AI_SETTINGS,
+    ONLINE_LOBBY,
+    HOW_TO_PLAY
+}
+enum class SoundType {
+    MOVE,
+    TOUCHE,
+    WIN,
+    LOSE }
+data class SoundEvent(
+    val type: SoundType,
+    val playerId: Int,
+    val triggerId:
+    Long = System.currentTimeMillis()
 )

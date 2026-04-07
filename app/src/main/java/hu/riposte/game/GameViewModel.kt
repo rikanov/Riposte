@@ -11,8 +11,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.*
 
-enum class SoundType { MOVE, TOUCHE, WIN, LOSE }
-data class SoundEvent(val type: SoundType, val playerId: Int, val triggerId: Long = System.currentTimeMillis())
 class GameViewModel : ViewModel() {
     // A C++ motor számára
     val board = mutableStateListOf<Int>()
@@ -24,6 +22,7 @@ class GameViewModel : ViewModel() {
     var gamePhase by mutableStateOf(GameWaitingFor.SETUP)
     var settings by mutableStateOf(GameSettings())
     var matchCount: Int = 0
+    var currentMoveDuration by mutableIntStateOf(500)
     var currentPlayerId: Int = when( settings.startingPlayer ) {
         StartingPlayer.AI -> 1
         StartingPlayer.PLAYER -> 2
@@ -56,24 +55,26 @@ class GameViewModel : ViewModel() {
         playerCaptured = intArrayOf(0, 0, 0)
         undoStack.clear()
     }
-
-    // --- SZINKRONIZÁLT MOZGÁS ---
-    private fun synchronizeMove(fromIdx: Int, toIdx: Int, owner: Int) {
+    // --- SZINKRONIZÁLT MOZGÁS (Módosítva dinamikus idővel) ---
+    // Hozzáadtunk egy 'duration' paramétert!
+    private fun synchronizeMove(fromIdx: Int, toIdx: Int, owner: Int, duration: Int = 500) {
         val hitTouche = board[toIdx] == 4
 
         board[fromIdx] = 0
         board[toIdx] = owner
 
-        // 2. Piece lista frissítése (UI/Animáció indulása)
-        val pieceIdx = pieces.indexOfFirst { it.pos == Coord.fromIndex(fromIdx) && it.state != PieceState.CAPTURED }
+        val pieceIdx =
+            pieces.indexOfFirst { it.pos == Coord.fromIndex(fromIdx) && it.state != PieceState.CAPTURED }
         if (pieceIdx != -1) {
             pieces[pieceIdx] = pieces[pieceIdx].copy(pos = Coord.fromIndex(toIdx))
         }
 
-        // ÚJ: Indítunk egy szálat, ami megvárja a csúszás animációját!
         viewModelScope.launch {
-            delay(550) // 550ms: pont azelőtt egy pattanással szólal meg, hogy befejeződne a mozgás
+            // A csúszás hangja AZONNAL indul (mert az a surlódás hangja)
             triggerSound(SoundType.MOVE, owner)
+
+            // Megvárjuk, amíg a bábu TÉNYLEG odaér a célmezőre!
+            delay(duration.toLong())
 
             if (hitTouche) {
                 gamePhase = GameWaitingFor.TAKE_PIECE
@@ -82,8 +83,8 @@ class GameViewModel : ViewModel() {
             }
         }
     }
-
-    fun handleSwipe(index: Int, dragAmount: Offset) {
+    // --- HANDLE SWIPE (Módosítva dinamikus idővel) ---
+    fun handleSwipe(index: Int, dragAmount: Offset, duration: Int) { // <-- Új paraméter!
         if (gamePhase != GameWaitingFor.MOVE_PIECE || board[index] != currentPlayerId) return
 
         val x = dragAmount.x
@@ -97,15 +98,16 @@ class GameViewModel : ViewModel() {
         if (targetIndex != index) {
             if (settings.riposteAllowed || !afterTouche || board[targetIndex] != 4) {
                 saveState()
+                gamePhase = GameWaitingFor.ANIMATION
                 afterTouche = false
-                synchronizeMove(index, targetIndex, currentPlayerId)
+                currentMoveDuration = duration
+                synchronizeMove(index, targetIndex, currentPlayerId, duration)
             }
         }
     }
 
     fun onCellClick(index: Int) {
         if (gamePhase == GameWaitingFor.TAKE_PIECE && board[index] == 3 - currentPlayerId) {
-            // Keressük meg melyik AI bábu az
             val pIdx =
                 pieces.indexOfFirst { it.pos == Coord.fromIndex(index) && it.state != PieceState.CAPTURED }
             if (pIdx != -1) {
@@ -118,8 +120,8 @@ class GameViewModel : ViewModel() {
                     afterTouche = true
                     playerCaptured[currentPlayerId]++
 
-                    // Várás az animációra
-                    delay(800)
+                    gamePhase = GameWaitingFor.ANIMATION
+                    delay(300)
 
                     // 2. Fázis: Végleg eltűnik
                     pieces[pIdx] = pieces[pIdx].copy(
@@ -150,14 +152,37 @@ class GameViewModel : ViewModel() {
             }
         }
     }
+        // --- AI LÉPÉS ÉS SZEMÉLYISÉG ---
     private fun aiStep() {
         gamePhase = GameWaitingFor.AI_MOVE
         viewModelScope.launch {
+
+            // 1. Időmérés kezdete
+            val startTime = System.currentTimeMillis()
+
+            // AI Gondolkodás (C++ hívás a háttérszálon)
             val move = withContext(Dispatchers.Default) {
                 getBestStepNative(board.toIntArray(), 1, settings.difficulty, settings.riposteAllowed)
             }
 
-            applyAiMove(move)
+            // 2. Időmérés vége és Várakozási idő kiszámítása
+            val thinkTime = System.currentTimeMillis() - startTime
+
+            // Ha az AI túl gyors volt (pl. első lépés vagy azonnali matt),
+            // hagyunk egy kis emberi "késleltetést" (minimum 600ms gondolkodás)
+            if (thinkTime < 600) {
+                delay(600 - thinkTime)
+            }
+
+            // 3. Az AI "Érzelmi" Leképezése (Mapping)
+            val clampedThinkTime = thinkTime.coerceIn(500, 5000).toFloat()
+            val thinkFraction = (clampedThinkTime - 500f) / 4500f
+
+            // Az AI animációs ideje 250ms (agresszív) és 1200ms (nagyon komótos) között fog mozogni
+            val aiMoveDuration = (250f + (950f * thinkFraction)).toInt()
+            currentMoveDuration = aiMoveDuration
+            // Végrehajtjuk a lépést a dinamikus idővel!
+            applyAiMove(move, aiMoveDuration)
 
             if (playerCaptured[1] >= 2) {
                 triggerSound(SoundType.LOSE, 1)
@@ -169,7 +194,7 @@ class GameViewModel : ViewModel() {
         }
     }
 
-    private suspend fun applyAiMove(move: MoveData) {
+    private suspend fun applyAiMove(move: MoveData, duration: Int) {
         if (board[move.to] == 4) {
             playerCaptured[1]++
             afterTouche = true
@@ -178,11 +203,12 @@ class GameViewModel : ViewModel() {
         val pIdx = pieces.indexOfFirst { it.pos == Coord.fromIndex(move.from) && it.state != PieceState.CAPTURED }
         if (pIdx != -1) pieces[pIdx] = pieces[pIdx].copy(pos = Coord.fromIndex(move.to))
 
-        // ÚJ: Megvárjuk az AI bábu csúszását, és CSAK UTÁNA jön a hang!
-        delay(550)
+        // Csúszás hangja indul
         triggerSound(SoundType.MOVE, 1)
 
-        // 2. Ütés keresése (MIELŐTT felülírjuk a board-ot)
+        // Várakozás a kiszámolt, dinamikus ideig, amíg a bábu odaér!
+        delay(duration.toLong())
+
         val isCapture = move.hotSpot != move.to && board[move.hotSpot] != 4
         var capturedIdx = -1
 
@@ -193,17 +219,13 @@ class GameViewModel : ViewModel() {
             }
         }
 
-        // 3. C++ Board frissítése
         board[move.from] = 0
         board[move.to] = 1
         board[move.hotSpot] = 4
 
-        // 4. Várakozás és Véglegesítés
         if (isCapture && capturedIdx != -1) {
-            delay(200) // Pici szünet a lépés és az ütés között
             triggerSound(SoundType.TOUCHE, 1)
             delay(600) // Haláltusa megvárása
-            // FÁZIS 2: Végleg levesszük a tábláról
             pieces[capturedIdx] = pieces[capturedIdx].copy(state = PieceState.CAPTURED, pos = Coord.Invalid)
         }
     }

@@ -1,3 +1,61 @@
 <resources>
     <string name="app_name">Riposte</string>
+
+    <string name="cd_toggle_animation">Toggle Animation</string>
+    <string name="cd_toggle_music">Toggle Music</string>
+    <string name="cd_toggle_sfx">Toggle SFX</string>
+    <string name="cd_themes">Themes</string>
+    <string name="cd_menu">Menu</string>
+    <string name="cd_board_background">Board Background</string>
+    <string name="cd_touche_point">Touche Point</string>
+
+    <string name="status_players_turn">Player\'s Turn</string>
+    <string name="status_ai_thinking">AI\'s thinking</string>
+    <string name="status_select_capture">Select a piece to capture</string>
+    <string name="status_wait">Wait...</string>
+    <string name="status_setting_up">Setting up...</string>
+    <string name="status_game_over">Game Over - %1$s</string>
+
+    <string name="diff_beginner">Beginner (5)</string>
+    <string name="diff_normal">Normal (7)</string>
+    <string name="diff_expert">Expert (9)</string>
+    <string name="diff_pro">Pro (10)</string>
+
+    <string name="starter_player">Player</string>
+    <string name="starter_ai">AI</string>
+    <string name="starter_alternating">Alternating</string>
+
+    <string name="gameover_new_game">NEW GAME</string>
+    <string name="menu_new_match">NEW MATCH</string>
+    <string name="menu_player_vs_ai">PLAYER VS AI</string>
+    <string name="menu_2_local_players">2 LOCAL PLAYERS</string>
+    <string name="menu_how_to_play">HOW TO PLAY</string>
+    <string name="menu_vs_ai_settings">VS AI SETTINGS</string>
+    <string name="menu_ai_difficulty">AI Difficulty</string>
+    <string name="menu_first_move">First Move</string>
+    <string name="menu_start_match">START MATCH</string>
+
+    <string name="options_title">SETTINGS</string>
+    <string name="options_music">Music</string>
+    <string name="options_sfx">Sound Effects (SFX)</string>
+    <string name="options_haptic">Haptic Feedback</string>
+    <string name="options_riposte">Enable Riposte Rule</string>
+    <string name="options_done">DONE</string>
+
+    <string name="pause_title">PAUSE MENU</string>
+    <string name="pause_resume">RESUME</string>
+    <string name="pause_new_game">NEW GAME</string>
+    <string name="pause_options">OPTIONS</string>
+    <string name="pause_undo">UNDO LAST MOVE</string>
+    <string name="pause_exit">EXIT GAME</string>
+
+    <string name="gameover_victory">VICTORY!</string>
+    <string name="gameover_defeat">DEFEAT</string>
+    <string name="gameover_you_won">YOU WON!</string>
+    <string name="gameover_ai_won">THE AI WON</string>
+    <string name="cd_bg_mood_icon">Background Mood Icon</string>
+
+    <string name="theme_title">CHOOSE THEME</string>
+    <string name="theme_apply">APPLY</string>
+    <string name="theme_cancel">CANCEL</string>
 </resources>

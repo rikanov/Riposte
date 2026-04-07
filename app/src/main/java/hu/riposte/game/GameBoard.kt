@@ -1,18 +1,25 @@
 package hu.riposte.game
 
 import android.app.Activity
+import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.MusicOff
+import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.filled.VolumeOff
+import androidx.compose.material.icons.filled.PlayCircle
+import androidx.compose.material.icons.filled.PauseCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,40 +27,97 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.util.VelocityTracker
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import kotlinx.coroutines.launch
+import kotlin.math.pow
 import kotlin.math.roundToInt
+import kotlin.math.sqrt
+import hu.riposte.game.R // Biztosítjuk, hogy a mi strings.xml-ünket húzza be
 
+// =========================================================================================
+// 1. FŐ KONTÉNER (Virtuális Kijelző és Állapotkezelés)
+// =========================================================================================
 @Composable
 fun RiposteGameBoard(gameViewModel: GameViewModel) {
-    var showMenu by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val activity = (context as? Activity)
-
     val haptic = LocalHapticFeedback.current
+    val coroutineScope = rememberCoroutineScope()
+
     val soundManager = remember { SoundManager(context) }
+    val settingsManager = remember { SettingsManager(context) }
 
-// Az új beállítások állapota!
-    var appSettings by remember { mutableStateOf(AppSettings()) }
+    val appSettingsState = settingsManager.settingsFlow.collectAsState(initial = null)
+    val appSettings = appSettingsState.value
+
+    if (appSettings == null) {
+        Box(modifier = Modifier.fillMaxSize().background(Color(0xFF0F141E)))
+        return
+    }
+
+    // UI State
+    var showMenu by remember { mutableStateOf(false) }
     var showOptions by remember { mutableStateOf(false) }
+    var showThemeDialog by remember { mutableStateOf(false) }
+    var previewThemeId by remember { mutableStateOf<String?>(null) }
+    var localSavedThemeId by remember(appSettings.themeId) { mutableStateOf(appSettings.themeId) }
+    var isGridVisible by remember { mutableStateOf(true) }
+    var isAnimationEnabled by remember { mutableStateOf(true) }
 
-    // Hang és rezgés figyelő (ami MOST MÁR FIGYELI A BEÁLLÍTÁSOKAT IS!)
+    val activeThemeId = previewThemeId ?: localSavedThemeId
+    val activeTheme = remember(activeThemeId) { ThemeRegistry.getThemeById(activeThemeId) }
+
+    // Életciklus és Hang logika
+    LaunchedEffect(appSettings.musicEnabled, activeTheme.id) {
+        soundManager.loadThemeSFX(activeTheme)
+        soundManager.isMusicEnabled = appSettings.musicEnabled
+        if (appSettings.musicEnabled) {
+            soundManager.playThemeMusic(activeTheme.bgMusicRes)
+        } else {
+            soundManager.pauseMusic()
+        }
+    }
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> soundManager.resumeMusic()
+                Lifecycle.Event.ON_PAUSE -> soundManager.pauseMusic()
+                Lifecycle.Event.ON_DESTROY -> soundManager.release()
+                else -> {}
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
     LaunchedEffect(gameViewModel.soundEvent) {
         gameViewModel.soundEvent?.let { event ->
             when (event.type) {
                 SoundType.MOVE -> {
-                    // Csak akkor szól/rezeg, ha engedélyezték!
                     if (appSettings.sfxEnabled) soundManager.playMove(event.playerId)
                     if (appSettings.hapticEnabled) haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 }
@@ -61,448 +125,492 @@ fun RiposteGameBoard(gameViewModel: GameViewModel) {
                     if (appSettings.sfxEnabled) soundManager.playTouche()
                     if (appSettings.hapticEnabled) haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 }
-
                 SoundType.WIN ->  { if (appSettings.sfxEnabled) soundManager.playWin() }
                 SoundType.LOSE -> { if (appSettings.sfxEnabled) soundManager.playLose() }
             }
         }
     }
 
-    // FŐ KONTÉNER
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+    AnimatedContent(
+        targetState = activeTheme,
+        transitionSpec = { fadeIn(animationSpec = tween(800)) togetherWith fadeOut(animationSpec = tween(800)) },
+        label = "ThemeTransition"
+    ) { currentTheme ->
 
-        // --- 1. PRÉMIUM FEJLÉC ÉS MENÜ ---
+        CompositionLocalProvider(LocalGameTheme provides currentTheme) {
+
+            // --- A VIRTUÁLIS KIJELZŐ (SCALING) LOGIKA ---
+            BoxWithConstraints(
+                modifier = Modifier.fillMaxSize().background(Color(0xFF0F141E)),
+                contentAlignment = Alignment.Center
+            ) {
+                // Cél arány 5:8
+                val targetAspect = 5f / 8f
+                val screenAspect = maxWidth / maxHeight
+
+                val containerWidth: androidx.compose.ui.unit.Dp
+                val containerHeight: androidx.compose.ui.unit.Dp
+
+                if (screenAspect > targetAspect) {
+                    containerHeight = maxHeight
+                    containerWidth = maxHeight * targetAspect
+                } else {
+                    containerWidth = maxWidth
+                    containerHeight = maxWidth / targetAspect
+                }
+
+                Box(
+                    modifier = Modifier
+                        .size(containerWidth, containerHeight)
+                        .padding(16.dp)
+                ) {
+                    Column(modifier = Modifier.fillMaxSize()) {
+
+                        // 1. TOP BAR KOMPONENS
+                        RiposteTopBar(
+                            appSettings = appSettings,
+                            isGridVisible = isGridVisible,
+                            isAnimationEnabled = isAnimationEnabled,
+                            onGridToggle = { soundManager.playClick(); isGridVisible = it },
+                            onAnimationToggle = { soundManager.playClick(); isAnimationEnabled = !isAnimationEnabled },
+                            onMusicToggle = {
+                                soundManager.playClick()
+                                coroutineScope.launch { settingsManager.updateSettings(appSettings.copy(musicEnabled = !appSettings.musicEnabled)) }
+                            },
+                            onSfxToggle = {
+                                soundManager.playToggle(!appSettings.sfxEnabled)
+                                coroutineScope.launch { settingsManager.updateSettings(appSettings.copy(sfxEnabled = !appSettings.sfxEnabled)) }
+                            },
+                            onThemeClick = { soundManager.playClick(); showThemeDialog = true },
+                            onMenuClick = { soundManager.playClick(); showMenu = true }
+                        )
+
+                        // 2. JÁTÉKTÁBLA KOMPONENS
+                        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                            RiposteBoardArea(
+                                gameViewModel = gameViewModel,
+                                isGridVisible = isGridVisible,
+                                isAnimationEnabled = isAnimationEnabled
+                            )
+                        }
+
+                        // 3. STATUS KOMPONENS
+                        RiposteStatusIndicator(gameViewModel = gameViewModel)
+                    }
+                }
+            }
+
+            // --- DIALÓGUSOK ---
+            if (showMenu) { PauseMenuDialog(soundManager = soundManager, onResume = { showMenu = false }, onNewGame = { gameViewModel.gamePhase = GameWaitingFor.SETUP; showMenu = false }, onOptions = { showMenu = false; showOptions = true }, onUndo = { gameViewModel.undo(); showMenu = false }, onExit = { activity?.finish(); showMenu = false }) }
+            if (showOptions) { OptionsDialog(soundManager = soundManager, settings = appSettings, onSettingsChange = { newSettings -> coroutineScope.launch { settingsManager.updateSettings(newSettings) } }, onClose = { showOptions = false }) }
+            if (gameViewModel.gamePhase == GameWaitingFor.SETUP) { MainMenuDialog(soundManager = soundManager, appSettings = appSettings, onStart = { settings -> gameViewModel.startNewGame(settings) }, onCancel = { gameViewModel.gamePhase = GameWaitingFor.MOVE_PIECE }) }
+            if (gameViewModel.gamePhase == GameWaitingFor.GAME_OVER) {
+                val isWin = gameViewModel.winner?.contains("You", ignoreCase = true) == true || gameViewModel.winner?.contains("Player", ignoreCase = true) == true
+                if (isWin) { FireworksOverlay() }
+                GameOverDialog(soundManager = soundManager, winnerName = gameViewModel.winner ?: "", onRestart = { gameViewModel.restartGame() })
+            }
+            if (showThemeDialog) {
+                ThemeSelectorDialog(
+                    currentThemeId = activeThemeId,
+                    onThemeSelected = { finalId ->
+                        localSavedThemeId = finalId
+                        previewThemeId = null
+                        coroutineScope.launch { settingsManager.updateSettings(appSettings.copy(themeId = finalId)) }
+                        showThemeDialog = false
+                    },
+                    onThemePreview = { viewedId -> previewThemeId = viewedId },
+                    onDismiss = { previewThemeId = null; showThemeDialog = false },
+                    soundManager = soundManager
+                )
+            }
+        }
+    }
+}
+
+// =========================================================================================
+// 2. TOP BAR KOMPONENS
+// =========================================================================================
+@Composable
+fun RiposteTopBar(
+    appSettings: AppSettings,
+    isGridVisible: Boolean,
+    isAnimationEnabled: Boolean,
+    onGridToggle: (Boolean) -> Unit,
+    onAnimationToggle: () -> Unit,
+    onMusicToggle: () -> Unit,
+    onSfxToggle: () -> Unit,
+    onThemeClick: () -> Unit,
+    onMenuClick: () -> Unit
+) {
+    val currentTheme = LocalGameTheme.current
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 12.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        currentTheme.containerColor.copy(alpha = 0.95f),
+                        currentTheme.containerColor.copy(alpha = 0.70f)
+                    )
+                )
+            )
+            .border(1.dp, currentTheme.textColor.copy(alpha = 0.15f), RoundedCornerShape(16.dp))
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.End,
+        verticalAlignment = Alignment.CenterVertically
+    ){
+        Spacer(modifier = Modifier.weight(1f))
+
+        IconButton(onClick = onAnimationToggle, modifier = Modifier.size(44.dp)) {
+            val animIcon = if (isAnimationEnabled) Icons.Default.PlayCircle else Icons.Default.PauseCircle
+            val iconAlpha = if (isAnimationEnabled) 1f else 0.4f
+            Icon(animIcon, contentDescription = stringResource(R.string.cd_toggle_animation), tint = currentTheme.textColor.copy(alpha = iconAlpha), modifier = Modifier.size(34.dp))
+        }
+
+        IconButton(onClick = onMusicToggle, modifier = Modifier.size(44.dp)) {
+            val musicIcon = if (appSettings.musicEnabled) Icons.Default.MusicNote else Icons.Default.MusicOff
+            val iconAlpha = if (appSettings.musicEnabled) 1f else 0.4f
+            Icon(musicIcon, contentDescription = stringResource(R.string.cd_toggle_music), tint = currentTheme.textColor.copy(alpha = iconAlpha), modifier = Modifier.size(34.dp))
+        }
+
+        IconButton(onClick = onSfxToggle, modifier = Modifier.size(44.dp)) {
+            val sfxIcon = if (appSettings.sfxEnabled) Icons.Default.VolumeUp else Icons.Default.VolumeOff
+            val iconAlpha = if (appSettings.sfxEnabled) 1f else 0.4f
+            Icon(sfxIcon, contentDescription = stringResource(R.string.cd_toggle_sfx), tint = currentTheme.textColor.copy(alpha = iconAlpha), modifier = Modifier.size(34.dp))
+        }
+
+        Checkbox(
+            checked = isGridVisible,
+            onCheckedChange = onGridToggle,
+            colors = CheckboxDefaults.colors(
+                checkedColor = currentTheme.textColor,
+                checkmarkColor = Color(0xFF0F141E),
+                uncheckedColor = currentTheme.textColor.copy(alpha = 0.5f)
+            ),
+            modifier = Modifier.scale(1.2f).padding(horizontal = 4.dp)
+        )
+
+        IconButton(onClick = onThemeClick, modifier = Modifier.size(44.dp)) {
+            Icon(Icons.Default.Star, contentDescription = stringResource(R.string.cd_themes), tint = currentTheme.textColor, modifier = Modifier.size(34.dp))
+        }
+
+        IconButton(onClick = onMenuClick, modifier = Modifier.size(44.dp)) {
+            Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.cd_menu), tint = currentTheme.textColor, modifier = Modifier.size(34.dp))
+        }
+    }
+}
+
+// =========================================================================================
+// 3. STATUS INDICATOR KOMPONENS
+// =========================================================================================
+@Composable
+fun RiposteStatusIndicator(gameViewModel: GameViewModel) {
+    val currentTheme = LocalGameTheme.current
+    val density = LocalDensity.current
+
+    Box(
+        modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        var displayPhase by remember { mutableStateOf(gameViewModel.gamePhase) }
+        val flipRotation = remember { Animatable(0f) }
+        val shimmerProgress = remember { Animatable(-1f) }
+
+        LaunchedEffect(gameViewModel.gamePhase) {
+            if (displayPhase != gameViewModel.gamePhase) {
+                flipRotation.animateTo(90f, animationSpec = tween(300, easing = LinearEasing))
+                displayPhase = gameViewModel.gamePhase
+                flipRotation.snapTo(-90f)
+                flipRotation.animateTo(0f, animationSpec = tween(350, easing = LinearOutSlowInEasing))
+                shimmerProgress.snapTo(-0.5f)
+                shimmerProgress.animateTo(1.5f, animationSpec = tween(1200, easing = FastOutSlowInEasing))
+            }
+        }
+
+        val containerColor = when (displayPhase) {
+            GameWaitingFor.AI_MOVE -> Color(0xFFFFEBEE)
+            GameWaitingFor.TAKE_PIECE -> Color(0xFFFFF8E1)
+            GameWaitingFor.GAME_OVER -> Color(0xFFE8F5E9)
+            else -> currentTheme.containerColor
+        }
+        val contentColor = when (displayPhase) {
+            GameWaitingFor.AI_MOVE -> Color(0xFFD32F2F)
+            GameWaitingFor.TAKE_PIECE -> Color(0xFFF57F17)
+            GameWaitingFor.GAME_OVER -> Color(0xFF2E7D32)
+            else -> currentTheme.textColor
+        }
+
+        // JAVÍTÁS: Dinamikus hivatkozások a szótárból
+        val statusText = when (displayPhase) {
+            GameWaitingFor.MOVE_PIECE -> stringResource(R.string.status_players_turn)
+            GameWaitingFor.AI_MOVE -> stringResource(R.string.status_ai_thinking)
+            GameWaitingFor.TAKE_PIECE -> stringResource(R.string.status_select_capture)
+            GameWaitingFor.ANIMATION -> stringResource(R.string.status_wait)
+            GameWaitingFor.GAME_OVER -> stringResource(R.string.status_game_over, gameViewModel.winner ?: "")
+            else -> stringResource(R.string.status_setting_up)
+        }
+
+        val metalShape = CutCornerShape(10.dp)
+        val metallicBrush = Brush.linearGradient(
+            colors = listOf(
+                containerColor.copy(alpha = 0.8f),
+                Color.White.copy(alpha = 0.9f),
+                containerColor,
+                containerColor.copy(alpha = 0.6f),
+                containerColor
+            )
+        )
+
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 8.dp)
-                .height(56.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .graphicsLayer {
+                    rotationX = flipRotation.value
+                    cameraDistance = 12f * density.density
+                }
+                .shadow(6.dp, metalShape)
+                .clip(metalShape)
+                .background(metallicBrush)
+                .drawBehind {
+                    val lineColor = Color.Black.copy(alpha = 0.05f)
+                    val strokeWidth = 1.dp.toPx()
+                    var yPos = 0f
+                    while (yPos < size.height) {
+                        drawLine(color = lineColor, start = Offset(0f, yPos), end = Offset(size.width, yPos), strokeWidth = strokeWidth)
+                        yPos += 3.dp.toPx()
+                    }
+                }
+                .border(1.dp, Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.8f), Color.Black.copy(alpha = 0.3f))), shape = metalShape)
+                .drawWithContent {
+                    drawContent()
+                    if (shimmerProgress.value > -0.5f && shimmerProgress.value < 1.5f) {
+                        val w = size.width
+                        val h = size.height
+                        val xOffset = w * shimmerProgress.value
+                        val shimmerBrush = Brush.linearGradient(colors = listOf(Color.Transparent, Color.White.copy(alpha = 0.9f), Color.Transparent), start = Offset(xOffset, 0f), end = Offset(xOffset + 80.dp.toPx(), h))
+                        drawRect(brush = shimmerBrush, blendMode = BlendMode.SrcAtop)
+                    }
+                }
+                .padding(horizontal = 32.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
         ) {
-            Text(
-                text = "R I P O S T E",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.ExtraBold,
-                letterSpacing = 2.sp,
-                color = MaterialTheme.colorScheme.primary
-            )
-            IconButton(onClick = { showMenu = true }) {
-                Icon(Icons.Default.MoreVert, contentDescription = "Menu")
-            }
+            Text(text = statusText.uppercase(), fontWeight = FontWeight.Black, color = contentColor, fontSize = 15.sp, letterSpacing = 1.5.sp)
         }
+    }
+}
 
-        // --- 2. FLIP + SHIMMER STÁTUSZ BÁR (FÉMES PLAKETT) ---
+// =========================================================================================
+// 4. BOARD AREA KOMPONENS
+// =========================================================================================
+@Composable
+fun RiposteBoardArea(
+    gameViewModel: GameViewModel,
+    isGridVisible: Boolean,
+    isAnimationEnabled: Boolean
+) {
+    val currentTheme = LocalGameTheme.current
+
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(5f / 7f)
+            .shadow(24.dp, RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(16.dp))
+            .border(1.5.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
+    ) {
+        Image(
+            painter = painterResource(id = currentTheme.backgroundRes),
+            contentDescription = stringResource(R.string.cd_board_background),
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            var displayPhase by remember { mutableStateOf(gameViewModel.gamePhase) }
-            val flipRotation = remember { Animatable(0f) }
-            val shimmerProgress = remember { Animatable(-1f) }
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.3f))
+                .background(
+                    Brush.linearGradient(
+                        colors = listOf(Color.White.copy(alpha = 0.15f), Color.White.copy(alpha = 0.02f)),
+                        start = Offset(0f, 0f),
+                        end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
+                    )
+                )
+        )
 
-            // Pörgés és csillogás animáció vezérlése
-            LaunchedEffect(gameViewModel.gamePhase) {
-                if (displayPhase != gameViewModel.gamePhase) {
-                    flipRotation.animateTo(90f, animationSpec = tween(300, easing = LinearEasing))
-                    displayPhase = gameViewModel.gamePhase
-                    flipRotation.snapTo(-90f)
-                    flipRotation.animateTo(0f, animationSpec = tween(350, easing = LinearOutSlowInEasing))
-                    shimmerProgress.snapTo(-0.5f)
-                    shimmerProgress.animateTo(1.5f, animationSpec = tween(1200, easing = FastOutSlowInEasing))
+        val boardWidth = constraints.maxWidth.toFloat()
+        val boardHeight = constraints.maxHeight.toFloat()
+        val cellWidth = boardWidth / 5
+        val cellHeight = boardHeight / 7
+        val density = LocalDensity.current
+        val cellWidthDp = with(density) { cellWidth.toDp() }
+        val cellHeightDp = with(density) { cellHeight.toDp() }
+
+        val gridAlpha by animateFloatAsState(targetValue = if (isGridVisible) 1f else 0f, animationSpec = tween(500), label = "grid_alpha")
+        Column(modifier = Modifier.fillMaxSize().padding(4.dp).graphicsLayer { alpha = gridAlpha }) {
+            for (y in 0 until 7) {
+                Row(modifier = Modifier.weight(1f)) {
+                    for (x in 0 until 5) {
+                        val isDark = (x + y) % 2 == 0
+                        val tileGradient = if (isDark) Brush.linearGradient(listOf(currentTheme.boardCellDark, Color.Transparent))
+                        else Brush.linearGradient(listOf(currentTheme.boardCellLight, currentTheme.boardCellLight.copy(alpha = 0.3f)))
+
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .padding(3.dp)
+                                .background(tileGradient, RoundedCornerShape(8.dp))
+                                .drawBehind {
+                                    val lineColor = Color.White.copy(alpha = 0.03f)
+                                    val strokeWidth = 1.dp.toPx()
+                                    var xPos = -size.height
+                                    while (xPos < size.width) {
+                                        drawLine(color = lineColor, start = Offset(xPos, 0f), end = Offset(xPos + size.height, size.height), strokeWidth = strokeWidth)
+                                        xPos += 4.dp.toPx()
+                                    }
+                                }
+                                .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(8.dp))
+                        )
+                    }
                 }
             }
+        }
+        val toucheIdx = gameViewModel.board.indexOf(4)
+        val infiniteTransitionTouche = rememberInfiniteTransition(label = "TouchePulseAnim")
 
-            val containerColor = when (displayPhase) {
-                GameWaitingFor.AI_MOVE -> Color(0xFFFFEBEE)
-                GameWaitingFor.TAKE_PIECE -> Color(0xFFFFF8E1)
-                GameWaitingFor.GAME_OVER -> Color(0xFFE8F5E9)
-                else -> Color(0xFFE3F2FD)
-            }
-            val contentColor = when (displayPhase) {
-                GameWaitingFor.AI_MOVE -> Color(0xFFD32F2F)
-                GameWaitingFor.TAKE_PIECE -> Color(0xFFF57F17)
-                GameWaitingFor.GAME_OVER -> Color(0xFF2E7D32)
-                else -> Color(0xFF1976D2)
-            }
-            val statusText = when (displayPhase) {
-                GameWaitingFor.MOVE_PIECE -> "Player's Turn"
-                GameWaitingFor.AI_MOVE -> "AI's thinking"
-                GameWaitingFor.TAKE_PIECE -> "Touché! Select enemy to capture"
-                GameWaitingFor.GAME_OVER -> "Game Over - ${gameViewModel.winner ?: ""}"
-                else -> "Setting up..."
-            }
+        val goldScale by infiniteTransitionTouche.animateFloat(
+            initialValue = currentTheme.toucheScaleMin,
+            targetValue = currentTheme.toucheScaleMax,
+            animationSpec = infiniteRepeatable(
+                tween(currentTheme.touchePulseDuration, easing = FastOutSlowInEasing),
+                RepeatMode.Reverse
+            ),
+            label = "GoldPulse"
+        )
 
-            val metalShape = CutCornerShape(10.dp)
-            val metallicBrush = androidx.compose.ui.graphics.Brush.linearGradient(
-                colors = listOf(
-                    containerColor.copy(alpha = 0.8f),
-                    Color.White.copy(alpha = 0.9f),
-                    containerColor,
-                    containerColor.copy(alpha = 0.6f),
-                    containerColor
-                )
-            )
+        val goldRotationZ by infiniteTransitionTouche.animateFloat(
+            initialValue = 360f,
+            targetValue = 0f,
+            animationSpec = infiniteRepeatable(
+                tween(currentTheme.toucheRotationDuration, easing = LinearEasing),
+                RepeatMode.Restart
+            ),
+            label = "GoldRotate"
+        )
+        var starX: Float? = null
+        var starY: Float? = null
 
-            Row(
+        if (toucheIdx != -1) {
+            val tPos = Coord.fromIndex(toucheIdx)
+            starX = tPos.x * cellWidth
+            starY = tPos.y * cellHeight
+            val shimmerIntensity = ((goldScale - 0.8f) * 5f).coerceIn(0f, 1f)
+
+            Box(
                 modifier = Modifier
-                    .graphicsLayer {
-                        rotationX = flipRotation.value
-                        cameraDistance = 12f * density
-                    }
-                    .shadow(6.dp, metalShape)
-                    .clip(metalShape)
-                    .background(metallicBrush)
-                    .drawBehind {
-                        val lineColor = Color.Black.copy(alpha = 0.05f)
-                        val strokeWidth = 1.dp.toPx()
-                        var yPos = 0f
-                        while (yPos < size.height) {
-                            drawLine(
-                                color = lineColor,
-                                start = androidx.compose.ui.geometry.Offset(0f, yPos),
-                                end = androidx.compose.ui.geometry.Offset(size.width, yPos),
-                                strokeWidth = strokeWidth
-                            )
-                            yPos += 3.dp.toPx()
-                        }
-                    }
-                    .border(
-                        width = 1.5.dp,
-                        brush = androidx.compose.ui.graphics.Brush.verticalGradient(
-                            listOf(Color.White.copy(alpha = 0.8f), Color.Black.copy(alpha = 0.3f))
-                        ),
-                        shape = metalShape
-                    )
-                    .drawWithContent {
-                        drawContent()
-                        if (shimmerProgress.value > -0.5f && shimmerProgress.value < 1.5f) {
-                            val w = size.width
-                            val h = size.height
-                            val xOffset = w * shimmerProgress.value
-                            val shimmerBrush = androidx.compose.ui.graphics.Brush.linearGradient(
-                                colors = listOf(Color.Transparent, Color.White.copy(alpha = 0.9f), Color.Transparent),
-                                start = androidx.compose.ui.geometry.Offset(xOffset, 0f),
-                                end = androidx.compose.ui.geometry.Offset(xOffset + 80.dp.toPx(), h)
-                            )
-                            drawRect(brush = shimmerBrush, blendMode = androidx.compose.ui.graphics.BlendMode.SrcAtop)
-                        }
-                    }
-                    .padding(horizontal = 32.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
+                    .size(cellWidthDp, cellHeightDp)
+                    .offset { IntOffset(starX!!.roundToInt(), starY!!.roundToInt()) },
+                contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = statusText.uppercase(),
-                    fontWeight = FontWeight.Black,
-                    color = contentColor,
-                    fontSize = 15.sp,
-                    letterSpacing = 1.5.sp
+                Box(
+                    modifier = Modifier.fillMaxSize(1.8f).drawBehind {
+                        val glowRadius = (size.minDimension / 2f) * (0.8f + 0.4f * shimmerIntensity)
+                        val glowAlpha = 0.2f + 0.5f * shimmerIntensity
+                        val glowBrush = Brush.radialGradient(colors = listOf(currentTheme.auraP1Color.copy(alpha = glowAlpha), currentTheme.auraP1Color.copy(alpha = glowAlpha * 0.4f), Color.Transparent), radius = glowRadius)
+                        drawCircle(brush = glowBrush, radius = glowRadius)
+                    }
+                )
+                Image(
+                    painter = painterResource(id = currentTheme.toucheStarRes),
+                    contentDescription = stringResource(R.string.cd_touche_point),
+                    modifier = Modifier.fillMaxSize(0.85f).graphicsLayer { scaleX = goldScale; scaleY = goldScale; rotationZ = goldRotationZ }
                 )
             }
         }
 
-        // --- 3. A JÁTÉKTÉR ---
-        BoxWithConstraints(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(5f / 7f)
-                .padding(horizontal = 8.dp)
-                .shadow(16.dp, RoundedCornerShape(16.dp))
-                .clip(RoundedCornerShape(16.dp))
-                .background(Color(0xFF1E272E))
-                .border(2.dp, Color(0xFF485460), RoundedCornerShape(16.dp))
-        ) {
-            val boardWidth = constraints.maxWidth.toFloat()
-            val boardHeight = constraints.maxHeight.toFloat()
-            val cellWidth = boardWidth / 5
-            val cellHeight = boardHeight / 7
-            val density = LocalDensity.current
-            val cellWidthDp = with(density) { cellWidth.toDp() }
-            val cellHeightDp = with(density) { cellHeight.toDp() }
-
-            // --- A: PRÉMIUM RÁCS HÁTTÉR ---
-            Column(modifier = Modifier.fillMaxSize().padding(4.dp)) {
-                for (y in 0 until 7) {
-                    Row(modifier = Modifier.weight(1f)) {
-                        for (x in 0 until 5) {
-                            val isDark = (x + y) % 2 == 0
-                            val tileGradient = if (isDark) {
-                                androidx.compose.ui.graphics.Brush.linearGradient(listOf(Color(0xFF2F3640), Color(0xFF1E272E)))
-                            } else {
-                                androidx.compose.ui.graphics.Brush.linearGradient(listOf(Color(0xFF3D4554), Color(0xFF2F3640)))
-                            }
-
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxHeight()
-                                    .padding(3.dp)
-                                    .shadow(2.dp, RoundedCornerShape(8.dp))
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(tileGradient)
-                                    .drawBehind {
-                                        val lineColor = Color.Black.copy(alpha = 0.04f)
-                                        val strokeWidth = 1.dp.toPx()
-                                        val gap = 3.dp.toPx()
-                                        var xPos = -size.height
-                                        while (xPos < size.width) {
-                                            drawLine(
-                                                color = lineColor,
-                                                start = androidx.compose.ui.geometry.Offset(xPos, 0f),
-                                                end = androidx.compose.ui.geometry.Offset(xPos + size.height, size.height),
-                                                strokeWidth = strokeWidth
-                                            )
-                                            xPos += gap
-                                        }
-                                    }
-                                    .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(8.dp))
-                            ) {
-                                Box(modifier = Modifier.size(6.dp).align(Alignment.Center).background(Color.White.copy(alpha = 0.05f), CircleShape))
-                            }
-                        }
-                    }
-                }
-            }
-
-            // --- B: TOUCHE PONT (Arany csillag) ---
-            val toucheIdx = gameViewModel.board.indexOf(4)
-            if (toucheIdx != -1) {
-                val tPos = Coord.fromIndex(toucheIdx)
-                val goldX = tPos.x * cellWidth
-                val goldY = tPos.y * cellHeight
-
-                val infiniteTransition = rememberInfiniteTransition(label = "TouchePulseAnim")
-                val goldScale by infiniteTransition.animateFloat(
-                    initialValue = 0.8f, targetValue = 1.0f,
-                    animationSpec = infiniteRepeatable(tween(1200, easing = FastOutSlowInEasing), RepeatMode.Reverse),
-                    label = "GoldPulse"
-                )
-                val goldRotationZ by infiniteTransition.animateFloat(
-                    initialValue = 360f, targetValue = 0f,
-                    animationSpec = infiniteRepeatable(tween(12000, easing = LinearEasing), RepeatMode.Restart),
-                    label = "GoldRotate"
-                )
+        gameViewModel.pieces.filter { it.state != PieceState.CAPTURED }.forEach { piece ->
+            key(piece.id) {
+                val isDying = (piece.state == PieceState.BEING_CAPTURED)
+                val captureRotation by animateFloatAsState(targetValue = if (isDying) 720f else 0f, animationSpec = tween(1200, easing = LinearOutSlowInEasing), label = "")
+                val targetX = piece.pos.x * cellWidth
+                val targetY = piece.pos.y * cellHeight
+                val animOffset by animateIntOffsetAsState(targetValue = IntOffset(targetX.roundToInt(), targetY.roundToInt()), animationSpec = tween(durationMillis = gameViewModel.currentMoveDuration, easing = EaseOutQuart), label = "PieceSlide")
+                val captureScale by animateFloatAsState(targetValue = if (isDying) 0f else 1f, animationSpec = tween(800, easing = FastOutSlowInEasing), label = "")
+                val captureAlpha by animateFloatAsState(targetValue = if (isDying) 0f else 1f, animationSpec = tween(300), label = "")
+                val shouldPulse = (gameViewModel.gamePhase == GameWaitingFor.TAKE_PIECE) && (piece.owner != gameViewModel.currentPlayerId) && (piece.state == PieceState.IN_PLAY)
 
                 Box(
                     modifier = Modifier
                         .size(cellWidthDp, cellHeightDp)
-                        .offset { IntOffset(goldX.roundToInt(), goldY.roundToInt()) }
-                        .graphicsLayer {
-                            scaleX = goldScale
-                            scaleY = goldScale
-                            rotationZ = goldRotationZ
-                        },
+                        .offset { animOffset }
+                        .graphicsLayer { rotationZ = captureRotation; scaleX = captureScale; scaleY = captureScale; alpha = captureAlpha },
                     contentAlignment = Alignment.Center
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_touche_star),
-                        contentDescription = "Touche Point",
-                        modifier = Modifier.fillMaxSize(0.85f)
+                    PieceDesign(
+                        owner = piece.owner, pieceId = piece.id, isPulsing = shouldPulse, isAnimationEnabled = isAnimationEnabled,
+                        pieceX = animOffset.x.toFloat(), pieceY = animOffset.y.toFloat(), starX = starX, starY = starY, boardWidth = boardWidth, boardHeight = boardHeight, starPulseValue = goldScale
                     )
                 }
             }
+        }
 
-            // --- C: BÁBUK ---
-            gameViewModel.pieces.filter { it.state != PieceState.CAPTURED }.forEach { piece ->
-                key(piece.id) {
-                    val isDying = (piece.state == PieceState.BEING_CAPTURED)
-                    val captureRotation by animateFloatAsState(targetValue = if (isDying) 720f else 0f, animationSpec = tween(1200, easing = LinearOutSlowInEasing), label = "")
-                    val targetX = piece.pos.x * cellWidth
-                    val targetY = piece.pos.y * cellHeight
-                    val animOffset by animateIntOffsetAsState(targetValue = IntOffset(targetX.roundToInt(), targetY.roundToInt()), animationSpec = tween(durationMillis = 600, easing = FastOutSlowInEasing), label = "PieceSlide")
-                    val captureScale by animateFloatAsState(targetValue = if (isDying) 0f else 1f, animationSpec = tween(800, easing = FastOutSlowInEasing), label = "")
-                    val captureAlpha by animateFloatAsState(targetValue = if (isDying) 0f else 1f, animationSpec = tween(300), label = "")
-                    val shouldPulse = (gameViewModel.gamePhase == GameWaitingFor.TAKE_PIECE) && (piece.owner != gameViewModel.currentPlayerId) && (piece.state == PieceState.IN_PLAY)
+        Column(modifier = Modifier.fillMaxSize()) {
+            for (y in 0 until 7) {
+                Row(modifier = Modifier.weight(1f)) {
+                    for (x in 0 until 5) {
+                        val idx = y * 5 + x
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .pointerInput(Unit) {
+                                    val velocityTracker = VelocityTracker()
+                                    var dragAccumulator = Offset.Zero
 
-                    Box(
-                        modifier = Modifier
-                            .size(cellWidthDp, cellHeightDp)
-                            .offset { animOffset }
-                            .graphicsLayer {
-                                rotationZ = captureRotation
-                                scaleX = captureScale
-                                scaleY = captureScale
-                                alpha = captureAlpha
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        PieceDesign(owner = piece.owner, isPulsing = shouldPulse)
-                    }
-                }
-            }
-
-            // --- D: INPUT OVERLAY ---
-            Column(modifier = Modifier.fillMaxSize()) {
-                for (y in 0 until 7) {
-                    Row(modifier = Modifier.weight(1f)) {
-                        for (x in 0 until 5) {
-                            val idx = y * 5 + x
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxHeight()
-                                    .pointerInput(Unit) {
-                                        detectDragGestures(
-                                            onDragStart = { },
-                                            onDragEnd = { },
-                                            onDrag = { change, dragAmount ->
-                                                change.consume()
-                                                gameViewModel.handleSwipe(idx, dragAmount)
+                                    detectDragGestures(
+                                        onDragStart = {
+                                            if (gameViewModel.gamePhase == GameWaitingFor.MOVE_PIECE) {
+                                                velocityTracker.resetTracking()
+                                                dragAccumulator = Offset.Zero
                                             }
-                                        )
-                                    }
-                                    .clickable {
+                                        },
+                                        onDrag = { change, dragAmount ->
+                                            if (gameViewModel.gamePhase != GameWaitingFor.MOVE_PIECE) return@detectDragGestures
+
+                                            change.consume()
+                                            velocityTracker.addPosition(change.uptimeMillis, change.position)
+                                            dragAccumulator += dragAmount
+                                        },
+                                        onDragEnd = {
+                                            if (gameViewModel.gamePhase != GameWaitingFor.MOVE_PIECE) return@detectDragGestures
+
+                                            val velocity = velocityTracker.calculateVelocity()
+                                            val speed = sqrt(velocity.x.pow(2) + velocity.y.pow(2)) / 4f
+                                            val distance = sqrt(dragAccumulator.x.pow(2) + dragAccumulator.y.pow(2))
+
+                                            if ((distance >= 60f || speed >= 400f) && gameViewModel.board[idx] == gameViewModel.currentPlayerId) {
+                                                val clampedSpeed = speed.coerceIn(400f, 2000f)
+                                                val speedFraction = (clampedSpeed - 400) / 1600
+                                                val mappedDuration = 100f + (2000f * (1f - speedFraction).pow(2))
+                                                val simulatedDrag = dragAccumulator * 10f
+
+                                                gameViewModel.handleSwipe(idx, simulatedDrag, mappedDuration.toInt())
+                                            }
+                                        }
+                                    )
+                                }
+                                .clickable {
+                                    if (gameViewModel.gamePhase == GameWaitingFor.MOVE_PIECE || gameViewModel.gamePhase == GameWaitingFor.TAKE_PIECE) {
                                         gameViewModel.onCellClick(idx)
                                     }
-                            )
-                        }
-                    }
-                }
-            }
-        } // ITT VÉGE A BoxWithConstraints-nek!
-
-        // --- Dialógusok Hívása ---
-        if (showMenu) {
-            PauseMenuDialog(
-                onResume = { showMenu = false },
-                onNewGame = {
-                    gameViewModel.gamePhase = GameWaitingFor.SETUP
-                    showMenu = false
-                },
-                onOptions = {
-                    showMenu = false // Menü elrejtése
-                    showOptions = true // Beállítások megnyitása
-                },
-                onUndo = {
-                    gameViewModel.undo()
-                    showMenu = false
-                },
-                onExit = {
-                    activity?.finish()
-                    showMenu = false
-                }
-            )
-        }
-
-        // AZ ÚJ BEÁLLÍTÁSOK ABLAK MEGJELENÍTÉSE
-        if (showOptions) {
-            OptionsDialog(
-                settings = appSettings,
-                onSettingsChange = { appSettings = it }, // Itt mentjük el, ha valamit átkapcsolsz
-                onClose = { showOptions = false }
-            )
-        }
-        if (gameViewModel.gamePhase == GameWaitingFor.SETUP) {
-            SetupDialog(
-                onStart = { settings -> gameViewModel.startNewGame(settings) },
-                onCancel = { gameViewModel.gamePhase = GameWaitingFor.MOVE_PIECE }
-            )
-        }
-        if (gameViewModel.gamePhase == GameWaitingFor.GAME_OVER) {
-            // ÚJ: Teljes képernyős tűzijáték a háttérben, ha nyertél!
-            val isWin = gameViewModel.winner?.contains("You", ignoreCase = true) == true || gameViewModel.winner?.contains("Player", ignoreCase = true) == true
-            if (isWin) {
-                FireworksOverlay()
-            }
-
-            GameOverDialog(
-                winnerName = gameViewModel.winner ?: "",
-                onRestart = { gameViewModel.restartGame() }
-            )
-        }
-    } // ITT VÉGE A FŐ Column-nak!
-}
-@Composable
-fun PieceDesign(owner: Int, isPulsing: Boolean = false) {
-    val imageRes = if (owner == 1) R.drawable.ic_piece_p1 else R.drawable.ic_piece_p2
-    val infiniteTransition = rememberInfiniteTransition(label = "PieceAnim")
-
-    // 1. LÜKTETÉS ANIMÁCIÓ (Ha épp üthető a bábu)
-    val scale by if (isPulsing) {
-        infiniteTransition.animateFloat(
-            initialValue = 0.9f, targetValue = 1.1f,
-            animationSpec = infiniteRepeatable(animation = tween(800, easing = FastOutSlowInEasing), repeatMode = RepeatMode.Reverse),
-            label = "pulse"
-        )
-    } else {
-        remember { mutableFloatStateOf(1f) }
-    }
-
-    // 2. CSILLOGÁS (Shimmer) ANIMÁCIÓ
-    val shimmerProgress by infiniteTransition.animateFloat(
-        initialValue = -1f, targetValue = 3f,
-        animationSpec = infiniteRepeatable(animation = tween(4000, easing = LinearEasing), repeatMode = RepeatMode.Restart),
-        label = "shimmer"
-    )
-
-    // 3. ÚJ: LÉLEGZŐ AURA ANIMÁCIÓ
-    // Az EaseInOutSine a legtermészetesebb, "tüdőszerű" lélegzési görbe
-    val auraPhase by infiniteTransition.animateFloat(
-        initialValue = 0f, targetValue = 1f,
-        animationSpec = infiniteRepeatable(animation = tween(1500, easing = EaseInOutSine), repeatMode = RepeatMode.Reverse),
-        label = "aura"
-    )
-
-    // Játékosonként eltérő aura szín (P1 = Cián, P2 = Piros)
-    val auraColor = if (owner == 1) Color(0xFF00E5FF) else Color(0xFFE53935)
-
-    // FŐ KONTÉNER: A teljes dobozt pulzáltatjuk, ha üthető
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            },
-        contentAlignment = Alignment.Center
-    ) {
-
-        // --- ALSÓ RÉTEG: A LÉLEGZŐ AURA ---
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .drawBehind {
-                    val currentRadius = size.minDimension * (0.25f + (0.3f * auraPhase))
-
-                    val currentAlpha = 0.7f - (0.5f * auraPhase)
-                    val brush = androidx.compose.ui.graphics.Brush.radialGradient(
-                        0.0f to auraColor.copy(alpha = currentAlpha),
-                        0.6f to auraColor.copy(alpha = currentAlpha * 0.7f),
-                        1.0f to Color.Transparent,
-                        radius = currentRadius
-                    )
-
-                    drawCircle(brush = brush, radius = currentRadius)
-                }
-        )
-
-        // --- FELSŐ RÉTEG: A BÁBU ÉS A SHIMMER ---
-        Image(
-            painter = painterResource(id = imageRes),
-            contentDescription = "Game Piece",
-            modifier = Modifier
-                .fillMaxSize(0.85f)
-                .graphicsLayer {
-                    alpha = 0.99f // A Shimmer maszk miatt kell!
-                }
-                .drawWithContent {
-                    drawContent()
-                    if (shimmerProgress in -0.5f..1.5f) {
-                        val w = size.width
-                        val h = size.height
-                        val xOffset = w * shimmerProgress
-                        val yOffset = h * shimmerProgress
-                        val shimmerBrush = androidx.compose.ui.graphics.Brush.linearGradient(
-                            colors = listOf(Color.Transparent, Color.White.copy(alpha = 0.5f), Color.Transparent),
-                            start = androidx.compose.ui.geometry.Offset(xOffset, yOffset),
-                            end = androidx.compose.ui.geometry.Offset(xOffset + w * 0.4f, yOffset + h * 0.4f)
+                                }
                         )
-                        drawRect(brush = shimmerBrush, blendMode = androidx.compose.ui.graphics.BlendMode.SrcAtop)
                     }
                 }
-        )
+            }
+        }
     }
 }

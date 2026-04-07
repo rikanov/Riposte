@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="120mm"
+   height="120mm"
+   viewBox="0 0 120 120"
+   version="1.1"
+   id="svg1"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1">
+    <linearGradient
+       id="linearGradient10">
+      <stop
+         style="stop-color:#3e45f7;stop-opacity:1;"
+         offset="0"
+         id="stop11" />
+      <stop
+         style="stop-color:#06096b;stop-opacity:0.91852856;"
+         offset="1"
+         id="stop12" />
+    </linearGradient>
+    <linearGradient
+       id="swatch10">
+      <stop
+         style="stop-color:#3e45f7;stop-opacity:1;"
+         offset="0"
+         id="stop10" />
+    </linearGradient>
+    <linearGradient
+       id="swatch6">
+      <stop
+         style="stop-color:#10159b;stop-opacity:1;"
+         offset="0"
+         id="stop7" />
+    </linearGradient>
+    <radialGradient
+       xlink:href="#linearGradient10"
+       id="radialGradient12"
+       cx="107.7763"
+       cy="128.32269"
+       fx="107.7763"
+       fy="128.32269"
+       r="60"
+       gradientUnits="userSpaceOnUse" />
+  </defs>
+  <g
+     id="layer1"
+     transform="translate(-47.776299,-68.322693)">
+    <circle
+       style="fill:url(#radialGradient12);fill-opacity:1;stroke-width:0.600001"
+       id="path1"
+       cx="107.7763"
+       cy="128.32269"
+       r="60" />
+  </g>
+</svg>
