@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 
 enum class GameWaitingFor {
     SETUP,
+    TUTORIAL_WELCOME,
     MOVE_PIECE,
     TAKE_PIECE,
     ANIMATION,
@@ -52,8 +53,16 @@ data class GameStateSnapshot(
     val afterTouche: Boolean,
     val gamePhase: GameWaitingFor
 )
-
-
+enum class TutorialPhase {
+    NOT_ACTIVE,
+    SWIPE_TO_MOVE,
+    FREE_PLAY,
+    SHOW_TOUCHE,
+    WAIT_FOR_TOUCH,
+    SHOW_CAPTURE,
+    SHOW_WIN_COND,
+    FINISHED
+}
 enum class MenuScreen {
     MAIN,
     VS_AI_SETTINGS,

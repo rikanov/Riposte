@@ -29,7 +29,7 @@
     <string name="menu_new_match">NEW MATCH</string>
     <string name="menu_player_vs_ai">PLAYER VS AI</string>
     <string name="menu_2_local_players">2 LOCAL PLAYERS</string>
-    <string name="menu_how_to_play">HOW TO PLAY</string>
+    <string name="menu_how_to_play">QUICK TUTORIAL</string>
     <string name="menu_vs_ai_settings">VS AI SETTINGS</string>
     <string name="menu_ai_difficulty">AI Difficulty</string>
     <string name="menu_first_move">First Move</string>
@@ -58,4 +58,19 @@
     <string name="theme_title">CHOOSE THEME</string>
     <string name="theme_apply">APPLY</string>
     <string name="theme_cancel">CANCEL</string>
+
+    <string name="tutorial_welcome_title">HOW TO MOVE</string>
+    <string name="tutorial_welcome_desc">Swipe any piece to slide it.\nIt will only stop when it hits a wall or another piece.</string>
+    <string name="tutorial_tap_to_start">- TAP ANYWHERE TO START -</string>
+
+    <string name="app_slogan">Fencing-inspired, turn-based strategy</string>
+
+    <string name="menu_resume">Back</string>
+    <string name="menu_quick_tutorial">Tutorial</string>
+    <string name="menu_training_ai">Training with AI</string>
+    <string name="menu_local_players">Two Local Players</string>
+    <string name="menu_tournament">Tournament (soon)</string>
+    <string name="menu_online">Online (soon)</string>
+    <string name="menu_settings">Settings</string>
+    <string name="menu_exit">Exit</string>
 </resources>

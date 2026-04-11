@@ -1,6 +1,6 @@
+// GameViewModel.kt
 package hu.riposte.game
 
-import android.util.Log
 import androidx.compose.runtime.*
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.ViewModel
@@ -12,14 +12,17 @@ import kotlinx.coroutines.withContext
 import kotlin.math.*
 
 class GameViewModel : ViewModel() {
-    // A C++ motor számára
     val board = mutableStateListOf<Int>()
-    // A UI animáció számára (Stabil ID-kkal)
     val pieces = mutableStateListOf<Piece>()
 
     var playerCaptured by mutableStateOf(intArrayOf(0, 0, 0))
     var winner by mutableStateOf<String?>(null)
     var gamePhase by mutableStateOf(GameWaitingFor.SETUP)
+
+    var isTutorialMode by mutableStateOf(false)
+    var tutorialPhase by mutableStateOf(TutorialPhase.NOT_ACTIVE)
+    var tutorialMoveCount by mutableIntStateOf(0)
+
     var settings by mutableStateOf(GameSettings())
     var matchCount: Int = 0
     var currentMoveDuration by mutableIntStateOf(500)
@@ -32,10 +35,14 @@ class GameViewModel : ViewModel() {
     var soundEvent by mutableStateOf<SoundEvent?>(null)
         private set
 
+    // --- ÚJ: A HINT (JAVASLAT) ÁLLAPOTA ---
+    var activeHint by mutableStateOf<MoveData?>(null)
+
     fun triggerSound(type: SoundType, playerId: Int) {
         soundEvent = SoundEvent(type, playerId)
     }
     private val undoStack = mutableListOf<GameStateSnapshot>()
+
     init { resetBoard() }
 
     private fun resetBoard() {
@@ -51,40 +58,37 @@ class GameViewModel : ViewModel() {
             board[i] = 2
             pieces.add(Piece(id = i, owner = 2, pos = Coord.fromIndex(i)))
         }
-        board[17] = 4 // Arany bábu kezdőhelye
+        board[17] = 4
         playerCaptured = intArrayOf(0, 0, 0)
+        activeHint = null // Töröljük a tippet
         undoStack.clear()
     }
-    // --- SZINKRONIZÁLT MOZGÁS (Módosítva dinamikus idővel) ---
-    // Hozzáadtunk egy 'duration' paramétert!
+
     private fun synchronizeMove(fromIdx: Int, toIdx: Int, owner: Int, duration: Int = 500) {
         val hitTouche = board[toIdx] == 4
-
         board[fromIdx] = 0
         board[toIdx] = owner
 
-        val pieceIdx =
-            pieces.indexOfFirst { it.pos == Coord.fromIndex(fromIdx) && it.state != PieceState.CAPTURED }
-        if (pieceIdx != -1) {
-            pieces[pieceIdx] = pieces[pieceIdx].copy(pos = Coord.fromIndex(toIdx))
-        }
+        val pieceIdx = pieces.indexOfFirst { it.pos == Coord.fromIndex(fromIdx) && it.state != PieceState.CAPTURED }
+        if (pieceIdx != -1) pieces[pieceIdx] = pieces[pieceIdx].copy(pos = Coord.fromIndex(toIdx))
 
         viewModelScope.launch {
-            // A csúszás hangja AZONNAL indul (mert az a surlódás hangja)
             triggerSound(SoundType.MOVE, owner)
-
-            // Megvárjuk, amíg a bábu TÉNYLEG odaér a célmezőre!
             delay(duration.toLong())
 
             if (hitTouche) {
                 gamePhase = GameWaitingFor.TAKE_PIECE
+                if (isTutorialMode && (tutorialPhase == TutorialPhase.WAIT_FOR_TOUCH || tutorialPhase == TutorialPhase.SHOW_TOUCHE)) {
+                    tutorialPhase = TutorialPhase.SHOW_CAPTURE
+                }
             } else {
                 finalizeTurn()
             }
         }
     }
-    // --- HANDLE SWIPE (Módosítva dinamikus idővel) ---
-    fun handleSwipe(index: Int, dragAmount: Offset, duration: Int) { // <-- Új paraméter!
+
+    fun handleSwipe(index: Int, dragAmount: Offset, duration: Int) {
+        activeHint = null // Érintésre eltűnik a tipp
         if (gamePhase != GameWaitingFor.MOVE_PIECE || board[index] != currentPlayerId) return
 
         val x = dragAmount.x
@@ -107,43 +111,40 @@ class GameViewModel : ViewModel() {
     }
 
     fun onCellClick(index: Int) {
+        activeHint = null // Érintésre eltűnik a tipp
         if (gamePhase == GameWaitingFor.TAKE_PIECE && board[index] == 3 - currentPlayerId) {
-            val pIdx =
-                pieces.indexOfFirst { it.pos == Coord.fromIndex(index) && it.state != PieceState.CAPTURED }
+            val pIdx = pieces.indexOfFirst { it.pos == Coord.fromIndex(index) && it.state != PieceState.CAPTURED }
             if (pIdx != -1) {
                 viewModelScope.launch {
                     triggerSound(SoundType.TOUCHE, currentPlayerId)
-                    // 1. Fázis: Haláltusa indul
                     pieces[pIdx] = pieces[pIdx].copy(state = PieceState.BEING_CAPTURED)
-
                     board[index] = 4
                     afterTouche = true
                     playerCaptured[currentPlayerId]++
-
                     gamePhase = GameWaitingFor.ANIMATION
                     delay(300)
-
-                    // 2. Fázis: Végleg eltűnik
-                    pieces[pIdx] = pieces[pIdx].copy(
-                        state = PieceState.CAPTURED,
-                        pos = Coord.Invalid
-                    )
+                    pieces[pIdx] = pieces[pIdx].copy(state = PieceState.CAPTURED, pos = Coord.Invalid)
 
                     if (playerCaptured[currentPlayerId] >= 2) {
                         triggerSound(SoundType.WIN, currentPlayerId)
                         winner = "You won!"; gamePhase = GameWaitingFor.GAME_OVER
                     } else {
-                        finalizeTurn()
+                        if (isTutorialMode && (tutorialPhase == TutorialPhase.SHOW_CAPTURE || tutorialPhase == TutorialPhase.WAIT_FOR_TOUCH)) {
+                            tutorialPhase = TutorialPhase.SHOW_WIN_COND
+                        } else {
+                            finalizeTurn()
+                        }
                     }
                 }
             }
         }
     }
+
+    fun resumeTutorialTurn() { finalizeTurn() }
+
     private fun finalizeTurn() {
         viewModelScope.launch {
-
             delay(350)
-
             if (settings.gameMode == GameMode.VS_AI) {
                 aiStep()
             } else {
@@ -152,36 +153,37 @@ class GameViewModel : ViewModel() {
             }
         }
     }
-        // --- AI LÉPÉS ÉS SZEMÉLYISÉG ---
+
+    // --- ÚJ: HINT KÉRÉSE A C++ MOTORTÓL ---
+    fun requestHint() {
+        if (gamePhase != GameWaitingFor.MOVE_PIECE) return
+
+        viewModelScope.launch {
+            // A háttérszálon számoljuk, hogy ne akadjon meg a UI!
+            val move = withContext(Dispatchers.Default) {
+                getBestStepNative(board.toIntArray(), currentPlayerId, 7, settings.riposteAllowed) // 7-es mélység
+            }
+            if (move.from != -1) {
+                activeHint = move
+            }
+        }
+    }
+
     private fun aiStep() {
         gamePhase = GameWaitingFor.AI_MOVE
         viewModelScope.launch {
-
-            // 1. Időmérés kezdete
             val startTime = System.currentTimeMillis()
-
-            // AI Gondolkodás (C++ hívás a háttérszálon)
             val move = withContext(Dispatchers.Default) {
                 getBestStepNative(board.toIntArray(), 1, settings.difficulty, settings.riposteAllowed)
             }
-
-            // 2. Időmérés vége és Várakozási idő kiszámítása
             val thinkTime = System.currentTimeMillis() - startTime
+            if (thinkTime < 600) delay(600 - thinkTime)
 
-            // Ha az AI túl gyors volt (pl. első lépés vagy azonnali matt),
-            // hagyunk egy kis emberi "késleltetést" (minimum 600ms gondolkodás)
-            if (thinkTime < 600) {
-                delay(600 - thinkTime)
-            }
-
-            // 3. Az AI "Érzelmi" Leképezése (Mapping)
             val clampedThinkTime = thinkTime.coerceIn(500, 5000).toFloat()
             val thinkFraction = (clampedThinkTime - 500f) / 4500f
-
-            // Az AI animációs ideje 250ms (agresszív) és 1200ms (nagyon komótos) között fog mozogni
             val aiMoveDuration = (250f + (950f * thinkFraction)).toInt()
             currentMoveDuration = aiMoveDuration
-            // Végrehajtjuk a lépést a dinamikus idővel!
+
             applyAiMove(move, aiMoveDuration)
 
             if (playerCaptured[1] >= 2) {
@@ -190,23 +192,22 @@ class GameViewModel : ViewModel() {
             } else {
                 gamePhase = GameWaitingFor.MOVE_PIECE
                 currentPlayerId = 2
+
+                if (isTutorialMode && tutorialPhase == TutorialPhase.FREE_PLAY) {
+                    tutorialMoveCount++
+                    if (tutorialMoveCount == 2) tutorialPhase = TutorialPhase.SHOW_TOUCHE
+                }
             }
         }
     }
 
     private suspend fun applyAiMove(move: MoveData, duration: Int) {
-        if (board[move.to] == 4) {
-            playerCaptured[1]++
-            afterTouche = true
-        }
+        if (board[move.to] == 4) { playerCaptured[1]++; afterTouche = true }
 
         val pIdx = pieces.indexOfFirst { it.pos == Coord.fromIndex(move.from) && it.state != PieceState.CAPTURED }
         if (pIdx != -1) pieces[pIdx] = pieces[pIdx].copy(pos = Coord.fromIndex(move.to))
 
-        // Csúszás hangja indul
         triggerSound(SoundType.MOVE, 1)
-
-        // Várakozás a kiszámolt, dinamikus ideig, amíg a bábu odaér!
         delay(duration.toLong())
 
         val isCapture = move.hotSpot != move.to && board[move.hotSpot] != 4
@@ -214,9 +215,7 @@ class GameViewModel : ViewModel() {
 
         if (isCapture) {
             capturedIdx = pieces.indexOfFirst { it.pos == Coord.fromIndex(move.hotSpot) && it.state != PieceState.CAPTURED }
-            if (capturedIdx != -1) {
-                pieces[capturedIdx] = pieces[capturedIdx].copy(state = PieceState.BEING_CAPTURED)
-            }
+            if (capturedIdx != -1) pieces[capturedIdx] = pieces[capturedIdx].copy(state = PieceState.BEING_CAPTURED)
         }
 
         board[move.from] = 0
@@ -225,11 +224,12 @@ class GameViewModel : ViewModel() {
 
         if (isCapture && capturedIdx != -1) {
             triggerSound(SoundType.TOUCHE, 1)
-            delay(600) // Haláltusa megvárása
+            delay(600)
             pieces[capturedIdx] = pieces[capturedIdx].copy(state = PieceState.CAPTURED, pos = Coord.Invalid)
         }
     }
-    private fun getOffsetFromAngle(angle: Double): Int? {
+
+    fun getOffsetFromAngle(angle: Double): Int? {
         return when {
             angle >= -22.5 && angle < 22.5 -> 1
             angle >= 22.5 && angle < 67.5 -> 6
@@ -243,7 +243,6 @@ class GameViewModel : ViewModel() {
         }
     }
 
-    // --- RESTART ÉS UNDO ---
     fun restartGame() {
         resetBoard()
         currentPlayerId = when( settings.startingPlayer ) {
@@ -258,6 +257,7 @@ class GameViewModel : ViewModel() {
             gamePhase = GameWaitingFor.MOVE_PIECE
         }
     }
+
     private fun saveState() {
         undoStack.add(
             GameStateSnapshot(
@@ -270,21 +270,19 @@ class GameViewModel : ViewModel() {
             )
         )
     }
+
     fun undo() {
         if (undoStack.isNotEmpty()) {
             val lastState = undoStack.removeAt(undoStack.size - 1)
-
-            // Visszatöltés
             board.clear()
             board.addAll(lastState.board.toTypedArray())
-
             pieces.clear()
             pieces.addAll(lastState.pieces)
-
             playerCaptured = lastState.playerCaptured
             currentPlayerId = lastState.currentPlayerId
             afterTouche = lastState.afterTouche
             gamePhase = lastState.gamePhase
+            activeHint = null // Undo esetén is töröljük
         }
     }
 
@@ -294,8 +292,19 @@ class GameViewModel : ViewModel() {
         restartGame()
     }
 
-    private external fun getBestStepNative(b: IntArray, p: Int, d: Int, r: Boolean): MoveData
-    companion object {
-        init { System.loadLibrary("riposte") }
+    fun startTutorial() {
+        isTutorialMode = true
+        tutorialPhase = TutorialPhase.FREE_PLAY
+        tutorialMoveCount = 0
+        settings = GameSettings(
+            gameMode = GameMode.VS_AI,
+            startingPlayer = StartingPlayer.PLAYER,
+            difficulty = 4,
+            riposteAllowed = true
+        )
+        restartGame()
     }
+
+    private external fun getBestStepNative(b: IntArray, p: Int, d: Int, r: Boolean): MoveData
+    companion object { init { System.loadLibrary("riposte") } }
 }

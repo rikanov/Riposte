@@ -14,20 +14,24 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
+import androidx.compose.foundation.Canvas
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
+import kotlin.math.PI
 
 @Composable
 fun PieceDesign(
     owner: Int,
     pieceId: Int,
     isPulsing: Boolean = false,
-    isAnimationEnabled: Boolean = true, // <-- ÚJ PARAMÉTER (Alapértelmezetten true)
+    isAnimationEnabled: Boolean = true,
     pieceX: Float,
     pieceY: Float,
     starX: Float?,
@@ -44,7 +48,7 @@ fun PieceDesign(
     val infiniteTransition = rememberInfiniteTransition(label = "PieceAnim")
     val timeOffset = pieceId * 400
 
-    // 1. BASE SIZE & PULSE (Ez marad, mert jelzi, hogy melyik bábura lehet rákattintani)
+    // 1. BASE SIZE & PULSE
     val scale by if (isPulsing) {
         infiniteTransition.animateFloat(
             initialValue = 0.75f, targetValue = 0.95f,
@@ -55,34 +59,39 @@ fun PieceDesign(
         remember { mutableFloatStateOf(0.8f) }
     }
 
-    // 2. BREATHING AURA (Kiszámoljuk, de csak akkor használjuk, ha az animáció be van kapcsolva)
+    // 2. BREATHING AURA
     val baseAuraPhase by infiniteTransition.animateFloat(
         initialValue = 0f, targetValue = 1f,
         animationSpec = infiniteRepeatable(tween(2000, easing = EaseInOutSine), RepeatMode.Reverse, initialStartOffset = StartOffset(timeOffset)),
         label = "aura"
     )
-    val auraPhase = if (isAnimationEnabled) baseAuraPhase else 0.5f // Ha ki van kapcsolva, egy fix, köztes ragyogást kap
+    val auraPhase = if (isAnimationEnabled) baseAuraPhase else 0.5f
 
-    // 3. HOVERING UP AND DOWN (Súlytalan lebegés)
+    // 3. HOVERING UP AND DOWN (A bábu lebeg, az árnyék a földön marad!)
     val baseHoverY by infiniteTransition.animateFloat(
         initialValue = -7.5f, targetValue = 7.5f,
         animationSpec = infiniteRepeatable(tween(2000, easing = EaseInOutSine), RepeatMode.Reverse, initialStartOffset = StartOffset(timeOffset)),
         label = "hoverY"
     )
-    val hoverY = if (isAnimationEnabled) baseHoverY else 0f // Földbe gyökerezik, ha ki van kapcsolva!
+    val hoverY = if (isAnimationEnabled) baseHoverY else 0f
 
-    // 4. SUBTLE WOBBLE (Finom billegés a levegőben)
+    // 4. SUBTLE WOBBLE
     val baseHoverRotation by infiniteTransition.animateFloat(
         initialValue = -5.5f, targetValue = 5.5f,
         animationSpec = infiniteRepeatable(tween(2700, easing = EaseInOutSine), RepeatMode.Reverse, initialStartOffset = StartOffset(timeOffset)),
         label = "wobble"
     )
-    val hoverRotation = if (isAnimationEnabled) baseHoverRotation else 0f // Fixen áll, ha ki van kapcsolva!
+    val hoverRotation = if (isAnimationEnabled) baseHoverRotation else 0f
 
-    // --- 2.5D LIGHT MATHEMATICS (No Shadows, pure reflection) ---
+    // --- 2.5D LIGHT & SHADOW MATHEMATICS ---
     var finalLightAlpha = 0.3f
     var lightOffsetX = 0f
     var lightOffsetY = -0.5f
+
+    var shadowOffsetX = 0f
+    var shadowOffsetY = 0f
+    var shadowStretch = 1f
+    var shadowAlpha = 0f
 
     if (starX != null && starY != null) {
         val dx = starX - pieceX
@@ -91,74 +100,123 @@ fun PieceDesign(
         val maxDistance = sqrt(boardWidth * boardWidth + boardHeight * boardHeight)
 
         val distanceRatio = (distance / maxDistance).coerceIn(0f, 1f)
-        val angleToStar = atan2(dy, dx)
+        val angleToStar = atan2(dy, dx).toFloat()
         val normalizedPulse = ((starPulseValue - 0.8f) * 5f).coerceIn(0f, 1f)
 
-        // Light intensity logic (Syncs with star)
+        // Fény intenzitás
         val distanceFade = 1f - distanceRatio
         val baseIntensity = distanceFade.coerceIn(0.2f, 0.9f)
         finalLightAlpha = baseIntensity * (0.3f + 0.7f * normalizedPulse)
 
-        // HIGHLIGHT OFFSET: Agresszívabb eltolás a bábu pereme felé!
+        // Fény eltolása a bábun
         val offsetFactor = (distanceRatio * 2.2f).coerceIn(0f, 1.2f)
         lightOffsetX = cos(angleToStar) * offsetFactor
         lightOffsetY = sin(angleToStar) * offsetFactor
+
+        // --- SHADOW LOGIC ---
+        // Az árnyék pontosan ellentétes a fényforrással
+        val shadowAngle = angleToStar + PI.toFloat()
+
+        // Ha távolabb van, jobban megnyúlik az árnyék
+        shadowStretch = 1f + (distanceRatio * 1.5f)
+
+        // SOKKAL sötétebb árnyék: 95%-os feketéről indul!
+        shadowAlpha = (0.95f - (distanceRatio * 0.3f)) * (0.8f + 0.2f * normalizedPulse)
+
+        // Az árnyék elcsúszása (max 50 pixel)
+        val maxShadowOffsetPx = 50f
+        shadowOffsetX = cos(shadowAngle) * (distanceRatio * maxShadowOffsetPx)
+        shadowOffsetY = sin(shadowAngle) * (distanceRatio * maxShadowOffsetPx)
     }
 
-    // MAIN CONTAINER (Minden együtt lebeg és mozog)
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-                translationY = hoverY // Dinamikusan 0 vagy animált
-                rotationZ = hoverRotation // Dinamikusan 0 vagy animált
-            },
-        contentAlignment = Alignment.Center
-    ) {
+    // MAIN CONTAINER: szétválasztjuk az árnyékot és a lebegő bábut!
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
 
-        // --- LAYER 1: AURA ---
-        Box(
-            modifier = Modifier.fillMaxSize().drawBehind {
-                val currentRadius = size.minDimension * (0.25f + (0.3f * auraPhase))
-                val currentAlpha = 0.7f - (0.5f * auraPhase)
-                val brush = androidx.compose.ui.graphics.Brush.radialGradient(
-                    0.0f to auraColor.copy(alpha = currentAlpha),
-                    0.6f to auraColor.copy(alpha = currentAlpha * 0.7f),
-                    1.0f to Color.Transparent,
-                    radius = currentRadius
+        // --- LAYER 0: STATIONARY DROP SHADOW (A talajon marad) ---
+        if (starX != null && starY != null) {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                // A bábu méretéhez igazítjuk a sugárt
+                val shadowRadius = size.width * 0.35f * scale
+
+                val shadowCenter = Offset(
+                    x = (size.width / 2f) + shadowOffsetX,
+                    // Egy kis extra Y eltolás, hogy alapból is a bábu talpa "alatt" legyen vizuálisan
+                    y = (size.height / 2f) + shadowOffsetY + (size.height * 0.15f)
                 )
-                drawCircle(brush = brush, radius = currentRadius)
-            }
-        )
 
-        // --- LAYER 2: THE PIECE & DYNAMIC HIGHLIGHT ---
-        Image(
-            painter = painterResource(id = imageRes),
-            contentDescription = "Game Piece",
-            modifier = Modifier
-                .fillMaxSize(0.85f)
-                .drawWithContent {
-                    drawContent()
-
-                    val r = size.minDimension / 2f
-                    val lightCenter = Offset(
-                        x = size.width / 2f + lightOffsetX * r,
-                        y = size.height / 2f + lightOffsetY * r
-                    )
-
-                    val lightBrush = androidx.compose.ui.graphics.Brush.radialGradient(
-                        colors = listOf(
-                            Color.White.copy(alpha = finalLightAlpha),
-                            Color.Transparent
+                // Varázslat: Összenyomjuk a vásznat Y tengelyen, így a kör színátmenetből tökéletes elipszis lesz!
+                withTransform({
+                    translate(left = shadowCenter.x, top = shadowCenter.y)
+                    scale(scaleX = 1f, scaleY = 0.35f * shadowStretch) // 0.35 = lapítás aránya
+                }) {
+                    drawCircle(
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                Color.Black.copy(alpha = shadowAlpha), // Fekete mag
+                                Color.Transparent                      // Lágyan eltűnő szél
+                            ),
+                            radius = shadowRadius
                         ),
-                        center = lightCenter,
-                        radius = r * 1.3f // Széles, lágy fénysugár
+                        radius = shadowRadius
                     )
-
-                    drawCircle(brush = lightBrush, blendMode = BlendMode.Overlay)
                 }
-        )
+            }
+        }
+
+        // --- LAYER 1 & 2: HOVERING PIECE (A lebegő konténer) ---
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                    translationY = hoverY // Ez emeli fel a bábut a talajról (árnyékról)!
+                    rotationZ = hoverRotation
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            // AURA
+            Box(
+                modifier = Modifier.fillMaxSize().drawBehind {
+                    val currentRadius = size.minDimension * (0.25f + (0.3f * auraPhase))
+                    val currentAlpha = 0.7f - (0.5f * auraPhase)
+                    val brush = Brush.radialGradient(
+                        0.0f to auraColor.copy(alpha = currentAlpha),
+                        0.6f to auraColor.copy(alpha = currentAlpha * 0.7f),
+                        1.0f to Color.Transparent,
+                        radius = currentRadius
+                    )
+                    drawCircle(brush = brush, radius = currentRadius)
+                }
+            )
+
+            // PIECE & HIGHLIGHT
+            Image(
+                painter = painterResource(id = imageRes),
+                contentDescription = "Game Piece",
+                modifier = Modifier
+                    .fillMaxSize(0.85f)
+                    .drawWithContent {
+                        drawContent()
+
+                        val r = size.minDimension / 2f
+                        val lightCenter = Offset(
+                            x = size.width / 2f + lightOffsetX * r,
+                            y = size.height / 2f + lightOffsetY * r
+                        )
+
+                        val lightBrush = Brush.radialGradient(
+                            colors = listOf(
+                                Color.White.copy(alpha = finalLightAlpha),
+                                Color.Transparent
+                            ),
+                            center = lightCenter,
+                            radius = r * 1.3f
+                        )
+
+                        drawCircle(brush = lightBrush, blendMode = BlendMode.Overlay)
+                    }
+            )
+        }
     }
 }
