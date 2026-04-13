@@ -3,7 +3,8 @@ project("riposte")
 
 add_library(${CMAKE_PROJECT_NAME} SHARED
     native-lib.cpp
-    riposte_engine.cpp)
+    riposte_engine.cpp
+    riposte_tt_engine.cpp)
 
 target_link_libraries(${CMAKE_PROJECT_NAME}
     android

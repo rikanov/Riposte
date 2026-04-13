@@ -23,6 +23,11 @@ fun RiposteApp() {
 
         composable(Screen.Main.route) {
             MainScreen(
+                isInterruptedGame = gameViewModel.isInterruptedGame,
+                gameViewModel = gameViewModel,
+                onResumeGame = {
+                    navController.navigate(Screen.Game.route) { launchSingleTop = true }
+                },
                 onNavigateToTournament = {
                     // Később
                 },
@@ -32,15 +37,6 @@ fun RiposteApp() {
                     navController.navigate(Screen.Game.route) { launchSingleTop = true }
                 },
                 onNavigateToAiTraining = {
-                    // AZONNALI INDÍTÁS: AI Mód, Váltakozó kezdés, Fix Depth=9
-                    gameViewModel.startNewGame(
-                        GameSettings(
-                            gameMode = GameMode.VS_AI,
-                            startingPlayer = StartingPlayer.ALTERNATING,
-                            difficulty = 9,
-                            riposteAllowed = gameViewModel.settings.riposteAllowed
-                        )
-                    )
                     navController.navigate(Screen.Game.route) { launchSingleTop = true }
                 },
                 onNavigateToLocal = {

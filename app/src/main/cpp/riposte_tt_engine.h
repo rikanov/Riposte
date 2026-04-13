@@ -6,11 +6,10 @@
 #include <atomic>
 #include <thread>
 #include <vector>
-
+#include "adapter_struct.h"
 typedef unsigned int uint;
-typedef std::array<int, 3> MoveData;
 
-class RiposteEngine {
+class Riposte_TT_Engine {
 public:
     static void init();
     static MoveData getBestStep(const int * board, const int playerID, const uint depth, const bool riposte);

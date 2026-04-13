@@ -1,4 +1,4 @@
-#include "riposte_engine.h"
+#include "riposte_tt_engine.h"
 #include <random>
 #include <algorithm>
 #include <chrono>
@@ -13,16 +13,16 @@ static int allowRiposte = true;
 static inline int sgn(int x) {
     return (x > 0) - (x < 0);
 }
-std::atomic<bool> RiposteEngine::stopSearch{false};
+std::atomic<bool> Riposte_TT_Engine::stopSearch{false};
 // --- ZOBRIST STATICS ---
-uint64_t RiposteEngine::zobristP1[64];
-uint64_t RiposteEngine::zobristP2[64];
-uint64_t RiposteEngine::zobristHotSpot[64];
-uint64_t RiposteEngine::zobristTurn;
-bool RiposteEngine::isZobristInitialized = false;
-RiposteEngine::TTEntry RiposteEngine::transpositionTable[TT_SIZE];
+uint64_t Riposte_TT_Engine::zobristP1[64];
+uint64_t Riposte_TT_Engine::zobristP2[64];
+uint64_t Riposte_TT_Engine::zobristHotSpot[64];
+uint64_t Riposte_TT_Engine::zobristTurn;
+bool Riposte_TT_Engine::isZobristInitialized = false;
+Riposte_TT_Engine::TTEntry Riposte_TT_Engine::transpositionTable[TT_SIZE];
 
-void RiposteEngine::init()
+void Riposte_TT_Engine::init()
 {
     if (isZobristInitialized) return;
 
@@ -40,7 +40,7 @@ void RiposteEngine::init()
     isZobristInitialized = true;
 }
 
-uint64_t RiposteEngine::computeHash(uint64_t set1, uint64_t set2, uint64_t hotSpot, bool isP1) noexcept
+uint64_t Riposte_TT_Engine::computeHash(uint64_t set1, uint64_t set2, uint64_t hotSpot, bool isP1) noexcept
 {
     uint64_t hash = isP1 ? zobristTurn : 0;
 
@@ -63,7 +63,7 @@ uint64_t RiposteEngine::computeHash(uint64_t set1, uint64_t set2, uint64_t hotSp
     return hash;
 }
 
-constexpr uint64_t RiposteEngine::ballMask(uint64_t set, int index)
+constexpr uint64_t Riposte_TT_Engine::ballMask(uint64_t set, int index)
 {
     uint64_t mask = 0;
     do {
@@ -73,14 +73,14 @@ constexpr uint64_t RiposteEngine::ballMask(uint64_t set, int index)
     return mask;
 }
 
-constexpr uint64_t RiposteEngine::take(uint64_t& set, const uint ballID) noexcept
+constexpr uint64_t Riposte_TT_Engine::take(uint64_t& set, const uint ballID) noexcept
 {
     const uint64_t hotSpot = ballMask(set, ballID);
     set &= ~hotSpot;
     return hotSpot;
 }
 
-bool RiposteEngine::step(uint64_t& set1, const uint64_t set2, const uint stepID) noexcept
+bool Riposte_TT_Engine::step(uint64_t& set1, const uint64_t set2, const uint stepID) noexcept
 {
     const uint bitShift = (0x1876 >> ( (stepID & 3) << 2)) & 0xF;
     uint64_t ball = ballMask( set1, stepID >> 3 );
@@ -99,7 +99,7 @@ bool RiposteEngine::step(uint64_t& set1, const uint64_t set2, const uint stepID)
     return currentPos != ball;
 }
 
-int RiposteEngine::captureSearch(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, int alfa, int beta, const int depth, bool isP1, uint64_t hash) noexcept
+int Riposte_TT_Engine::captureSearch(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, int alfa, int beta, const int depth, bool isP1, uint64_t hash) noexcept
 {
     if( __builtin_popcountll(set2) == 4) {
         return WIN;
@@ -125,12 +125,12 @@ int RiposteEngine::captureSearch(const uint64_t set1, const uint64_t set2, const
 
         if(bestScore < score) { bestScore = score; }
         alfa = std::max(alfa, score);
-        if( score > 0 || alfa >= beta) { break; }
+        if( alfa >= beta) { break; }
     }
     return bestScore - sgn(bestScore);
 }
 
-int RiposteEngine::captureRoot(const uint64_t set1, const uint64_t set2, uint64_t & hotSpot, const int depth, bool isP1, uint64_t hash) noexcept
+int Riposte_TT_Engine::captureRoot(const uint64_t set1, const uint64_t set2, uint64_t & hotSpot, const int depth, bool isP1, uint64_t hash) noexcept
 {
     if( __builtin_popcountll(set2) == 4) {
         hotSpot = set2 & -set2;
@@ -164,14 +164,14 @@ int RiposteEngine::captureRoot(const uint64_t set1, const uint64_t set2, uint64_
     return bestScore - sgn(bestScore);
 }
 
-int RiposteEngine::getIndex(uint64_t mask)
+int Riposte_TT_Engine::getIndex(uint64_t mask)
 {
     const int x = __builtin_clzll(mask) % 7 - 2;
     const int y = __builtin_clzll(mask) / 7 - 1;
     return x + 5 * y;
 }
 
-MoveData RiposteEngine::getCompactMoveData(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot)
+MoveData Riposte_TT_Engine::getCompactMoveData(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot)
 {
     MoveData move;
     const uint64_t from = ballMask( (set1 ^ set2) & set1, 0 );
@@ -182,7 +182,7 @@ MoveData RiposteEngine::getCompactMoveData(const uint64_t set1, const uint64_t s
     return move;
 }
 
-int RiposteEngine::searchRestrict(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, int alfa, int beta, const int depth, bool isP1, uint64_t hash) noexcept
+int Riposte_TT_Engine::searchRestrict(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, int alfa, int beta, const int depth, bool isP1, uint64_t hash) noexcept
 {
     if( 0 == depth ) return 0;
     if ( (++nodeCounter & 2047) == 0 && (stopSearch.load(std::memory_order_relaxed)) ) return 0;
@@ -218,7 +218,7 @@ int RiposteEngine::searchRestrict(const uint64_t set1, const uint64_t set2, cons
         bestScore = std::max(bestScore, score);
         alfa = std::max(alfa, score);
 
-        if( score > 0 || alfa >= beta) { break; }
+        if( alfa >= beta) { break; }
     }
 
     int finalScore = bestScore - sgn(bestScore);
@@ -241,7 +241,7 @@ int RiposteEngine::searchRestrict(const uint64_t set1, const uint64_t set2, cons
     return finalScore;
 }
 
-int RiposteEngine::search(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, int alfa, int beta, const int depth, bool isP1, uint64_t hash) noexcept
+int Riposte_TT_Engine::search(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, int alfa, int beta, const int depth, bool isP1, uint64_t hash) noexcept
 {
     if( 0 == depth ) return 0;
     if ( (++nodeCounter & 2047) == 0 && (stopSearch.load(std::memory_order_relaxed)) ) return 0;
@@ -279,7 +279,7 @@ int RiposteEngine::search(const uint64_t set1, const uint64_t set2, const uint64
             bestScore = std::max(bestScore, score);
             alfa = std::max(alfa, score);
 
-            if( score > 0 || alfa >= beta) { break; }
+            if( alfa >= beta) { break; }
         }
     }
 
@@ -302,7 +302,7 @@ int RiposteEngine::search(const uint64_t set1, const uint64_t set2, const uint64
 
     return finalScore;
 }
-MoveData RiposteEngine::searchIDA(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, bool isP1, int threadID)
+MoveData Riposte_TT_Engine::searchIDA(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, bool isP1, int threadID)
 {
     uint64_t deadBranches = 0;
     MoveData bestMove;
@@ -379,7 +379,7 @@ MoveData RiposteEngine::searchIDA(const uint64_t set1, const uint64_t set2, cons
     }
     return bestMove;
 }
-MoveData RiposteEngine::getBestStep(const int * board, const int playerID, const uint depth, const bool riposte)
+MoveData Riposte_TT_Engine::getBestStep(const int * board, const int playerID, const uint depth, const bool riposte)
 {
     init();
     maxDepth = depth;

@@ -67,8 +67,8 @@
 
     <string name="menu_resume">Back</string>
     <string name="menu_quick_tutorial">Tutorial</string>
-    <string name="menu_training_ai">Training with AI</string>
-    <string name="menu_local_players">Two Local Players</string>
+    <string name="menu_training_ai">Player vs Ai</string>
+    <string name="menu_local_players">Local Players</string>
     <string name="menu_tournament">Tournament (soon)</string>
     <string name="menu_online">Online (soon)</string>
     <string name="menu_settings">Settings</string>

@@ -1,5 +1,6 @@
 #include <jni.h>
 #include "riposte_engine.h"
+#include "riposte_tt_engine.h"
 #include <android/log.h>
 #define LOG_TAG "RiposteEngine"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
@@ -33,4 +34,23 @@ extern "C" {
                               (jint)result[1],  // to
                               (jint)result[2]); // hotspot
     }
+}
+
+extern "C" JNIEXPORT jobject JNICALL
+Java_hu_riposte_game_GameViewModel_getBestStepNativeTT(
+        JNIEnv *env,
+        jobject /* this */,
+        jintArray b,
+        jint p,
+        jint d,
+        jboolean r) {
+
+    jint *board = env->GetIntArrayElements(b, nullptr);
+    MoveData bestMove = Riposte_TT_Engine::getBestStep(board, p, d, r);
+
+    env->ReleaseIntArrayElements(b, board, JNI_ABORT);
+    jclass moveDataClass = env->FindClass("hu/riposte/game/MoveData");
+    jmethodID constructor = env->GetMethodID(moveDataClass, "<init>", "(III)V");
+
+    return env->NewObject(moveDataClass, constructor, bestMove[0], bestMove[1], bestMove[2]);
 }

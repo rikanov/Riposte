@@ -1,8 +1,5 @@
 package hu.riposte.game
 
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-
 enum class GameWaitingFor {
     SETUP,
     TUTORIAL_WELCOME,
@@ -79,4 +76,13 @@ data class SoundEvent(
     val playerId: Int,
     val triggerId:
     Long = System.currentTimeMillis()
+)
+enum class CombatTextType {
+    RIPOSTE, REMISE, LUNGE, FLECHE, TOUCHE
+}
+
+data class CombatTextEvent(
+    val type: CombatTextType,
+    val coord: Coord,
+    val id: Long = System.currentTimeMillis() // Egyedi ID, hogy a Compose tudja, ha új animáció kell
 )

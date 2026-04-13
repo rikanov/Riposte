@@ -9,6 +9,7 @@ data class GameTheme(
 
     // --- KÉPEK ÉS GRAFIKÁK ---
     val backgroundRes: Int,
+    val boardBackgroundRes: Int,
     val pieceP1Res: Int,
     val pieceP2Res: Int,
     val toucheStarRes: Int,

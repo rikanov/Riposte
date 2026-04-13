@@ -4,58 +4,38 @@ import androidx.compose.ui.graphics.Color
 
 object ThemeRegistry {
 
-    // 1. ABSTRACT SUNRISE
-    val CloudySunrise = GameTheme(
-        id = "cloudy_sunrise",
-        displayName = "Cloudy Sunrise",
-        backgroundRes = R.drawable.bg_abstract,
-        pieceP1Res = R.drawable.ic_piece_p1,
-        pieceP2Res = R.drawable.ic_piece_p2,
+    val Destreza = GameTheme(
+        id = "destreza",
+        displayName = "Manuscript",
+        backgroundRes = R.drawable.bg_board_destreza,
+        boardBackgroundRes = R.drawable.bg_destreza,
+        pieceP1Res = R.drawable.ic_destreza_p1,
+        pieceP2Res = R.drawable.ic_destreza_p2,
         toucheStarRes = R.drawable.ic_touche_star,
-        previewImageRes = R.drawable.prev_sunrise,
-        bgMusicRes = R.raw.bg_music,
+        previewImageRes = R.drawable.bg_destreza,
+        bgMusicRes = R.raw.bg_music_destreza,
         moveSoundP1Res = R.raw.p1_move,
         moveSoundP2Res = R.raw.p2_move,
         toucheSoundRes = R.raw.touche_hit,
-        boardCellDark = Color.White.copy(alpha = 0.05f),
-        boardCellLight = Color.White.copy(alpha = 0.12f),
-        auraP1Color = Color(0xFF00E5FF),
-        auraP2Color = Color(0xFFE53935),
-        containerColor = Color(0xFFE3F2FD),
-        textColor = Color(0xFF1976D2),
-        uiAccentColor = Color(0xFFFF6B6B)
+        boardCellDark = Color(0x26000000), // Nagyon halvány, áttetsző fekete tinta a sötét mezőkhöz
+        boardCellLight = Color(0x1AFFFFFF), // Halvány pergamen-fehér a világos mezőkhöz
+        auraP1Color = Color(0xFFB71C1C), // Mély vörös (Sangre)
+        auraP2Color = Color(0xFF455A64), // Hideg acélkék (Acero)
+        containerColor = Color(0xFF3E2723), // Sötét fa/bőr a UI paneleknek
+        textColor = Color(0xFFFFE082), // Meleg, aranyozott pergamen szín a szövegeknek
+        uiAccentColor = Color(0xFFD4AF37) // Arany (Brass) a gomboknak
     )
 
-    // 2. JUNGLE MORNING
-    val JungleMorning = GameTheme(
-        id = "jungle_morning",
-        displayName = "Jungle's Dawn",
-        backgroundRes = R.drawable.bg_jungle,
-        pieceP1Res = R.drawable.ic_jungle_p1,
-        pieceP2Res = R.drawable.ic_jungle_p2,
-        toucheStarRes = R.drawable.ic_touche_star,
-        previewImageRes = R.drawable.bg_jungle,
-        bgMusicRes = R.raw.bg_music_jungle,
-        moveSoundP1Res = R.raw.p1_move_jungle,
-        moveSoundP2Res = R.raw.p2_move_jungle,
-        toucheSoundRes = R.raw.touche_hit_jungle,
-        boardCellDark = Color(0xFF1B5E20).copy(alpha = 0.2f),
-        boardCellLight = Color(0xFF81C784).copy(alpha = 0.15f),
-        auraP1Color = Color(0xFFFFB300),
-        auraP2Color = Color(0xFF8D6E63),
-        containerColor = Color(0xFFF1F8E9),
-        textColor = Color(0xFF2E7D32),
-        uiAccentColor = Color(0xFFF4511E)
-    )
     // 3. WINTER PAGODA
     val WinterPagoda = GameTheme(
         id = "winter_pagoda",
         displayName = "Winter Pagoda",
-        backgroundRes = R.drawable.bg_winter, // TODO: Pótold az assetet
+        backgroundRes = R.drawable.bg_winter,
+        boardBackgroundRes = R.drawable.bg_board_winter,
         pieceP1Res = R.drawable.ic_winter_p1,
         pieceP2Res = R.drawable.ic_winter_p2,
         toucheStarRes = R.drawable.ic_touche_star,
-        previewImageRes = R.drawable.bg_winter,
+        previewImageRes = R.drawable.bg_board_winter,
         bgMusicRes = R.raw.bg_music_winter,
         moveSoundP1Res = R.raw.p1_move,
         moveSoundP2Res = R.raw.p2_move,
@@ -74,6 +54,7 @@ object ThemeRegistry {
         id = "datura_blossom",
         displayName = "Datura Blossom",
         backgroundRes = R.drawable.bg_datura,
+        boardBackgroundRes = R.drawable.bg_datura,
         pieceP1Res = R.drawable.ic_datura_p1,
         pieceP2Res = R.drawable.ic_datura_p2,
         toucheStarRes = R.drawable.ic_touche_star,
@@ -95,10 +76,11 @@ object ThemeRegistry {
         id = "mayan_fresco",
         displayName = "Mayan Fresco",
         backgroundRes = R.drawable.bg_mayan,
+        boardBackgroundRes = R.drawable.bg_board_mayan,
         pieceP1Res = R.drawable.ic_mayan_p1,
         pieceP2Res = R.drawable.ic_mayan_p2,
         toucheStarRes = R.drawable.ic_touche_star,
-        previewImageRes = R.drawable.bg_mayan,
+        previewImageRes = R.drawable.bg_board_mayan,
         bgMusicRes = R.raw.bg_music_mayan,
         moveSoundP1Res = R.raw.p1_move_jungle,
         moveSoundP2Res = R.raw.p2_move_jungle,
@@ -111,18 +93,12 @@ object ThemeRegistry {
         textColor = Color(0xFF2E7D32),
         uiAccentColor = Color(0xFFF4511E)
     )
-    val RandomTheme = CloudySunrise.copy(
-        id = "random",
-        displayName = "Shuffle",
-        previewImageRes = R.drawable.bg_abstract // TODO: Egy kérdőjeles ikon
-    )
-
-    val allThemes = listOf(CloudySunrise, JungleMorning, WinterPagoda, DaturaBlossom, MayanFresco, RandomTheme)
+    val allThemes = listOf(Destreza, WinterPagoda, DaturaBlossom, MayanFresco)
 
     fun getThemeById(id: String): GameTheme {
         if (id == "random") {
             return allThemes.filter { it.id != "random" }.random()
         }
-        return allThemes.find { it.id == id } ?: CloudySunrise
+        return allThemes.find { it.id == id } ?: Destreza
     }
 }
