@@ -1,0 +1,190 @@
+package hu.riposte.game.ui.components
+
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import kotlin.math.cos
+import kotlin.math.sin
+
+@Composable
+fun SlantedMenuButton(
+    item: MainMenuItem,
+    buttonWidth: Dp,
+    buttonHeight: Dp,
+    slantAmountDp: Dp,
+    fontSize: TextUnit,
+    index: Int,
+    phaseState: State<Float>,
+    scale: Float,
+    isHovered: Boolean
+) {
+    val density = LocalDensity.current
+    val slantPx = with(density) { slantAmountDp.toPx() }
+
+    // --- PRÉMIUM SZÍNEK ÉS TRANSZPARENCIA ---
+    // Lecsökkentettem az alfát (0.45f), hogy a háttér jobban átjöjjön
+    val alphaColor = if (isHovered) 0.85f else 0.45f
+    val gradientColors = if (item.isEnabled) {
+        if (isHovered) listOf(Color(0xFF4A5570), Color(0xFF262C3A))
+        else listOf(Color(0xFF2A3040), Color(0xFF1A1E28))
+    } else {
+        listOf(Color(0xFF1E1E24), Color(0xFF121216))
+    }
+    val textColor = if (item.isEnabled) Color.White else Color.White.copy(alpha = 0.3f)
+
+    Box(
+        modifier = Modifier
+            .width(buttonWidth)
+            .height(buttonHeight)
+            .graphicsLayer {
+                transformOrigin = TransformOrigin(1f, 0.5f)
+                scaleX = scale
+                scaleY = scale
+
+                // --- INTENZÍVEBB HULLÁMZÁS (10f és 5f szorzókkal) ---
+                val hoverIntensity = if (isHovered) 0.2f else 1f
+                translationX = sin(phaseState.value + index * 0.8f) * 10f * hoverIntensity
+                translationY = cos(phaseState.value + index * 0.8f) * 5f * hoverIntensity
+            }
+            .clip(SlantedShape(slantPx = slantPx))
+            .background(Brush.horizontalGradient(gradientColors), alpha = alphaColor)
+            .border(
+                width = if (isHovered) 1.5.dp else 0.8.dp,
+                color = Color.White.copy(alpha = if (isHovered) 0.7f else 0.15f),
+                shape = SlantedShape(slantPx = slantPx)
+            ),
+        contentAlignment = Alignment.Center // Vízszintesen és függőlegesen is középre zár
+    ) {
+        // Finom belső fényeffekt
+        Box(modifier = Modifier.matchParentSize().background(Brush.horizontalGradient(0.0f to Color.White.copy(alpha = 0.1f), 0.3f to Color.Transparent)))
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            // Optikai korrekció: a dőlés miatt kicsit eltoljuk a szöveget, hogy valóban középen tűnjön
+            modifier = Modifier.padding(start = slantAmountDp / 2)
+        ) {
+            if (item.hasSwipeAction) {
+                val infinitePulse = rememberInfiniteTransition(label = "SwipeHint")
+                val hintOffset by infinitePulse.animateFloat(
+                    initialValue = 0f,
+                    targetValue = -6f,
+                    animationSpec = infiniteRepeatable(tween(1000, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+                    label = "arrowOffset"
+                )
+                val hintAlpha by infinitePulse.animateFloat(
+                    initialValue = 0.4f,
+                    targetValue = 0.8f,
+                    animationSpec = infiniteRepeatable(tween(1000), RepeatMode.Reverse),
+                    label = "arrowAlpha"
+                )
+
+                Text(
+                    text = "« ",
+                    color = Color.White.copy(alpha = hintAlpha),
+                    fontSize = fontSize,
+                    modifier = Modifier.offset(x = hintOffset.dp)
+                )
+            }
+            Text(
+                text = item.label.uppercase(),
+                color = textColor,
+                fontWeight = if (isHovered) FontWeight.Black else FontWeight.Bold,
+                fontSize = fontSize,
+                letterSpacing = 1.5.sp,
+                textAlign = TextAlign.Center,
+                maxLines = 1
+            )
+        }
+    }
+}
+
+@Composable
+fun ParallelMenuButton(
+    item: MainMenuItem,
+    isPremiumVersion: Boolean,
+    buttonWidth: Dp,
+    buttonHeight: Dp,
+    slantAmountDp: Dp,
+    fontSize: TextUnit,
+    index: Int,
+    phaseState: State<Float>,
+    scale: Float,
+    isHovered: Boolean,
+    isStygian: Boolean
+) {
+    val density = LocalDensity.current
+    val isLocked = item.isPremiumOnly && !isPremiumVersion
+    val slantPx = with(density) { slantAmountDp.toPx() }
+
+    // --- TRANSZPARENCIA ÉS SZÍNEK ---
+    val alphaColor = if (isLocked) 0.3f else if (isHovered) 0.85f else 0.45f
+    val gradientColors = if (isStygian) {
+        if (isHovered) listOf(Color(0xFF7A2424), Color(0xFF3A1212))
+        else listOf(Color(0xFF401A1A), Color(0xFF281111))
+    } else {
+        if (isHovered) listOf(Color(0xFF4A5570), Color(0xFF262C3A))
+        else listOf(Color(0xFF2A3040), Color(0xFF1A1E28))
+    }
+
+    val textColor = if (isLocked) Color.White.copy(alpha = 0.3f)
+    else if (isStygian) Color(0xFFFF7777)
+    else Color.White
+
+    val displayText = if (isLocked) "${item.label} 🔒" else item.label
+
+    Box(
+        modifier = Modifier
+            .width(buttonWidth)
+            .height(buttonHeight)
+            .graphicsLayer {
+                transformOrigin = TransformOrigin(0f, 0.5f)
+                scaleX = scale
+                scaleY = scale
+
+                val hoverIntensity = if (isHovered) 0.2f else 1f
+                // Eltolt fázis (+2f), hogy ne egyszerre mozogjanak a főmenüvel
+                translationX = sin(phaseState.value + index * 0.8f + 2f) * 8f * hoverIntensity
+                translationY = cos(phaseState.value + index * 0.8f + 2f) * 4f * hoverIntensity
+            }
+            .clip(ParallelSubMenuShape(slantPx = slantPx))
+            .background(Brush.horizontalGradient(gradientColors.reversed()), alpha = alphaColor)
+            .border(
+                width = if (isHovered) 1.5.dp else 0.8.dp,
+                color = if (isStygian && !isLocked) Color.Red.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.15f),
+                shape = ParallelSubMenuShape(slantPx = slantPx)
+            ),
+        contentAlignment = Alignment.BottomStart
+    ) {
+        Box(modifier = Modifier.matchParentSize().background(Brush.horizontalGradient(0.0f to Color.Transparent, 0.8f to Color.White.copy(alpha = 0.1f))))
+
+        Text(
+            text = displayText,
+            color = textColor,
+            fontWeight = if (isHovered) FontWeight.Black else FontWeight.Bold,
+            fontSize = fontSize * 0.9f,
+            letterSpacing = 1.2.sp,
+            textAlign = TextAlign.Start,
+            maxLines = 1,
+            modifier = Modifier.padding(start = 12.dp )
+        )
+    }
+}

@@ -1,12 +1,13 @@
 #include "riposte_tt_engine.h"
+#include "heuristic.h"
 #include <random>
 #include <algorithm>
 #include <chrono>
 
-thread_local uint nodeCounter = 0;
+using namespace Heuristic;
 
-static int WIN = 128;
-static uint64_t sentinelMask = 0x7F83060C183060FF;
+thread_local uint nodeCounter = 0;
+thread_local bool isSearchAborted = false;
 
 static int maxDepth = 11;
 static int allowRiposte = true;
@@ -14,6 +15,7 @@ static inline int sgn(int x) {
     return (x > 0) - (x < 0);
 }
 std::atomic<bool> Riposte_TT_Engine::stopSearch{false};
+
 // --- ZOBRIST STATICS ---
 uint64_t Riposte_TT_Engine::zobristP1[64];
 uint64_t Riposte_TT_Engine::zobristP2[64];
@@ -184,8 +186,18 @@ MoveData Riposte_TT_Engine::getCompactMoveData(const uint64_t set1, const uint64
 
 int Riposte_TT_Engine::searchRestrict(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, int alfa, int beta, const int depth, bool isP1, uint64_t hash) noexcept
 {
-    if( 0 == depth ) return 0;
-    if ( (++nodeCounter & 2047) == 0 && (stopSearch.load(std::memory_order_relaxed)) ) return 0;
+    if ( 0 == depth )
+    {
+        return heuristic(set1, set2, hotSpot);
+    }
+
+    // --- JAVÍTOTT MEGSZAKÍTÁSI LOGIKA ---
+    if (isSearchAborted) return heuristic(set1, set2, hotSpot);;
+    if ( (++nodeCounter & 2047) == 0 && stopSearch.load(std::memory_order_relaxed) ) {
+        isSearchAborted = true;
+        return 0;
+    }
+
     // --- 1. TT OLVASÁS ---
     TTEntry& ttEntry = transpositionTable[hash & 0xFFFFF];
     if (ttEntry.hash == hash && ttEntry.depth >= depth) {
@@ -221,7 +233,10 @@ int Riposte_TT_Engine::searchRestrict(const uint64_t set1, const uint64_t set2, 
         if( alfa >= beta) { break; }
     }
 
-    int finalScore = bestScore - sgn(bestScore);
+    const int finalScore = bestScore + (bestScore < heuristicLow) - (bestScore > heuristicHigh);
+
+    // --- JAVÍTÁS: TT VÉDELEM MEGSZAKÍTÁS ESETÉN ---
+    if (isSearchAborted) return 0;
 
     // --- 2. TT ÍRÁS ---
     if (ttEntry.hash != hash || depth >= ttEntry.depth) {
@@ -243,8 +258,18 @@ int Riposte_TT_Engine::searchRestrict(const uint64_t set1, const uint64_t set2, 
 
 int Riposte_TT_Engine::search(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, int alfa, int beta, const int depth, bool isP1, uint64_t hash) noexcept
 {
-    if( 0 == depth ) return 0;
-    if ( (++nodeCounter & 2047) == 0 && (stopSearch.load(std::memory_order_relaxed)) ) return 0;
+    if ( 0 == depth )
+    {
+        return heuristic(set1, set2, hotSpot);
+    }
+
+    // --- JAVÍTOTT MEGSZAKÍTÁSI LOGIKA ---
+    if (isSearchAborted) return heuristic(set1, set2, hotSpot);;
+    if ( (++nodeCounter & 2047) == 0 && stopSearch.load(std::memory_order_relaxed) ) {
+        isSearchAborted = true;
+        return 0;
+    }
+
     // --- 1. TT CACHE ---
     TTEntry& ttEntry = transpositionTable[hash & 0xFFFFF];
 
@@ -282,8 +307,10 @@ int Riposte_TT_Engine::search(const uint64_t set1, const uint64_t set2, const ui
             if( alfa >= beta) { break; }
         }
     }
+    const int finalScore = bestScore + (bestScore < heuristicLow) - (bestScore > heuristicHigh);
 
-    int finalScore = bestScore - sgn(bestScore);
+    // --- JAVÍTÁS: TT VÉDELEM MEGSZAKÍTÁS ESETÉN ---
+    if (isSearchAborted) return 0;
 
     // --- 2. TT WRITE  ---
     if (ttEntry.hash != hash || depth >= ttEntry.depth) {
@@ -302,14 +329,18 @@ int Riposte_TT_Engine::search(const uint64_t set1, const uint64_t set2, const ui
 
     return finalScore;
 }
+
 MoveData Riposte_TT_Engine::searchIDA(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, bool isP1, int threadID)
 {
+    // --- JAVÍTÁS: Gyökérszinten nullázzuk a flaget! ---
+    isSearchAborted = false;
+
     uint64_t deadBranches = 0;
     MoveData bestMove;
     bool finished = false;
     uint64_t rootHash = computeHash(set1, set2, hotSpot, isP1);
 
-    // --- ÚJ: A LEHETSÉGES KEZDŐLÉPÉSEK ÖSSZEGYŰJTÉSE ---
+    // A LEHETSÉGES KEZDŐLÉPÉSEK ÖSSZEGYŰJTÉSE
     std::vector<uint> rootMoves;
     for(uint moveID = 0; moveID < __builtin_popcountll(set1) * 8; ++moveID) {
         uint64_t nextSet1 = set1;
@@ -373,12 +404,13 @@ MoveData Riposte_TT_Engine::searchIDA(const uint64_t set1, const uint64_t set2, 
                 }
             }
 
-            if( score < 0 ) { deadBranches |= (1ULL << moveID); }
-            if( score > 0 ) { finished = true; break; }
+            if( score < heuristicLow ) { deadBranches |= (1ULL << moveID); }
+            if( score > heuristicHigh ) { finished = true; break; }
         }
     }
     return bestMove;
 }
+
 MoveData Riposte_TT_Engine::getBestStep(const int * board, const int playerID, const uint depth, const bool riposte)
 {
     init();

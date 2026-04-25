@@ -1,16 +1,15 @@
 #include "riposte_engine.h"
+#include "heuristic.h"
 #include <random>
 
-constexpr static int WIN = 128;
-constexpr static  uint64_t sentinelMask = 0x7F83060C183060FF;
+using namespace Heuristic;
 
 static int maxDepth = 11;
 static int allowRiposte = true;
-static inline int sgn(int x)
+static inline int regression(int x)
 {
-    return (x > 0) - (x < 0);
+    return x + (x < heuristicLow) - (x > heuristicHigh);
 }
-
 void RiposteEngine::init()
 {
     srand(time(NULL));
@@ -80,7 +79,7 @@ constexpr int RiposteEngine::captureSearch(const uint64_t set1, const uint64_t s
             break;
         }
     }
-    return bestScore - sgn(bestScore);
+    return regression(bestScore);
 }
 
 constexpr int RiposteEngine::captureRoot(const uint64_t set1, const uint64_t set2, uint64_t & hotSpot, const int depth) noexcept
@@ -106,14 +105,14 @@ constexpr int RiposteEngine::captureRoot(const uint64_t set1, const uint64_t set
             hotSpot = nextSpot;
         }
     }
-    return bestScore - sgn(bestScore);
+    return regression(bestScore);
 }
 
 constexpr int RiposteEngine::searchRestrict(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, int alfa, int beta, const int depth) noexcept
 {
     if( 0 == depth )
     {
-        return 0;
+        return heuristic(set1, set2, hotSpot);
     }
 
     int bestScore = -WIN;
@@ -134,15 +133,14 @@ constexpr int RiposteEngine::searchRestrict(const uint64_t set1, const uint64_t 
             break;
         }
     }
-    return bestScore - sgn(bestScore);
-
+    return regression(bestScore);
 }
 
 constexpr int RiposteEngine::search(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, int alfa, int beta, const int depth) noexcept
 {
     if( 0 == depth )
     {
-        return 0;
+        return heuristic(set1, set2, hotSpot);
     }
 
     int bestScore = -WIN;
@@ -170,7 +168,7 @@ constexpr int RiposteEngine::search(const uint64_t set1, const uint64_t set2, co
             break;
         }
     }
-    return bestScore - sgn(bestScore);
+    return regression(bestScore);
 }
 
 MoveData RiposteEngine::searchIDA(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot)
@@ -228,11 +226,11 @@ MoveData RiposteEngine::searchIDA(const uint64_t set1, const uint64_t set2, cons
                     count = 2;
                 }
             }
-            if( score < 0 )
+            if( score < heuristicLow )
             {
                 deadBranches |= (1ULL << moveID);
             }
-            if( score > 0 )
+            if( score > heuristicHigh )
             {
                 finished = true;
                 break;

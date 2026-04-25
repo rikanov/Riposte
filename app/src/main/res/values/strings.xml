@@ -9,52 +9,6 @@
     <string name="cd_board_background">Board Background</string>
     <string name="cd_touche_point">Touche Point</string>
 
-    <string name="status_players_turn">Player\'s Turn</string>
-    <string name="status_ai_thinking">AI\'s thinking</string>
-    <string name="status_select_capture">Select a piece to capture</string>
-    <string name="status_wait">Wait...</string>
-    <string name="status_setting_up">Setting up...</string>
-    <string name="status_game_over">Game Over - %1$s</string>
-
-    <string name="diff_beginner">Beginner (5)</string>
-    <string name="diff_normal">Normal (7)</string>
-    <string name="diff_expert">Expert (9)</string>
-    <string name="diff_pro">Pro (10)</string>
-
-    <string name="starter_player">Player</string>
-    <string name="starter_ai">AI</string>
-    <string name="starter_alternating">Alternating</string>
-
-    <string name="gameover_new_game">NEW GAME</string>
-    <string name="menu_new_match">NEW MATCH</string>
-    <string name="menu_player_vs_ai">PLAYER VS AI</string>
-    <string name="menu_2_local_players">2 LOCAL PLAYERS</string>
-    <string name="menu_how_to_play">QUICK TUTORIAL</string>
-    <string name="menu_vs_ai_settings">VS AI SETTINGS</string>
-    <string name="menu_ai_difficulty">AI Difficulty</string>
-    <string name="menu_first_move">First Move</string>
-    <string name="menu_start_match">START MATCH</string>
-
-    <string name="options_title">SETTINGS</string>
-    <string name="options_music">Music</string>
-    <string name="options_sfx">Sound Effects (SFX)</string>
-    <string name="options_haptic">Haptic Feedback</string>
-    <string name="options_riposte">Enable Riposte Rule</string>
-    <string name="options_done">DONE</string>
-
-    <string name="pause_title">PAUSE MENU</string>
-    <string name="pause_resume">RESUME</string>
-    <string name="pause_new_game">NEW GAME</string>
-    <string name="pause_options">OPTIONS</string>
-    <string name="pause_undo">UNDO LAST MOVE</string>
-    <string name="pause_exit">EXIT GAME</string>
-
-    <string name="gameover_victory">VICTORY!</string>
-    <string name="gameover_defeat">DEFEAT</string>
-    <string name="gameover_you_won">YOU WON!</string>
-    <string name="gameover_ai_won">THE AI WON</string>
-    <string name="cd_bg_mood_icon">Background Mood Icon</string>
-
     <string name="theme_title">CHOOSE THEME</string>
     <string name="theme_apply">APPLY</string>
     <string name="theme_cancel">CANCEL</string>
@@ -64,13 +18,236 @@
     <string name="tutorial_tap_to_start">- TAP ANYWHERE TO START -</string>
 
     <string name="app_slogan">Fencing-inspired, turn-based strategy</string>
+    <string name="options_title">OPTIONS</string>
+    <string name="options_music">MUSIC</string>
+    <string name="options_sfx">SFX</string>
+    <string name="options_haptic">HAPTIC</string>
+    <string name="options_grid">GRID</string>
+    <string name="options_notify">NOTIFY</string>
+    <string name="options_about">ABOUT THE GAME</string>
+    <string name="btn_ok">OK</string>
+    <string name="btn_close">CLOSE</string>
 
+    <string name="daily_tip_fallback">DAILY TIP</string>
+    <string name="tap_to_continue">- TAP TO CONTINUE -</string>
+    <string name="turn_off_notifications">Turn off notifications</string>
+    <string name="next_tip">Next tip →</string>
+    <string name="tournament_rank_label">RANK #%1$d</string>
+    <string name="tournament_vs">VS</string>
+
+    <string name="game_over_timeout">TIME\'S UP</string>
+    <string name="game_over_victory">VICTORY</string>
+    <string name="game_over_defeat">DEFEAT</string>
+    <string name="game_over_bout_yours">The bout is yours.</string>
+    <string name="game_over_bout_opponent">The opponent claims the bout.</string>
+
+    <string name="btn_continue_tournament">CONTINUE TOURNAMENT</string>
+    <string name="btn_main_menu">MAIN MENU</string>
+    <string name="btn_rematch">REMATCH</string>
+
+    <string name="app_name_title">RIPOSTE</string>
+    <string name="app_version">v1.0.0</string>
+    <string name="about_description">A strategic board game inspired by the elegant and deadly art of fencing. Designed for those who appreciate logic, timing, and the perfect strike.</string>
+    <string name="about_developer">Developed by Robert Ikanov</string>
     <string name="menu_resume">Back</string>
     <string name="menu_quick_tutorial">Tutorial</string>
     <string name="menu_training_ai">Player vs Ai</string>
     <string name="menu_local_players">Local Players</string>
-    <string name="menu_tournament">Tournament (soon)</string>
-    <string name="menu_online">Online (soon)</string>
-    <string name="menu_settings">Settings</string>
+    <string name="menu_tournament">Tournament</string>
+    <string name="menu_options">Options</string>
     <string name="menu_exit">Exit</string>
+
+    <string name="warning_title">WARNING</string>
+    <string name="warning_forfeit_tournament">You have an ongoing Tournament match. Starting a new training game will forfeit your current bout and result in a defeat.</string>
+
+    <string name="btn_forfeit_match">Forfeit match</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="tournament_title_main">HALL OF LEGENDS</string>
+    <string name="tournament_unknown_name">Unknown</string>
+    <string name="tournament_unknown_title">"???"</string>
+    <string name="player_you_suffix">(YOU)</string>
+    <string name="btn_back">Back</string>
+    <string name="btn_resume_match">Resume Match</string>
+    <string name="btn_accept_challenge">ACCEPT CHALLENGE</string>
+    <string name="btn_en_garde">EN GARDE!</string>
+
+    <string name="profile_title">IDENTITY</string>
+    <string name="profile_name_hint">Enter your name</string>
+    <string name="profile_title_hint">Enter your title</string>
+    <string name="stat_current_rank">CURRENT RANK</string>
+    <string name="stat_peak_rank">PEAK</string>
+    <string name="stat_rating">RIPOSTE RATING</string>
+    <string name="stat_global">GLOBAL: UNRANKED</string>
+    <string name="stat_recent_form">RECENT FORM (LAST 10)</string>
+    <string name="btn_save_profile">SAVE PROFILE</string>
+    <string name="premium_tease_text">Unlock Online Hall of Fame</string>
+    <string name="stat_peak_rating">PEAK RATING</string>
+
+    <string name="ai_apprentice">Apprentice</string>
+    <string name="ai_swordsman">Swordsman</string>
+    <string name="ai_duelist">Duelist</string>
+    <string name="ai_master">Master</string>
+    <string name="ai_grandmaster">Grandmaster</string>
+    <string name="ai_stygian">Stygian</string>
+    <string name="opp_1_name">The Grandmaster</string>
+    <string name="opp_1_title">The Nameless Champion</string>
+    <string name="opp_1_era">Unknown</string>
+    <string name="opp_1_desc">The perfect fencer. Legends say he has never been touched by a blade. Those who face him do not seek glory, only survival.</string>
+    <string name="opp_1_quote">\"The blade is merely a tool. The true weapon is the flaw in your mind.\"</string>
+
+    <string name="opp_2_name">Fiore dei Liberi</string>
+    <string name="opp_2_title">Father of Martial Arts</string>
+    <string name="opp_2_era">14th Century, Italy</string>
+    <string name="opp_2_desc">Author of the \'Flos Duellatorum\'. His defense is built on impenetrable mathematical formulas and absolute control of distance.</string>
+    <string name="opp_2_quote">\"I am as motionless as the tower, and my strike cannot be evaded.\"</string>
+
+    <string name="opp_3_name">Aladár Gerevich</string>
+    <string name="opp_3_title">The Seven-Time Champion</string>
+    <string name="opp_3_era">20th Century, Hungary</string>
+    <string name="opp_3_desc">Arguably the greatest swordsman in modern history. His speed, footwork, and mastery of the riposte are considered superhuman.</string>
+    <string name="opp_3_quote">\"Fencing is calculation. And I calculate faster than you.\"</string>
+
+    <string name="opp_4_name">Ridolfo Capo Ferro</string>
+    <string name="opp_4_title">Grandmaster of the Rapier</string>
+    <string name="opp_4_era">17th Century, Italy</string>
+    <string name="opp_4_desc">A founder of modern linear fencing. His genius lies in maintaining the perfect measure and executing flawless lunges.</string>
+    <string name="opp_4_quote">\"Do not attack until your defense is absolute.\"</string>
+
+    <string name="opp_5_name">Julie d\'Aubigny</string>
+    <string name="opp_5_title">La Maupin</string>
+    <string name="opp_5_era">17th Century, France</string>
+    <string name="opp_5_desc">Opera singer, duelist, and absolute force of nature. She fought multiple men at once and left a trail of defeated duelists across France.</string>
+    <string name="opp_5_quote">\"I sing for the King, but my blade sings only for me.\"</string>
+
+    <string name="opp_6_name">Jerónimo de Carranza</string>
+    <string name="opp_6_title">The True Path</string>
+    <string name="opp_6_era">16th Century, Spain</string>
+    <string name="opp_6_desc">The creator of \'La Verdadera Destreza\'. He treats the duel not as a brawl, but as an elegant application of geometry and philosophy.</string>
+    <string name="opp_6_quote">\"A circle surrounds us both. Step out of line, and you step into your demise.\"</string>
+
+    <string name="opp_7_name">Miyamoto Musashi</string>
+    <string name="opp_7_title">The Sword Saint</string>
+    <string name="opp_7_era">17th Century, Japan</string>
+    <string name="opp_7_desc">An undefeated legend who authored \'The Book of Five Rings\'. Though far from his homeland, his relentless offensive philosophy adapts to any blade.</string>
+    <string name="opp_7_quote">\"There is nothing outside of yourself that can ever enable you to get better.\"</string>
+
+    <string name="opp_8_name">Johannes Liechtenauer</string>
+    <string name="opp_8_title">The Grand Master</string>
+    <string name="opp_8_era">14th Century, Germany</string>
+    <string name="opp_8_desc">The central figure of the German school of fencing. His teachings were cryptic verses meant to hide deadly defensive secrets from the uninitiated.</string>
+    <string name="opp_8_quote">\"Before, after, weak, strong. Understand these, and the duel is yours.\"</string>
+
+    <string name="opp_9_name">Cyrano de Bergerac</string>
+    <string name="opp_9_title">The Poet Duelist</string>
+    <string name="opp_9_era">17th Century, France</string>
+    <string name="opp_9_desc">A master of both the pen and the sword. He famously defeated a hundred men in a single night. Proud, aggressive, and incredibly dangerous.</string>
+    <string name="opp_9_quote">\"I will thrust home at the end of the refrain!\"</string>
+
+    <string name="opp_10_name">Salvator Fabris</string>
+    <string name="opp_10_title">Supreme Fencing Master</string>
+    <string name="opp_10_era">17th Century, Italy</string>
+    <string name="opp_10_desc">Known for his extreme leaning postures that keep his body out of reach while maximizing the threat of his blade. Patience is his greatest weapon.</string>
+    <string name="opp_10_quote">\"Let the enemy exhaust their spirit against empty air.\"</string>
+
+    <string name="opp_11_name">Don Diego de la Vega</string>
+    <string name="opp_11_title">El Zorro</string>
+    <string name="opp_11_era">19th Century, California</string>
+    <string name="opp_11_desc">A charismatic and acrobatic vigilante. His fencing style is theatrical and aggressive, often sacrificing optimal defense for flair.</string>
+    <string name="opp_11_quote">\"A mask hides the face, but the blade reveals the soul.\"</string>
+
+    <string name="opp_12_name">Donald McBane</string>
+    <string name="opp_12_title">The Highlander</string>
+    <string name="opp_12_era">18th Century, Scotland</string>
+    <string name="opp_12_desc">A battle-hardened soldier, gladiator, and fencing master. He survived countless duels across Europe using dirty but highly effective defensive tricks.</string>
+    <string name="opp_12_quote">\"I have fought for money and I have fought for blood. Both spend the same.\"</string>
+
+    <string name="opp_13_name">Charles de Batz</string>
+    <string name="opp_13_title">d\'Artagnan</string>
+    <string name="opp_13_era">17th Century, France</string>
+    <string name="opp_13_desc">Young, fierce, and incredibly talented. His reckless, aggressive attacks often leave him exposed, but few can match his sheer speed.</string>
+    <string name="opp_13_quote">\"All for one, and one for all!\"</string>
+
+    <string name="opp_14_name">Joseph Bologne</string>
+    <string name="opp_14_title">Chevalier de Saint-Georges</string>
+    <string name="opp_14_era">18th Century, France</string>
+    <string name="opp_14_desc">A virtuoso violinist and champion fencer. His speed and elegance on the piste were unmatched in his time.</string>
+    <string name="opp_14_quote">\"My music captivates, but my blade conquers.\"</string>
+
+    <string name="opp_15_name">Peter Blood</string>
+    <string name="opp_15_title">Captain Blood</string>
+    <string name="opp_15_era">17th Century, Caribbean</string>
+    <string name="opp_15_desc">A physician turned pirate. He fights with unpredictable, unorthodox flair, relying on instinct rather than academy rules.</string>
+    <string name="opp_15_quote">\"I\'ll take your ship, your gold, and your pride.\"</string>
+
+    <string name="opp_16_name">Catalina de Erauso</string>
+    <string name="opp_16_title">The Lieutenant Nun</string>
+    <string name="opp_16_era">17th Century, Spain</string>
+    <string name="opp_16_desc">Fierce, unyielding, and utterly fearless. She survived the harshest environments and won countless duels across two continents.</string>
+    <string name="opp_16_quote">\"God may forgive you, but my steel will not.\"</string>
+
+    <string name="opp_17_name">The Royal Guardsman</string>
+    <string name="opp_17_title">Defender of the Crown</string>
+    <string name="opp_17_era">18th Century</string>
+    <string name="opp_17_desc">A highly disciplined soldier trained in classical academy fencing. Predictable, but solid and deeply defensive.</string>
+    <string name="opp_17_quote">\"Hold the line. Show no weakness.\"</string>
+
+    <string name="opp_18_name">The Academy Novice</string>
+    <string name="opp_18_title">Eager Student</string>
+    <string name="opp_18_era">Present Day</string>
+    <string name="opp_18_desc">Fresh out of training. Knows the basic footwork but completely lacks combat experience.</string>
+    <string name="opp_18_quote">\"En garde! I am ready to prove myself!\"</string>
+
+    <string name="opp_19_name">The Young Cadet</string>
+    <string name="opp_19_title">The Eager Challenger</string>
+    <string name="opp_19_era">Present Day</string>
+    <string name="opp_19_desc">The newest prodigy of the fencing academy. Knows all the textbook rules but lacks the tactical restraint of the masters.</string>
+    <string name="opp_19_quote">\"En garde! I am ready for my first bout.\"</string>
+
+    <string-array name="daily_tips">
+        <item>DID YOU KNOW?\nThe bottom dock icons allow you to easily change settings or switch visual themes.</item>
+        <item>WARNING\nIn Tournament mode, there is no Undo and no Hint option. Plan your moves carefully!</item>
+        <item>STRATEGY\nRiposte requires two touches to win. Beware of counter-attacks, and play cautiously after your first hit!</item>
+        <item>FUN FACT\nFarkas Kempelen, the famous Hungarian inventor and polymath, defeated nine elite Austrian imperial officers in sword duels in a single day.</item>
+        <item>PRO TIP\nIn the Hall of Legends, the Challenger (the one with the lower rank) always gets the first move.</item>
+        <item>FUN FACT\n\'Flèche\' is a French fencing term meaning \'arrow\'. In Riposte, diagonal strikes are called Flèche.</item>
+        <item>PRO TIP\nTouché! If you score a hit, you immediately gain +1 Minute on your Chess Clock in Tournament mode.</item>
+        <item>PRO TIP\nThe grid is more vital than it seems. Masterful defense lies in aligning your pieces on the same color; and masterful offense is born from that defense.</item>
+        <item>LITERATURE\n"A hit, a very palpable hit!" - William Shakespeare (Hamlet, Act V, Scene 2). A classic line spoken during the final tragic fencing match.</item>
+        <item>LITERATURE\n"I toss my chapeau high... And, as I end the refrain, thrust home!" - Edmond Rostand (Cyrano de Bergerac). The ultimate demonstration of tactical brilliance.</item>
+        <item>LITERATURE\n"Alla stoccata carries it away!" - Shakespeare (Romeo and Juliet). \'Stoccata\' is an Italian fencing term for a thrust with the rapier.</item>
+        <item>LITERATURE\n"Never fear quarrels, but seek hazardous adventures." - Alexandre Dumas (The Three Musketeers). Good advice for climbing the Hall of Legends!</item>
+
+        <item>FUN FACT\nIn 1695, French opera singer Julie d\'Aubigny (La Maupin) was insulted by three noblemen at a royal ball. She challenged all three to a sword duel outside and defeated them one by one.</item>
+        <item>FUN FACT\nLegendary Japanese swordsman Miyamoto Musashi fought 61 duels and remained undefeated, famously winning many of them using only a wooden sword (bokken) against live steel.</item>
+        <item>FUN FACT\nFrench cavalry officers Dupont and Fournier fought over 30 sword and pistol duels against each other over a span of 19 years, inspiring Joseph Conrad\'s story \'The Duel\'.</item>
+        <item>DID YOU KNOW?\nWhy do traditional fencers wear white? Before electronic scoring, points were recorded by attaching an ink-soaked pad to the sword tip to leave a visible mark on the opponent\'s white jacket.</item>
+        <item>FUN FACT\nFencing is one of only five sports that have been featured in every single modern Olympic Games since 1896.</item>
+        <item>FUN FACT\nThe \'En Garde\' stance is designed to minimize the target area you present to your opponent while keeping you balanced to launch a sudden attack (Lunge or Flèche).</item>
+        <item>LEGEND\nThe real-life Cyrano de Bergerac was a fearsome duelist. History records that at the Porte de Nesle in Paris, he single-handedly fought off an ambush of 100 men, defeating several before the rest fled in terror.</item>
+        <item>HISTORY\nThe 1578 \'Duel of the Mignons\' was a brutal 3-on-3 rapier fight between the favorites of King Henry III and a rival faction. It lasted only minutes but left four men dead or dying, cementing the deadly reputation of the rapier.</item>
+        <item>LEGEND\nJoseph Bologne, Chevalier de Saint-Georges, often called the \'Black Mozart\', was not only a genius composer but also the greatest fencer of 18th-century Europe. His blinding speed with the foil was considered supernatural.</item>
+        <item>HISTORY\nDuring the Renaissance, duels of honor were so common in France that King Louis XIII had to issue strict edicts banning them. Naturally, fencers simply started dueling in secret, usually at dawn.</item>
+
+        <item>SCHOOLS\nThe Italian School (16th-17th century) revolutionized swordplay by inventing the \'Lunge\'. Masters like Capo Ferro emphasized aggressive, linear strikes and mastering the lethal thrust of the rapier.</item>
+        <item>SCHOOLS\nThe French School emerged with the invention of the lighter \'smallsword\'. It favored extreme finesse, economy of movement, and complex parry-riposte sequences over brute physical force.</item>
+        <item>SCHOOLS\n\'La Verdadera Destreza\' (The True Skill) was the historical Spanish system of fencing. It was deeply philosophical, based on complex mathematics and geometry, utilizing circular footwork to dominate the opponent.</item>
+        <item>SCHOOLS\nThe German tradition of the longsword taught the concept of \'Vor\' (Before) and \'Nach\' (After). The ultimate goal was to always stay in the \'Vor\', forcing the opponent into a desperate defense.</item>
+
+        <item>STRATEGY\n\"Defense is nothing but a shield against the blow, but the attack is the sword that strikes.\" - Ridolfo Capo Ferro (1610). A reminder that while parrying keeps you alive, only the Riposte wins the bout.</item>
+        <item>STRATEGY\n\"In combat, your state of mind should not be different from your normal state of mind.\" - Miyamoto Musashi. Stay calm, even when the Chess Clock is ticking down in a Tournament!</item>
+        <item>STRATEGY\n\"Fencing is a game of living chess, a match where exact, logical thought is translated into action.\" - Aldo Nadi, one of the most undefeated fencers of the 20th century.</item>
+        <item>STRATEGY\n\"He who attacks first has the advantage of the initiative, but he who attacks second has the advantage of knowing the enemy\'s intention.\" - Classic fencing proverb. Choose your timing wisely.</item>
+        <item>PRO TIP\nDon\'t just react; anticipate. If your opponent consistently attacks the same line, bait them into doing it again, then execute a perfect Parry-Riposte.</item>
+
+        <item>HISTORY\n\'La Verdadera Destreza\', the Spanish school of fencing, visualized combat as a \'Magic Circle\' drawn on the floor. Fencers would step along its chords and tangents to outmaneuver the opponent using pure geometry.</item>
+        <item>FUN FACT\nThe iconic mesh fencing mask was not invented until the late 18th century by the French fencing master La Boëssière. Before that, fencers simply risked losing an eye during practice!</item>
+
+        <item>DID YOU KNOW?\nBruce Lee was heavily influenced by fencing. He incorporated the fencing \'Lunge\' and its footwork into his martial art, Jeet Kune Do, believing it to be the fastest way to close the distance.</item>
+        <item>STRATEGY\nIn modern foil and sabre fencing, there is a rule called \'Right of Way\'. It prevents double-kills by dictating that the fencer who initiates the attack first must be defended against before the defender can counter-attack.</item>
+        <item>LITERATURE\n"I am not left-handed either." - The Princess Bride. A legendary cinematic duel that references real historical fencing styles like \'Agrippa\' and \'Capo Ferro\'.</item>
+
+        <item>STRATEGY\n\"Let your sword be like a snake: coiled and ready to strike, but never revealing its full length until the venom is delivered.\" - Classical fencing adage.</item>
+        <item>LEGEND\nFiore dei Liberi, a 14th-century Italian master, wrote one of the oldest surviving martial arts manuals, \'The Flower of Battle\'. He stated that a swordsman must possess four qualities: Caution, Speed, Strength, and Audacity.</item>
+        <item>PRO TIP\nA heavy cut may look impressive, but a quick thrust travels a shorter distance. In Riposte, as in reality, speed and precision often defeat brute force.</item>
+    </string-array>
 </resources>
