@@ -31,3 +31,13 @@ Our research using the KotlinDemo statistical suite revealed a fascinating "Odd-
 Odd-Depth Search (5, 7, 9): Leads to "Decisive/Aggressive" play. The AI sees its own final move but not the opponent's reaction, encouraging bold attacks.
 
 Even-Depth Search (6, 8, 10): Leads to "Defensive/Cautious" play. The AI anticipates the opponent's counter, often resulting in intricate "fencing dances" where players maneuver for dozens of turns without committing to a strike.
+
+## Artistic Direction & AI Collaboration
+
+The visual and auditory landscape of *Riposte* is the result of a deliberate collaboration between human curation and Generative AI. 
+
+* **Assets:** All background art, UI elements, and musical tracks were initially generated using **Google Gemini** and specialized AI models (Lyria for music, Nano Banana for imagery).
+* **Human Touch:** Every asset has been individually reviewed, manually edited, or digitally post-processed to ensure it meets the game’s aesthetic standards and technical requirements.
+* **Attribution & Watermarks:** In the spirit of transparency and "Origin Marking," certain AI-generated signatures—including subtle sonic watermarks and visual cues—have been **intentionally preserved**. These marks serve as a digital "hallmark," acknowledging the role of AI in the creative process rather than obscuring it.
+
+This project stands as a testament to how AI can act as a "force multiplier" for solo developers, providing high-fidelity sensory experiences while maintaining a clear, human-led creative vision.
