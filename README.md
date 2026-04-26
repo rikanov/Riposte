@@ -1,36 +1,57 @@
-Riposte: The Fencing-Inspired Strategy Engine
+RRiposte: The Fencing-Inspired Strategic Board Game
+Riposte is a minimalist, abstract strategy game played on a 5x7 grid. It simulates the tactical "push and pull" of a fencing bout through high-speed movement, calculated exchanges, and strategic positioning.
 
-Riposte is a minimalist, abstract strategy game played on a 5 x 7 grid. It simulates the tactical "push and pull" of a fencing bout through high-speed movement and calculated exchanges.
+🎯 The Core Objective
+The goal is to successfully perform a capture on the Touché Point (marked with a ★) twice.
 
-The Core Objective
+Unlike traditional board games with a fixed goal (like a King in Chess), the Touché Point in Riposte is dynamic. It relocates every time a capture occurs, forcing players to constantly recalibrate their positioning and find a new "line of attack."
 
-The goal is to perform a capture on the Touché Point (marked with a ★) twice. Unlike traditional games with a fixed goal, the Touché Point is dynamic: it relocates every time a capture occurs, forcing players to constantly recalibrate their positioning and "line of attack."
+⚡ Movement: The "Ricochet" Mechanic
+Pieces move across the board with explosive speed, governed by a sliding mechanic:
 
-Movement: The "Ricochet" Mechanic
+Trajectory: Pieces can move in any straight line (Horizontal, Vertical, or Diagonal).
 
-Pieces move in straight lines (Horizontal, Vertical, or Diagonal).
-The Slide: A piece must slide until it hits an obstacle (the board edge or another piece).
-Fencing Analogy: This represents the explosive Lunge or Fleche—once the momentum starts, the fencer commits to the line of attack.
+The Slide: Once a piece moves, it must slide continuously until it hits an obstacle (either the edge of the board or another piece).
 
-Capturing & Shifting Focus
+Fencing Analogy: This represents the explosive Lunge or Fleche. Once the physical momentum starts, the fencer commits entirely to the line of attack.
 
-When a player lands on the Touché Point, the opponent's piece is captured and removed. However, the combat doesn't end there: the player who made the capture must then relocate the Touché Point to the square where the captured piece once stood. A player wins by capturing two of the opponent's pieces.
-Fencing Analogy: This represents a successful Touché. The moment you strike, the "line of engagement" shifts, forcing both fencers to adjust their footwork and distance instantly.
+🤺 Capturing & Shifting Focus
+When a player’s piece lands exactly on the Touché Point, the opponent's piece on that square is captured and removed from the board.
 
-Rules & Variations
+However, the combat doesn't end there:
 
-The Riposte (Classic Rule): If Player A captures Player B's piece, Player B is granted an immediate opportunity to counter-attack.
+The player who made the capture must immediately relocate the Touché Point to the square where their captured piece originally stood.
 
-Clean Cut (Tournament Rule): A variant where the "Riposte" is disabled. Once a piece is captured, it is removed without an immediate chance for a counter-strike.
+A player wins the bout by capturing two of the opponent's pieces.
 
-Fencing Analogy: In real fencing, a Parry-Riposte is a defensive action followed by an immediate offensive action. The game’s logic mirrors this "right of way" struggle.
+Fencing Analogy: This represents a successful Touché. The moment you strike, the "line of engagement" shifts instantly. Both fencers must immediately adjust their footwork and distance to adapt to the new reality of the piste.
 
-Mathematical Symmetry & AI Behavior
-Our research using the KotlinDemo statistical suite revealed a fascinating "Odd-Even Effect" in the Minimax search tree:
+📜 Rules & Variations
+The Riposte (Classic Rule): If Player A captures Player B's piece, Player B is granted an immediate, single-turn opportunity to counter-attack.
 
-Odd-Depth Search (5, 7, 9): Leads to "Decisive/Aggressive" play. The AI sees its own final move but not the opponent's reaction, encouraging bold attacks.
+Clean Cut (Tournament Rule): A strict variant where the "Riposte" is disabled. Once a piece is captured, it is removed without an immediate chance for a counter-strike.
 
-Even-Depth Search (6, 8, 10): Leads to "Defensive/Cautious" play. The AI anticipates the opponent's counter, often resulting in intricate "fencing dances" where players maneuver for dozens of turns without committing to a strike.
+Fencing Analogy: In real fencing, a Parry-Riposte is a defensive action followed by an immediate offensive strike. The game’s logic perfectly mirrors this fierce struggle for the "right of way."
+
+🏆 The Hall of Legends: Personalities & Playstyles
+Riposte does not rely on simple "Easy, Medium, or Hard" difficulty sliders. Instead, the single-player Tournament Mode introduces the Hall of Legends—a curated roster of AI opponents spanning historical fencing masters, literary duelists, and modern champions (including Paralympic legends).
+
+Facing a new opponent means facing a completely different heuristic mindset. The AI engine dynamically adjusts its tactical weights (Aggression, Defense, and Mobility) to reflect the real-world or fictional persona of the fencer.
+
+🛠️ Development Methodology & AI Collaboration
+The development of Riposte follows a Human-Centric AI-Assisted model.
+
+Original Core: The game concept, ruleset, and the high-performance C++ Game Engine (including the bitboard logic and JNI bridge) are 100% human-designed and hand-coded by the author.
+
+AI Co-pilot: Google Gemini (including 3.1 Pro and Ultra models) serves as a high-level project collaborator. Its role includes:
+
+Refactoring and optimizing complex Kotlin UI components.
+
+Assisting in the implementation of the "Hall of Legends" personality-based heuristics.
+
+Generating edge-case test scenarios and performing deep code audits for memory safety.
+
+The Architect's Role: Every line of AI-suggested code is reviewed, tested, and manually integrated. The AI acts as an advanced pair-programmer, while the overall architecture and creative direction remain firmly in human hands.
 
 ## Artistic Direction & AI Collaboration
 
