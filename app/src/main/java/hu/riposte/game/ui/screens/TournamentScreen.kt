@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -36,27 +37,27 @@ import hu.riposte.game.engine.logic.SoundManager
 import hu.riposte.game.engine.data.TournamentOpponent
 import hu.riposte.game.engine.data.TournamentRoster
 import hu.riposte.game.engine.utils.rememberDeviceTilt
+import hu.riposte.game.ui.components.RiposteSystemButton
 import hu.riposte.game.ui.dialogs.OpponentCardOverlay
 import hu.riposte.game.ui.dialogs.PlayerStatsOverlay
 import hu.riposte.game.ui.dialogs.PremiumUnlockDialog
 import hu.riposte.game.ui.theme.LocalGameTheme
+import androidx.compose.ui.zIndex
 import hu.riposte.game.ui.theme.ThemeRegistry
 import kotlinx.coroutines.launch
 import kotlin.math.max
-
-data class AmbientParticle(var x: Float, var y: Float, val speed: Float, val size: Float, val alpha: Float)
 
 @Composable
 fun AmbientDustVFX(accentColor: Color = Color(0xFFD4AF37)) {
     val particles = remember {
         List(40) {
-            AmbientParticle(
-                x = (Math.random() * 1000f).toFloat(),
-                y = (Math.random() * 2000f).toFloat(),
-                speed = (Math.random() * 0.5f + 0.2f).toFloat(),
-                size = (Math.random() * 4f + 2f).toFloat(),
-                alpha = (Math.random() * 0.4f + 0.1f).toFloat()
-            )
+            object {
+                val x = (Math.random() * 1000f).toFloat()
+                val y = (Math.random() * 2000f).toFloat()
+                val speed = (Math.random() * 0.5f + 0.2f).toFloat()
+                val size = (Math.random() * 4f + 2f).toFloat()
+                val alpha = (Math.random() * 0.4f + 0.1f).toFloat()
+            }
         }
     }
 
@@ -84,13 +85,13 @@ fun AmbientDustVFX(accentColor: Color = Color(0xFFD4AF37)) {
 @Composable
 fun TournamentScreen(
     gameViewModel: GameViewModel,
+    soundManager: SoundManager, // Global sound manager
     onBackToMenu: () -> Unit,
     onStartMatch: () -> Unit,
     onResumeGame: () -> Unit
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    val soundManager = remember { SoundManager(context) }
     val settingsManager = remember { SettingsManager(context) }
     val appSettings by settingsManager.settingsFlow.collectAsState(initial = null)
 
@@ -98,6 +99,7 @@ fun TournamentScreen(
     val density = LocalDensity.current.density
     val deviceTilt by rememberDeviceTilt()
     val listState = rememberLazyListState()
+    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
 
     var opponentToShow by remember { mutableStateOf<TournamentOpponent?>(null) }
     var showPremiumDialog by remember { mutableStateOf(false) }
@@ -105,7 +107,9 @@ fun TournamentScreen(
 
     LaunchedEffect(appSettings) {
         appSettings?.let { settings ->
-            if (settings.musicEnabled) soundManager.resumeMusic()
+            // In Tournament mode, keep playing the Main Menu music
+            soundManager.isMusicEnabled = settings.musicEnabled
+            if (settings.musicEnabled) soundManager.playThemeMusic(R.raw.main_menu_music)
 
             manager.loadState(
                 rank = settings.tournamentRank,
@@ -119,16 +123,17 @@ fun TournamentScreen(
         }
     }
 
-    val currentThemeId = appSettings?.themeId ?: "abstract_sunrise"
-    val activeTheme = remember(currentThemeId) { ThemeRegistry.getThemeById(currentThemeId) }
+    // Force Tournament Theme for UI context
+    val activeTheme = ThemeRegistry.Tournament
     val hasOngoingMatch = appSettings?.hasSavedTournamentMatch == true
 
     CompositionLocalProvider(LocalGameTheme provides activeTheme) {
         val accentColor = LocalGameTheme.current.uiAccentColor
 
         Box(modifier = Modifier.fillMaxSize()) {
+            // 1. BACKGROUND (Fixed to R.drawable.bg_hall with Parallax)
             Image(
-                painter = painterResource(id = activeTheme.backgroundRes),
+                painter = painterResource(id = R.drawable.bg_hall),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize().graphicsLayer {
@@ -144,13 +149,15 @@ fun TournamentScreen(
                 modifier = Modifier.fillMaxSize().padding(vertical = 32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    text = stringResource(id = R.string.tournament_title_main),
-                    color = accentColor,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Black,
-                    letterSpacing = 4.sp,
-                    modifier = Modifier.padding(bottom = 16.dp)
+                // 2. LOGO (Overlap adjustment)
+                Image(
+                    painter = painterResource(id = R.drawable.logo_hall),
+                    contentDescription = stringResource(id = R.string.tournament_title_main),
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .fillMaxWidth(0.8f) // 80% of screen width
+                        .zIndex(1f) // Draw on top
+                        .offset(x = (-6).dp, y = 16.dp) // Push down to overlap
                 )
 
                 Box(
@@ -213,20 +220,15 @@ fun TournamentScreen(
 
                 Row(
                     modifier = Modifier.fillMaxWidth(0.66f),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(56.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(Color.Black.copy(alpha = 0.4f))
-                            .border(1.dp, Color.White.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
-                            .clickable { soundManager.playClick(); onBackToMenu() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(stringResource(id = R.string.btn_back), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                    }
+                    // Unified System Button for Back
+                    RiposteSystemButton(
+                        text = stringResource(id = R.string.btn_back),
+                        modifier = Modifier.size(height = 56.dp, width = 80.dp),
+                        onClick = { soundManager.playClick(); onBackToMenu() }
+                    )
 
                     val pulse = rememberInfiniteTransition(label = "btnPulse").animateFloat(
                         initialValue = 1f, targetValue = 1.05f,
@@ -241,37 +243,25 @@ fun TournamentScreen(
                         stringResource(id = R.string.btn_en_garde)
                     }
 
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(start = 16.dp)
-                            .height(56.dp)
-                            .graphicsLayer { scaleX = pulse.value; scaleY = pulse.value }
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(accentColor)
-                            .clickable {
-                                soundManager.playClick()
-                                if (hasOngoingMatch) {
-                                    appSettings?.let { settings ->
-                                        gameViewModel.loadTournamentState(settings)
-                                    }
-                                    onResumeGame()
-                                } else if (!gameViewModel.isPremiumVersion && manager.currentRank == 15 && !manager.isDefending) {
-                                    showPremiumDialog = true
-                                } else {
-                                    onStartMatch()
+                    // Unified System Button for Main Action
+                    RiposteSystemButton(
+                        text = buttonText,
+                        modifier = Modifier.weight(1f).height(56.dp).graphicsLayer { scaleX = pulse.value; scaleY = pulse.value },
+                        isHanging = true, // Use accent color for CTA
+                        onClick = {
+                            soundManager.playClick()
+                            if (hasOngoingMatch) {
+                                appSettings?.let { settings ->
+                                    gameViewModel.loadTournamentState(settings)
                                 }
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = buttonText,
-                            color = Color(0xFF1E272E),
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 2.sp
-                        )
-                    }
+                                onResumeGame()
+                            } else if (!gameViewModel.isPremiumVersion && manager.currentRank == 15 && !manager.isDefending) {
+                                showPremiumDialog = true
+                            } else {
+                                onStartMatch()
+                            }
+                        }
+                    )
                 }
             }
 
@@ -287,7 +277,6 @@ fun TournamentScreen(
             )
 
             if (showPlayerStats && appSettings != null) {
-                // Logika a kezdőértékekhez: Ha null, akkor egyezik a jelenlegivel (nincs pörgés)
                 val startRating = gameViewModel.lastViewedRating ?: manager.riposteRating
                 val startRank = gameViewModel.lastViewedRank ?: manager.currentRank
 
@@ -313,7 +302,6 @@ fun TournamentScreen(
                         }
                     },
                     onDismiss = {
-                        // BEZÁRÁSKOR ELMENTJÜK AZ AKTUÁLISAT A VIEWMODELBE
                         gameViewModel.lastViewedRating = manager.riposteRating
                         gameViewModel.lastViewedRank = manager.currentRank
                         showPlayerStats = false

@@ -68,7 +68,7 @@
     <string name="player_you_suffix">(YOU)</string>
     <string name="btn_back">Back</string>
     <string name="btn_resume_match">Resume Match</string>
-    <string name="btn_accept_challenge">ACCEPT CHALLENGE</string>
+    <string name="btn_accept_challenge">Accept Challenge</string>
     <string name="btn_en_garde">EN GARDE!</string>
 
     <string name="profile_title">IDENTITY</string>

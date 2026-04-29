@@ -7,9 +7,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.graphics.BlendMode
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
@@ -43,6 +40,7 @@ import kotlinx.coroutines.launch
 fun MainScreen(
     isInterruptedGame: Boolean,
     gameViewModel: GameViewModel,
+    soundManager: SoundManager, // Global sound manager
     onResumeGame: () -> Unit,
     onNavigateToTournament: () -> Unit,
     onNavigateToTutorial: () -> Unit,
@@ -55,7 +53,6 @@ fun MainScreen(
     val configuration = LocalConfiguration.current
     val coroutineScope = rememberCoroutineScope()
 
-    val soundManager = remember { SoundManager(context) }
     val settingsManager = remember { SettingsManager(context) }
     val appSettingsState = settingsManager.settingsFlow.collectAsState(initial = null)
     val appSettings = appSettingsState.value
@@ -73,20 +70,6 @@ fun MainScreen(
             if (settings.musicEnabled) soundManager.playThemeMusic(R.raw.main_menu_music)
             else soundManager.pauseMusic()
         }
-    }
-
-    val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_RESUME -> soundManager.resumeMusic()
-                Lifecycle.Event.ON_PAUSE -> soundManager.pauseMusic()
-                Lifecycle.Event.ON_DESTROY -> soundManager.release()
-                else -> {}
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     val menuItems = listOf(
@@ -132,7 +115,7 @@ fun MainScreen(
 
     val activeThemeId = appSettings?.themeId ?: "abstract_sunrise"
     val activeTheme = remember(activeThemeId) { ThemeRegistry.getThemeById(activeThemeId) }
-    val screenWidth = configuration.screenWidthDp.dp
+    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
 
     CompositionLocalProvider(LocalGameTheme provides activeTheme) {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -159,7 +142,7 @@ fun MainScreen(
 
             // 3. AZ KISZERVEZETT MENÜ KOMPONENS
             InteractiveMainMenu(
-                modifier = Modifier.align(Alignment.BottomEnd), // Itt helyezzük a sarokba!
+                modifier = Modifier.align(Alignment.BottomEnd),
                 menuItems = menuItems,
                 aiDifficultyItems = aiDifficultyItems,
                 isPremiumVersion = gameViewModel.isPremiumVersion,

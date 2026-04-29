@@ -105,7 +105,7 @@ fun SlantedMenuButton(
                 )
             }
             Text(
-                text = item.label.uppercase(),
+                text = item.label,
                 color = textColor,
                 fontWeight = if (isHovered) FontWeight.Black else FontWeight.Bold,
                 fontSize = fontSize,

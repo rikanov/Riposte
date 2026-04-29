@@ -33,8 +33,7 @@ import hu.riposte.game.ui.theme.LocalGameTheme
 @Composable
 fun DailyTipDialog(
     soundManager: SoundManager,
-    onDismiss: () -> Unit,
-    onTurnOff: () -> Unit
+    onDismiss: () -> Unit
 ) {
     val accentColor = LocalGameTheme.current.uiAccentColor
     val tips = stringArrayResource(id = R.array.daily_tips)
@@ -53,11 +52,25 @@ fun DailyTipDialog(
         animationSpec = infiniteRepeatable(tween(1200), RepeatMode.Reverse), label = "alpha"
     )
 
-    GlassDialog(onDismissRequest = { /* Csak gombra zárható */ }) {
+    GlassDialog(
+        onDismissRequest = {
+            // Az overlay-re (ablakon kívülre) kattintás bezárja
+            soundManager.playClick()
+            onDismiss()
+        }
+    ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .fillMaxWidth()
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) {
+                    // A kártya bármely üres részére kattintás bezárja
+                    soundManager.playClick()
+                    onDismiss()
+                }
                 .padding(top = 16.dp, start = 8.dp, end = 8.dp, bottom = 8.dp)
         ) {
             // --- CÍM ---
@@ -80,13 +93,6 @@ fun DailyTipDialog(
                     .clip(RoundedCornerShape(16.dp))
                     .background(Color.White.copy(alpha = 0.03f))
                     .border(0.5.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(16.dp))
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null
-                    ) {
-                        soundManager.playClick()
-                        onDismiss()
-                    }
             ) {
                 Column(
                     modifier = Modifier
@@ -120,35 +126,21 @@ fun DailyTipDialog(
 
             Spacer(Modifier.height(32.dp))
 
-            // --- ALSÓ VEZÉRLŐK ---
-            Row(
+            // --- ALSÓ VEZÉRLŐK (Középre igazítva, nyíllal) ---
+            Box(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                contentAlignment = Alignment.Center
             ) {
-                // KIKAPCSOLÁS (Háttér nélküli kattintható szöveg)
                 Text(
-                    text = stringResource(id = R.string.turn_off_notifications),
-                    color = Color.White.copy(alpha = 0.3f),
-                    fontSize = 11.sp,
-                    modifier = Modifier
-                        .clickable {
-                            soundManager.playClick()
-                            onTurnOff()
-                            onDismiss()
-                        }
-                        .padding(8.dp)
-                )
-
-                // KÖVETKEZŐ (Háttér nélküli kattintható szöveg, de hangsúlyosabb színnel)
-                Text(
-                    text = stringResource(id = R.string.next_tip).uppercase(),
+                    text = "${stringResource(id = R.string.next_tip).uppercase()} ➔",
                     color = accentColor.copy(alpha = 0.8f),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.sp,
                     modifier = Modifier
                         .clickable {
+                            // Mivel a belső clickable megfogja az eseményt,
+                            // a "Next Tip" gomb nem zárja be az ablakot.
                             soundManager.playClick()
                             var nextIndex = tips.indices.random()
                             if (tips.size > 1) {

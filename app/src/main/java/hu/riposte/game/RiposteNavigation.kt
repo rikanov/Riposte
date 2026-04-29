@@ -1,8 +1,11 @@
 package hu.riposte.game
 
 import android.app.Activity
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.IntOffset
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -11,9 +14,11 @@ import hu.riposte.game.engine.data.GameMode
 import hu.riposte.game.engine.data.GameSettings
 import hu.riposte.game.engine.logic.GameViewModel
 import hu.riposte.game.engine.data.GameWaitingFor
-import hu.riposte.game.engine.utils.RiposteGameBoard
+import hu.riposte.game.engine.logic.SoundManager
+import hu.riposte.game.ui.screens.RiposteGameBoard
 import hu.riposte.game.engine.data.StartingPlayer
 import hu.riposte.game.ui.screens.MainScreen
+import hu.riposte.game.ui.screens.SplashScreen
 import hu.riposte.game.ui.screens.TournamentScreen
 
 sealed class Screen(val route: String) {
@@ -24,15 +29,13 @@ sealed class Screen(val route: String) {
 }
 
 @Composable
-fun RiposteApp() {
+fun RiposteApp(soundManager: SoundManager) {
     val navController = rememberNavController()
     val gameViewModel: GameViewModel = viewModel()
     val activity = (LocalContext.current as? Activity)
 
-    // A startDestination helyesen a Splash!
     NavHost(navController = navController, startDestination = Screen.Splash.route) {
 
-        // --- 1. SPLASH SCREEN (Önálló blokk!) ---
         composable(Screen.Splash.route) {
             SplashScreen(
                 onSplashFinished = {
@@ -43,11 +46,11 @@ fun RiposteApp() {
             )
         }
 
-        // --- 2. MAIN SCREEN ---
         composable(Screen.Main.route) {
             MainScreen(
                 isInterruptedGame = gameViewModel.isInterruptedGame,
                 gameViewModel = gameViewModel,
+                soundManager = soundManager,
                 onResumeGame = {
                     navController.navigate(Screen.Game.route) { launchSingleTop = true }
                 },
@@ -63,29 +66,43 @@ fun RiposteApp() {
                     navController.navigate(Screen.Game.route) { launchSingleTop = true }
                 },
                 onNavigateToLocal = {
-                    // AZONNALI INDÍTÁS: Local Mód, Váltakozó kezdés
                     gameViewModel.startNewGame(
                         GameSettings(
                             gameMode = GameMode.LOCAL_MULTIPLAYER,
                             startingPlayer = StartingPlayer.ALTERNATING,
-                            difficulty = 5, // Local módnál a depth nem számít
+                            difficulty = 5,
                             riposteAllowed = gameViewModel.settings.riposteAllowed,
                         ),
                         isTournament = false
                     )
                     navController.navigate(Screen.Game.route) { launchSingleTop = true }
                 },
-                // Az onNavigateToOnline törölve!
                 onExitGame = {
                     activity?.finish()
                 }
             )
         }
 
-        // --- 3. GAME BOARD ---
-        composable(Screen.Game.route) {
+        composable(
+            route = Screen.Game.route,
+            enterTransition = {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Up,
+                    animationSpec = tween(700)
+                )
+            },
+            exitTransition = {
+                // PREMIUM POLISH: Smooth diagonal slide out combined with fade
+                slideOut(
+                    animationSpec = tween(800, easing = FastOutSlowInEasing)
+                ) { fullSize -> 
+                    IntOffset(fullSize.width / 4, fullSize.height) 
+                } + fadeOut(animationSpec = tween(800))
+            }
+        ) {
             RiposteGameBoard(
                 gameViewModel = gameViewModel,
+                soundManager = soundManager,
                 onBackToMenu = {
                     if (gameViewModel.isTournamentMode) {
                         navController.popBackStack(Screen.Tournament.route, inclusive = false)
@@ -96,10 +113,10 @@ fun RiposteApp() {
             )
         }
 
-        // --- 4. TOURNAMENT SCREEN ---
         composable(Screen.Tournament.route) {
             TournamentScreen(
                 gameViewModel = gameViewModel,
+                soundManager = soundManager,
                 onBackToMenu = {
                     navController.popBackStack(Screen.Main.route, inclusive = false)
                 },
@@ -119,7 +136,6 @@ fun RiposteApp() {
                     navController.navigate(Screen.Game.route) { launchSingleTop = true }
                 },
                 onResumeGame = {
-                    // ÚJ: Visszaugrunk a megkezdett játékba!
                     navController.navigate(Screen.Game.route) { launchSingleTop = true }
                 }
             )

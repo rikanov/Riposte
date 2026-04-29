@@ -1,18 +1,22 @@
-package hu.riposte.game
+package hu.riposte.game.ui.screens
 
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import hu.riposte.game.ui.screens.AmbientDustVFX
+import hu.riposte.game.R
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -20,77 +24,106 @@ import kotlinx.coroutines.launch
 fun SplashScreen(
     onSplashFinished: () -> Unit
 ) {
-    // Animációs értékek
-    val logoScale = remember { Animatable(0.85f) }
-    val logoAlpha = remember { Animatable(0f) }
-    val subTextAlpha = remember { Animatable(0f) }
+    // --- ANIMATION VALUES ---
+    val textAlpha = remember { Animatable(0f) }
+    val shimmerProgress = remember { Animatable(0f) }
+    val globalAlpha = remember { Animatable(1f) }
 
     LaunchedEffect(Unit) {
-        // 1. A logó lassan beúszik és felnagyítódik
+        // 1. Initial wait to bridge from the OS splash
+        delay(300)
+
+        // 2. PARALLEL ANIMATION: Sweep the light while revealing the text
         launch {
-            logoScale.animateTo(
+            textAlpha.animateTo(
                 targetValue = 1f,
-                animationSpec = tween(durationMillis = 2000, easing = EaseOutSine)
+                animationSpec = tween(durationMillis = 700, easing = EaseOutSine)
             )
         }
         launch {
-            logoAlpha.animateTo(
+            shimmerProgress.animateTo(
                 targetValue = 1f,
-                animationSpec = tween(durationMillis = 1500, easing = EaseInOutSine)
+                animationSpec = tween(durationMillis = 800, easing = LinearEasing)
             )
         }
 
-        // 2. Az alcím pici késéssel jelenik meg
-        launch {
-            delay(800)
-            subTextAlpha.animateTo(
-                targetValue = 0.5f,
-                animationSpec = tween(durationMillis = 1000)
-            )
-        }
+        // 3. Reading pause
+        delay(800)
 
-        // 3. Várunk egy kicsit, hogy a játékos kiélvezze a látványt, majd váltunk
-        delay(2800)
+        // 4. Final fade out
+        globalAlpha.animateTo(
+            targetValue = 0f,
+            animationSpec = tween(durationMillis = 600, easing = EaseOutSine)
+        )
+
+        // 5. Hand over to main menu
         onSplashFinished()
     }
 
-    // A Splash Screen UI
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0F141E)), // Mélykék/fekete alap
+            .background(Color(0xFF0F141E)) // Deep Obsidian
+            .graphicsLayer { alpha = globalAlpha.value },
         contentAlignment = Alignment.Center
     ) {
-        // Használjuk a Bajnokságból ismerős szálló szikrákat!
+        // Subtle ambient motion
         AmbientDustVFX()
 
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.graphicsLayer {
-                scaleX = logoScale.value
-                scaleY = logoScale.value
-            }
+        // --- CENTERED CONTAINER ---
+        Box(
+            modifier = Modifier
+                .graphicsLayer {
+                    // Necessary for SrcAtop blend mode to work on the whole layer
+                    compositingStrategy = CompositingStrategy.Offscreen
+                }
+                .drawWithContent {
+                    drawContent()
+                    
+                    // --- CINEMATIC LIGHT SWEEP REVEAL ---
+                    if (shimmerProgress.value > 0f && shimmerProgress.value < 1f) {
+                        val width = size.width
+                        val height = size.height
+                        
+                        // Sweeping movement from left to right
+                        val sweepX = (shimmerProgress.value * (width * 2)) - (width / 2)
+                        
+                        val shimmerBrush = Brush.linearGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.White.copy(alpha = 0.2f),
+                                Color.White.copy(alpha = 0.7f), // The intense beam center
+                                Color.White.copy(alpha = 0.2f),
+                                Color.Transparent
+                            ),
+                            start = Offset(sweepX, 0f),
+                            end = Offset(sweepX + 180.dp.toPx(), height)
+                        )
+                        
+                        // Mask the shimmer to our logo and text vectors
+                        drawRect(
+                            brush = shimmerBrush,
+                            blendMode = BlendMode.SrcAtop
+                        )
+                    }
+                },
+            contentAlignment = Alignment.Center
         ) {
-            // Főcím (Később ezt cserélhetjük az Inkscape-es logódra)
-            Text(
-                text = "R I P O S T E",
-                color = Color(0xFFD4AF37), // Elegáns arany
-                fontSize = 42.sp,
-                fontWeight = FontWeight.Black,
-                letterSpacing = 8.sp,
-                modifier = Modifier.graphicsLayer { alpha = logoAlpha.value }
+            // THE LOGO: Dead center of the screen
+            Image(
+                painter = painterResource(id = R.drawable.ic_letter_r),
+                contentDescription = null,
+                modifier = Modifier.size(160.dp)
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Alcím
-            Text(
-                text = "TACTICAL BOARD GAME",
-                color = Color.White,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 6.sp,
-                modifier = Modifier.graphicsLayer { alpha = subTextAlpha.value }
+            // THE TEXT: Offset below the logo without moving the logo's center
+            Image(
+                painter = painterResource(id = R.drawable.ic_la_riposte_text),
+                contentDescription = "La Riposte",
+                modifier = Modifier
+                    .width(200.dp)
+                    .offset(y = 120.dp) // Perfect spacing below the 160dp logo
+                    .graphicsLayer { alpha = textAlpha.value }
             )
         }
     }

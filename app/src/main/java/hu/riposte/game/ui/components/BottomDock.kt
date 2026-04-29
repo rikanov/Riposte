@@ -28,6 +28,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -71,11 +72,11 @@ fun RiposteBottomDock(
 
     // DINAMIKUS LISTA ÉPÍTÉS
     val items = buildList {
-        add(BarItem(if (appSettings.musicEnabled) R.drawable.ic_dock_musicon else R.drawable.ic_dock_musicoff, "Music", appSettings.musicEnabled, false, onMusicToggle))
-        add(BarItem(if (appSettings.sfxEnabled) R.drawable.ic_dock_sfxon else R.drawable.ic_dock_sfxoff, "Sound FX", appSettings.sfxEnabled, false, onSfxToggle))
+        add(BarItem(if (appSettings.musicEnabled) R.drawable.ic_dock_musicon else R.drawable.ic_dock_musicoff, stringResource(id = R.string.options_music), appSettings.musicEnabled, false, onMusicToggle))
+        add(BarItem(if (appSettings.sfxEnabled) R.drawable.ic_dock_sfxon else R.drawable.ic_dock_sfxoff, stringResource(id = R.string.options_sfx), appSettings.sfxEnabled, false, onSfxToggle))
         add(BarItem(if (appSettings.nightModeEnabled) R.drawable.ic_dock_daylight else R.drawable.ic_dock_night, if (appSettings.nightModeEnabled) "Day Mode" else "Night Mode", appSettings.nightModeEnabled, false, onNightModeToggle))
-        add(BarItem(R.drawable.ic_dock_grid, "Grid", isGridVisible, false) { onGridToggle(!isGridVisible) })
-        add(BarItem(R.drawable.ic_dock_themes, "Theme", true, false, onThemeClick))
+        add(BarItem(R.drawable.ic_dock_grid, stringResource(id = R.string.options_grid), isGridVisible, false) { onGridToggle(!isGridVisible) })
+        add(BarItem(R.drawable.ic_dock_themes, stringResource(id = R.string.cd_themes), true, false, onThemeClick))
 
         if (!isTournamentMode) {
             // Sima játékmód: Undo és Hint
@@ -156,7 +157,7 @@ fun RiposteBottomDock(
         ) {
             if (hoveredIndex != -1) {
                 Text(
-                    text = currentItems[hoveredIndex].label.uppercase(),
+                    text = currentItems[hoveredIndex].label,
                     color = Color.White,
                     fontWeight = FontWeight.Black,
                     fontSize = 13.sp,

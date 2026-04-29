@@ -34,36 +34,43 @@ import kotlin.math.atan2
 import kotlin.math.max
 import kotlin.math.sqrt
 
+/**
+ * RIPOSTE - Core Game ViewModel
+ * Handles game state, AI steps, and Tournament logic.
+ * Follows AI_AGENT.md guidelines for state management.
+ */
 class GameViewModel(application: Application) : AndroidViewModel(application) {
 
+    // --- INFRASTRUCTURE ---
     val settingsManager = SettingsManager(application)
+    val tournamentManager = TournamentManager()
+    private var timerJob: Job? = null
+    private val undoStack = mutableListOf<GameStateSnapshot>()
+
+    // --- GLOBAL STATE ---
     var isPremiumVersion: Boolean by mutableStateOf(true)
-    var lastViewedRating: Int? = null
-    var lastViewedRank: Int? = null
+    var isGamePaused by mutableStateOf(false)
+    var isInterruptedGame by mutableStateOf(false)
+    var settings by mutableStateOf(GameSettings())
+    var matchCount: Int = 0
+
+    // --- BOARD & PIECES STATE ---
     val board = mutableStateListOf<Int>()
     val pieces = mutableStateListOf<Piece>()
-    var isInterruptedGame by mutableStateOf(false)
     var playerCaptured by mutableStateOf(intArrayOf(0, 0, 0))
-    var winner by mutableStateOf<String?>(null)
-    var gamePhase by mutableStateOf(GameWaitingFor.SETUP)
+    var activeHint by mutableStateOf<MoveData?>(null)
+    private var afterTouche: Boolean = false
 
+    // --- GAME PHASE & WINNER ---
+    var gamePhase by mutableStateOf(GameWaitingFor.SETUP)
+    var winner by mutableStateOf<String?>(null)
+
+    // --- TUTORIAL STATE ---
     var isTutorialMode by mutableStateOf(false)
     var tutorialPhase by mutableStateOf(TutorialPhase.NOT_ACTIVE)
     var tutorialMoveCount by mutableIntStateOf(0)
 
-    var settings by mutableStateOf(GameSettings())
-    var matchCount: Int = 0
-    private var afterTouche: Boolean = false
-    var soundEvent by mutableStateOf<SoundEvent?>(null)
-        private set
-    fun triggerSound(type: SoundType, playerId: Int) {
-        soundEvent = SoundEvent(type, playerId)
-    }
-
-    var activeHint by mutableStateOf<MoveData?>(null)
-
-    // --- BAJNOKSÁG ÉS ÓRA VÁLTOZÓK ---
-    val tournamentManager = TournamentManager()
+    // --- TOURNAMENT & CLOCK STATE ---
     var isTournamentMode by mutableStateOf(false)
     var tournamentOpponentNameRes: Int? by mutableStateOf(null)
     var tournamentTargetRank: Int? by mutableStateOf(null)
@@ -71,18 +78,28 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     var currentPlayerId: Int = if(matchCount++ % 2 == 1) 1 else 2
     var playerTimeMs by mutableLongStateOf(180_000L)
     var opponentTimeMs by mutableLongStateOf(180_000L)
-    private var timerJob: Job? = null
 
-    // ÚJ: Taktikai bónusz szorzó a meccsen belül
+    // --- STATS & VFX EVENTS ---
+    var lastViewedRating: Int? = null
+    var lastViewedRank: Int? = null
     var tacticalMultiplier by mutableStateOf(1.0f)
         private set
+    var soundEvent by mutableStateOf<SoundEvent?>(null)
+        private set
 
-    private val undoStack = mutableListOf<GameStateSnapshot>()
-    var isGamePaused by mutableStateOf(false)
+    init {
+        resetBoard()
+    }
 
-    init { resetBoard() }
+    // --- CORE LOGIC ---
 
-    // Ezt hívhatjuk meg, ha a játékos sikeresen használ Riposte-ot vagy Remise-t!
+    fun triggerSound(type: SoundType, playerId: Int) {
+        soundEvent = SoundEvent(type, playerId)
+    }
+
+    /**
+     * Increments tactical bonus for skilled moves (Riposte/Remise).
+     */
     fun onTacticalMoveExecuted() {
         tacticalMultiplier += 0.1f
     }
@@ -92,32 +109,35 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         pieces.clear()
         repeat(35) { board.add(0) }
 
+        // P1 Pieces (AI/Opponent)
         for (i in 0..4) {
             board[i] = 1
-            pieces.add(Piece(id = i, owner = 1, pos = Coord.Companion.fromIndex(i)))
+            pieces.add(Piece(id = i, owner = 1, pos = Coord.fromIndex(i)))
         }
+        // P2 Pieces (Player)
         for (i in 30..34) {
             board[i] = 2
-            pieces.add(Piece(id = i, owner = 2, pos = Coord.Companion.fromIndex(i)))
+            pieces.add(Piece(id = i, owner = 2, pos = Coord.fromIndex(i)))
         }
+        // Initial HotSpot (★)
         board[17] = 4
+
         playerCaptured = intArrayOf(0, 0, 0)
         activeHint = null
         undoStack.clear()
         soundEvent = null
-
         timerJob?.cancel()
     }
 
     fun restartGame() {
         resetBoard()
-        tacticalMultiplier = 1.0f // ÚJ: Szorzó nullázása!
+        tacticalMultiplier = 1.0f
 
         currentPlayerId = if (isTournamentMode) {
             if (tournamentManager.isDefending) 1 else 2
         } else {
             if(matchCount++ % 2 == 1) 1 else 2
-            }
+        }
 
         if (isTournamentMode) {
             playerTimeMs = 180_000L
@@ -167,7 +187,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         restartGame()
     }
 
-    // --- SAKK-ÓRA LOGIKA ---
+    // --- CHESS CLOCK LOGIC ---
+
     private fun startTimer() {
         timerJob?.cancel()
         timerJob = viewModelScope.launch {
@@ -180,7 +201,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
                 if (gamePhase == GameWaitingFor.GAME_OVER) break
 
-                if (!isGamePaused && isTournamentMode && (gamePhase == GameWaitingFor.MOVE_PIECE || gamePhase == GameWaitingFor.AI_MOVE)) {
+                if (!isGamePaused && isTournamentMode && (gamePhase == GameWaitingFor.MOVE_PIECE || gamePhase == GameWaitingFor.AI_MOVE || gamePhase == GameWaitingFor.TAKE_PIECE)) {
                     if (currentPlayerId == 2) {
                         playerTimeMs -= delta
                         if (playerTimeMs <= 0) {
@@ -211,13 +232,15 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         gamePhase = GameWaitingFor.GAME_OVER
     }
 
+    // --- MOVE EXECUTION ---
+
     private fun synchronizeMove(fromIdx: Int, toIdx: Int, owner: Int) {
         val hitTouche = board[toIdx] == 4
         board[fromIdx] = 0
         board[toIdx] = owner
 
-        val pieceIdx = pieces.indexOfFirst { it.pos == Coord.Companion.fromIndex(fromIdx) && it.state != PieceState.CAPTURED }
-        if (pieceIdx != -1) pieces[pieceIdx] = pieces[pieceIdx].copy(pos = Coord.Companion.fromIndex(toIdx))
+        val pieceIdx = pieces.indexOfFirst { it.pos == Coord.fromIndex(fromIdx) && it.state != PieceState.CAPTURED }
+        if (pieceIdx != -1) pieces[pieceIdx] = pieces[pieceIdx].copy(pos = Coord.fromIndex(toIdx))
 
         viewModelScope.launch {
             triggerSound(SoundType.MOVE, owner)
@@ -248,6 +271,11 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
         if (targetIndex != index) {
             if (settings.riposteAllowed || !afterTouche || board[targetIndex] != 4) {
+                // Tactical Bonus Check (Riposte)
+                if (afterTouche && board[targetIndex] == 4) {
+                    onTacticalMoveExecuted()
+                }
+
                 saveState()
                 gamePhase = GameWaitingFor.ANIMATION
                 afterTouche = false
@@ -259,7 +287,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     fun onCellClick(index: Int) {
         activeHint = null
         if (gamePhase == GameWaitingFor.TAKE_PIECE && board[index] == 3 - currentPlayerId) {
-            val pIdx = pieces.indexOfFirst { it.pos == Coord.Companion.fromIndex(index) && it.state != PieceState.CAPTURED }
+            val pIdx = pieces.indexOfFirst { it.pos == Coord.fromIndex(index) && it.state != PieceState.CAPTURED }
             if (pIdx != -1) {
                 viewModelScope.launch {
                     triggerSound(SoundType.TOUCHE, currentPlayerId)
@@ -273,7 +301,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                     playerCaptured[currentPlayerId]++
                     gamePhase = GameWaitingFor.ANIMATION
                     delay(300)
-                    pieces[pIdx] = pieces[pIdx].copy(state = PieceState.CAPTURED, pos = Coord.Companion.Invalid)
+                    pieces[pIdx] = pieces[pIdx].copy(state = PieceState.CAPTURED, pos = Coord.Invalid)
 
                     if (playerCaptured[currentPlayerId] >= 2) {
                         timerJob?.cancel()
@@ -305,6 +333,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // --- AI & ENGINE INTEGRATION ---
+
     fun requestHint() {
         if (gamePhase != GameWaitingFor.MOVE_PIECE) return
         viewModelScope.launch {
@@ -314,6 +344,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             if (move.from != -1) activeHint = move
         }
     }
+
     private fun getRandomOpeningMove(currentBoard: List<Int>): MoveData {
         val validMoves = mutableListOf<MoveData>()
         val offsets = intArrayOf(1, 4, 5, 6, -1, -4, -5, -6)
@@ -323,7 +354,6 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             if (currentBoard[i] == 1) {
                 for (offset in offsets) {
                     val target = MoveLogic.calculateTargetIndex(currentBoard, i, offset)
-                    // Ha a bábu el tudott mozdulni, és a célmező garantáltan üres
                     if (target != i && currentBoard[target] == 0) {
                         validMoves.add(MoveData(i, target, hotSpot))
                     }
@@ -336,6 +366,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             getBestStepNative(currentBoard.toIntArray(), 1, settings.difficulty, settings.riposteAllowed)
         }
     }
+
     private fun aiStep() {
         currentPlayerId = 1
         gamePhase = GameWaitingFor.AI_MOVE
@@ -378,8 +409,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     private suspend fun applyAiMove(move: MoveData) {
         if (board[move.to] == 4) { playerCaptured[1]++; afterTouche = true }
 
-        val pIdx = pieces.indexOfFirst { it.pos == Coord.Companion.fromIndex(move.from) && it.state != PieceState.CAPTURED }
-        if (pIdx != -1) pieces[pIdx] = pieces[pIdx].copy(pos = Coord.Companion.fromIndex(move.to))
+        val pIdx = pieces.indexOfFirst { it.pos == Coord.fromIndex(move.from) && it.state != PieceState.CAPTURED }
+        if (pIdx != -1) pieces[pIdx] = pieces[pIdx].copy(pos = Coord.fromIndex(move.to))
 
         triggerSound(SoundType.MOVE, 1)
         delay(400L)
@@ -389,7 +420,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
         if (isCapture) {
             delay(300L)
-            capturedIdx = pieces.indexOfFirst { it.pos == Coord.Companion.fromIndex(move.hotSpot) && it.state != PieceState.CAPTURED }
+            capturedIdx = pieces.indexOfFirst { it.pos == Coord.fromIndex(move.hotSpot) && it.state != PieceState.CAPTURED }
             if (capturedIdx != -1) pieces[capturedIdx] = pieces[capturedIdx].copy(state = PieceState.BEING_CAPTURED)
 
             if (isTournamentMode) opponentTimeMs += 60_000L
@@ -402,9 +433,11 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         if (isCapture && capturedIdx != -1) {
             triggerSound(SoundType.TOUCHE, 1)
             delay(600)
-            pieces[capturedIdx] = pieces[capturedIdx].copy(state = PieceState.CAPTURED, pos = Coord.Companion.Invalid)
+            pieces[capturedIdx] = pieces[capturedIdx].copy(state = PieceState.CAPTURED, pos = Coord.Invalid)
         }
     }
+
+    // --- UTILS ---
 
     fun getOffsetFromAngle(angle: Double): Int? {
         return when {
@@ -448,7 +481,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // --- ÚJ: BAJNOKSÁG VÉGEREDMÉNYÉNEK FELDOLGOZÁSA ---
+    // --- PERSISTENCE & TOURNAMENT FLOW ---
+
     fun processTournamentMatchEnd(isWin: Boolean): String {
         val rank = tournamentTargetRank ?: 20
         val baseScore = ((20 - rank) * (20 - rank)).toFloat()
@@ -527,7 +561,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun forfeitTournamentMatch() {
-        processTournamentMatchEnd(isWin = false) // ÚJ: Itt is a feldolgozót hívjuk!
+        processTournamentMatchEnd(isWin = false)
         isTournamentMode = false
         isInterruptedGame = false
 
@@ -547,5 +581,10 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     private external fun getBestStepNative(b: IntArray, p: Int, d: Int, r: Boolean): MoveData
     private external fun getBestStepNativeTT(b: IntArray, p: Int, d: Int, r: Boolean): MoveData
-    companion object { init { System.loadLibrary("riposte") } }
+
+    companion object {
+        init {
+            System.loadLibrary("riposte")
+        }
+    }
 }

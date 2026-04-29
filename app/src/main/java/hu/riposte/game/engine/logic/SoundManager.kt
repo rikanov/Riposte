@@ -58,7 +58,7 @@ class SoundManager(private val context: Context) {
     private val soundClick = soundPool.load(context, R.raw.menu_click, 1)
     private val soundToggleOn = soundPool.load(context, R.raw.toggle_on, 1)
     private val soundToggleOff = soundPool.load(context, R.raw.toggle_off, 1)
-    private val sliceSoundId = soundPool.load(context, R.raw.p2_move, 1) // Helyettesítsd a fájlod nevével!
+
     var isMusicEnabled: Boolean
         get() = isMusicGloballyEnabled
         set(value) {
@@ -100,14 +100,32 @@ class SoundManager(private val context: Context) {
     }
 
     fun pauseMusic() {
-        if (mediaPlayer?.isPlaying == true) {
-            mediaPlayer?.pause()
+        try {
+            if (mediaPlayer?.isPlaying == true) {
+                mediaPlayer?.pause()
+            }
+        } catch (e: Exception) {
+            // Player state might be invalid, fail silently
         }
     }
 
     fun resumeMusic() {
-        if (isMusicGloballyEnabled && mediaPlayer?.isPlaying == false) {
-            mediaPlayer?.start()
+        if (!isMusicGloballyEnabled) return
+        try {
+            if (mediaPlayer != null) {
+                if (mediaPlayer?.isPlaying == false) {
+                    mediaPlayer?.start()
+                }
+            } else if (currentMusicRes != null) {
+                startMusic()
+            }
+        } catch (e: Exception) {
+            // Robust Recovery: OS might have invalidated the player
+            try {
+                mediaPlayer?.release()
+            } catch (ex: Exception) {}
+            mediaPlayer = null
+            startMusic()
         }
     }
 

@@ -1,18 +1,19 @@
-package hu.riposte.game.engine.utils
+package hu.riposte.game.ui.screens
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -21,7 +22,6 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -40,8 +40,11 @@ import hu.riposte.game.engine.data.TutorialPhase
 import hu.riposte.game.engine.logic.GameViewModel
 import hu.riposte.game.engine.logic.SettingsManager
 import hu.riposte.game.engine.logic.SoundManager
+import hu.riposte.game.engine.utils.RiposteBoardArea
+import hu.riposte.game.engine.utils.rememberDeviceTilt
 import hu.riposte.game.ui.theme.ThemeRegistry
 import hu.riposte.game.ui.dialogs.OpponentCardOverlay
+import hu.riposte.game.ui.components.RiposteDialogButton
 import hu.riposte.game.ui.components.RiposteBottomDock
 import hu.riposte.game.ui.dialogs.DailyTipDialog
 import hu.riposte.game.ui.dialogs.ThemeSelectorDialog
@@ -50,6 +53,65 @@ import hu.riposte.game.ui.dialogs.TutorialWelcomeDialog
 import hu.riposte.game.ui.dialogs.GameOverOverlay
 import kotlinx.coroutines.launch
 import kotlin.math.max
+
+// --- PARTICLE MODEL ---
+private data class DustParticle(
+    val x: Float,
+    val y: Float,
+    val speed: Float,
+    val size: Float,
+    val alpha: Float
+)
+
+/**
+ * Ambient particle layer with 3D parallax effect driven by device tilt.
+ */
+@Composable
+fun ParallaxDustVFX(deviceTilt: Offset, accentColor: Color) {
+    val particles = remember {
+        List(45) {
+            DustParticle(
+                x = (Math.random() * 2000).toFloat(), // Wide spawn range
+                y = (Math.random() * 2000).toFloat(),
+                speed = (Math.random() * 0.4f + 0.1f).toFloat(),
+                size = (Math.random() * 6f + 2f).toFloat(), // 2f to 8f
+                alpha = (Math.random() * 0.5f + 0.1f).toFloat()
+            )
+        }
+    }
+
+    val infiniteTransition = rememberInfiniteTransition(label = "dust_move")
+    val fallingAnim by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1000f,
+        animationSpec = infiniteRepeatable(tween(25000, easing = LinearEasing), RepeatMode.Restart),
+        label = "falling"
+    )
+
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        particles.forEach { p ->
+            // Base movement (falling)
+            val currentY = (p.y + fallingAnim * p.speed) % size.height
+            
+            // 3D Parallax: Larger particles move more based on tilt
+            val parallaxX = deviceTilt.x * p.size * 3f
+            val parallaxY = -deviceTilt.y * p.size * 3f
+            
+            val finalX = (p.x + parallaxX) % size.width
+            val finalY = (currentY + parallaxY) % size.height
+            
+            // Re-wrap negative values
+            val drawX = if (finalX < 0) finalX + size.width else finalX
+            val drawY = if (finalY < 0) finalY + size.height else finalY
+
+            drawCircle(
+                color = accentColor.copy(alpha = p.alpha),
+                radius = p.size,
+                center = Offset(drawX, drawY)
+            )
+        }
+    }
+}
 
 // Segédfüggvény az idő formázására (mm:ss)
 fun formatTime(ms: Long): String {
@@ -62,6 +124,7 @@ fun formatTime(ms: Long): String {
 @Composable
 fun RiposteGameBoard(
     gameViewModel: GameViewModel,
+    soundManager: SoundManager, // Global sound manager
     onBackToMenu: () -> Unit
 ) {
     val configuration = LocalConfiguration.current
@@ -70,7 +133,6 @@ fun RiposteGameBoard(
     val coroutineScope = rememberCoroutineScope()
     val density = LocalDensity.current.density
 
-    val soundManager = remember { SoundManager(context) }
     val settingsManager = remember { SettingsManager(context) }
     val appSettingsState = settingsManager.settingsFlow.collectAsState(initial = null)
     val appSettings = appSettingsState.value
@@ -110,16 +172,6 @@ fun RiposteGameBoard(
         soundManager.loadThemeSFX(activeTheme)
         soundManager.isMusicEnabled = appSettings.musicEnabled
         soundManager.playThemeMusic(activeTheme.bgMusicRes)
-    }
-
-    val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) soundManager.resumeMusic()
-            if (event == Lifecycle.Event.ON_PAUSE) soundManager.pauseMusic()
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     LaunchedEffect(gameViewModel.soundEvent) {
@@ -172,6 +224,9 @@ fun RiposteGameBoard(
                         translationY = (-deviceTilt.y * 6f * density).coerceIn(-maxBgShift, maxBgShift)
                     }
                 )
+
+                // --- 1.5 AMBIENT PARTICLE LAYER (New ParallaxDustVFX) ---
+                ParallaxDustVFX(deviceTilt = deviceTilt, accentColor = currentTheme.uiAccentColor)
 
                 // 2. JÁTÉKTÁBLA
                 Box(
@@ -335,41 +390,31 @@ fun RiposteGameBoard(
                         if (isGameOver) {
                             if (gameViewModel.isTournamentMode) {
                                 // BAJNOKSÁG GAME OVER GOMB
-                                Box(
-                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp)
-                                        .background(currentTheme.uiAccentColor.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
-                                        .border(1.dp, currentTheme.uiAccentColor, RoundedCornerShape(8.dp))
-                                        .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
-                                            soundManager.playClick()
-                                            val isWin = gameViewModel.winner?.contains("You", ignoreCase = true) == true || gameViewModel.winner?.contains("Time's Up! You", ignoreCase = true) == true
+                                RiposteDialogButton(
+                                    text = stringResource(id = R.string.btn_continue_tournament),
+                                    isHanging = true,
+                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
+                                    onClick = {
+                                        soundManager.playClick()
+                                        val isWin = gameViewModel.winner?.contains("You", ignoreCase = true) == true || gameViewModel.winner?.contains("Time's Up! You", ignoreCase = true) == true
 
-                                            val historyStr = gameViewModel.processTournamentMatchEnd(isWin)
-                                            gameViewModel.isInterruptedGame = false
+                                        val historyStr = gameViewModel.processTournamentMatchEnd(isWin)
+                                        gameViewModel.isInterruptedGame = false
 
-                                            coroutineScope.launch {
-                                                settingsManager.updateSettings(
-                                                    appSettings.copy(
-                                                        tournamentRank = gameViewModel.tournamentManager.currentRank,
-                                                        tournamentHighest = gameViewModel.tournamentManager.highestRank,
-                                                        tournamentDefending = gameViewModel.tournamentManager.isDefending,
-                                                        tournamentMatchHistory = historyStr,
-                                                        hasSavedTournamentMatch = false
-                                                    )
+                                        coroutineScope.launch {
+                                            settingsManager.updateSettings(
+                                                appSettings.copy(
+                                                    tournamentRank = gameViewModel.tournamentManager.currentRank,
+                                                    tournamentHighest = gameViewModel.tournamentManager.highestRank,
+                                                    tournamentDefending = gameViewModel.tournamentManager.isDefending,
+                                                    tournamentMatchHistory = historyStr,
+                                                    hasSavedTournamentMatch = false
                                                 )
-                                            }
-                                            onBackToMenu()
+                                            )
                                         }
-                                        .padding(vertical = 16.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = stringResource(id = R.string.btn_continue_tournament),
-                                        color = currentTheme.uiAccentColor,
-                                        fontSize = 18.sp,
-                                        fontWeight = FontWeight.Black,
-                                        letterSpacing = 2.sp
-                                    )
-                                }
+                                        onBackToMenu()
+                                    }
+                                )
                             } else {
                                 // NORMÁL GAME OVER GOMBOK
                                 Row(
@@ -380,26 +425,16 @@ fun RiposteGameBoard(
                                     Text(
                                         text = stringResource(id = R.string.btn_main_menu),
                                         color = Color.White.copy(alpha = 0.6f), fontSize = 14.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp,
-                                        modifier = Modifier.clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
+                                        modifier = Modifier.clickable {
                                             soundManager.playClick(); onBackToMenu()
                                         }.padding(16.dp)
                                     )
-                                    Box(
-                                        modifier = Modifier.background(currentTheme.uiAccentColor.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
-                                            .border(1.dp, currentTheme.uiAccentColor, RoundedCornerShape(8.dp))
-                                            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
-                                                soundManager.playClick(); gameViewModel.restartGame()
-                                            }
-                                            .padding(horizontal = 24.dp, vertical = 12.dp)
-                                    ) {
-                                        Text(
-                                            text = stringResource(id = R.string.btn_rematch),
-                                            color = currentTheme.uiAccentColor,
-                                            fontSize = 16.sp,
-                                            fontWeight = FontWeight.Black,
-                                            letterSpacing = 2.sp
-                                        )
-                                    }
+                                    RiposteDialogButton(
+                                        text = stringResource(id = R.string.btn_rematch),
+                                        onClick = {
+                                            soundManager.playClick(); gameViewModel.restartGame()
+                                        }
+                                    )
                                 }
                             }
                         } else {
@@ -537,16 +572,6 @@ fun RiposteGameBoard(
                         gameViewModel.isGamePaused = false
                         coroutineScope.launch {
                             settingsManager.updateSettings(appSettings.copy(lastTipTime = System.currentTimeMillis()))
-                        }
-                    },
-                    onTurnOff = {
-                        coroutineScope.launch {
-                            settingsManager.updateSettings(
-                                appSettings.copy(
-                                    showDailyTips = false,
-                                    lastTipTime = System.currentTimeMillis()
-                                )
-                            )
                         }
                     }
                 )
