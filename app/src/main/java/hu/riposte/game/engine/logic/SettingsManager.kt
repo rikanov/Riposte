@@ -36,7 +36,12 @@ data class AppSettings(
     val savedTourneyBoardStr: String = "",
     val savedTourneyPiecesStr: String = "",
     val savedTourneyCurrentPlayer: Int = 2,
-    val savedTourneyAfterTouche: Boolean = false
+    val savedTourneyAfterTouche: Boolean = false,
+
+    // Napi tippek perzisztencia
+    val usefulTipIndex: Int = 0,
+    val loreTipIndex: Int = 0,
+    val lastTipWasUseful: Boolean = false
 )
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "riposte_settings")
@@ -61,7 +66,7 @@ class SettingsManager(private val context: Context) {
         val TOURNAMENT_HIGHEST_KEY = intPreferencesKey("tournament_highest")
         val TOURNAMENT_DEFENDING_KEY = booleanPreferencesKey("tournament_defending")
         val TOURNAMENT_HISTORY_KEY = stringPreferencesKey("tournament_history")
-        val HIGHEST_RATING_KEY = intPreferencesKey("highest_rating") // <-- ÚJ: Kulcs
+        val HIGHEST_RATING_KEY = intPreferencesKey("highest_rating")
         val LAST_TIP_TIME_KEY = longPreferencesKey("last_tip_time")
 
         val HAS_SAVED_TOURNEY_KEY = booleanPreferencesKey("has_saved_tourney")
@@ -73,6 +78,11 @@ class SettingsManager(private val context: Context) {
         val SAVED_TOURNEY_PIECES = stringPreferencesKey("saved_tourney_pieces")
         val SAVED_TOURNEY_PLAYER = intPreferencesKey("saved_tourney_player")
         val SAVED_TOURNEY_AFTER_TOUCHE = booleanPreferencesKey("saved_tourney_after_touche")
+
+        // Új kulcsok a tippekhez
+        val USEFUL_TIP_INDEX_KEY = intPreferencesKey("useful_tip_index")
+        val LORE_TIP_INDEX_KEY = intPreferencesKey("lore_tip_index")
+        val LAST_TIP_WAS_USEFUL_KEY = booleanPreferencesKey("last_tip_was_useful")
     }
 
     val settingsFlow: Flow<AppSettings> = context.dataStore.data.map { preferences ->
@@ -104,7 +114,11 @@ class SettingsManager(private val context: Context) {
             savedTourneyBoardStr = preferences[SAVED_TOURNEY_BOARD] ?: "",
             savedTourneyPiecesStr = preferences[SAVED_TOURNEY_PIECES] ?: "",
             savedTourneyCurrentPlayer = preferences[SAVED_TOURNEY_PLAYER] ?: 2,
-            savedTourneyAfterTouche = preferences[SAVED_TOURNEY_AFTER_TOUCHE] ?: false
+            savedTourneyAfterTouche = preferences[SAVED_TOURNEY_AFTER_TOUCHE] ?: false,
+
+            usefulTipIndex = preferences[USEFUL_TIP_INDEX_KEY] ?: 0,
+            loreTipIndex = preferences[LORE_TIP_INDEX_KEY] ?: 0,
+            lastTipWasUseful = preferences[LAST_TIP_WAS_USEFUL_KEY] ?: false
         )
     }
 
@@ -138,6 +152,10 @@ class SettingsManager(private val context: Context) {
             preferences[SAVED_TOURNEY_PIECES] = settings.savedTourneyPiecesStr
             preferences[SAVED_TOURNEY_PLAYER] = settings.savedTourneyCurrentPlayer
             preferences[SAVED_TOURNEY_AFTER_TOUCHE] = settings.savedTourneyAfterTouche
+
+            preferences[USEFUL_TIP_INDEX_KEY] = settings.usefulTipIndex
+            preferences[LORE_TIP_INDEX_KEY] = settings.loreTipIndex
+            preferences[LAST_TIP_WAS_USEFUL_KEY] = settings.lastTipWasUseful
         }
     }
 }

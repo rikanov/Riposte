@@ -11,6 +11,9 @@ thread_local bool isSearchAborted = false;
 
 static int maxDepth = 11;
 static int allowRiposte = true;
+static int currentOffWeight = 10;
+static int currentDefWeight = 10;
+
 static inline int sgn(int x) {
     return (x > 0) - (x < 0);
 }
@@ -101,7 +104,7 @@ bool Riposte_TT_Engine::step(uint64_t& set1, const uint64_t set2, const uint ste
     return currentPos != ball;
 }
 
-int Riposte_TT_Engine::captureSearch(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, int alfa, int beta, const int depth, bool isP1, uint64_t hash) noexcept
+int Riposte_TT_Engine::captureSearch(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, int alfa, int beta, const int depth, bool isP1, uint64_t hash, const int sepLeft) noexcept
 {
     if( __builtin_popcountll(set2) == 4) {
         return WIN;
@@ -121,9 +124,10 @@ int Riposte_TT_Engine::captureSearch(const uint64_t set1, const uint64_t set2, c
                             ^ (!isP1 ? zobristP1[newHotSpotIdx] : zobristP2[newHotSpotIdx])
                             ^ zobristTurn;
 
+        const int nextSep = std::max(0, sepLeft - 1);
         const int score = - ( allowRiposte
-                              ? search(nextSet2, set1, nextSpot, -beta, -alfa, depth - 1, !isP1, nextHash)
-                              : searchRestrict(nextSet2, set1, nextSpot, -beta, -alfa, depth - 1, !isP1, nextHash) );
+                              ? search(nextSet2, set1, nextSpot, -beta, -alfa, depth - 1, !isP1, nextHash, nextSep)
+                              : searchRestrict(nextSet2, set1, nextSpot, -beta, -alfa, depth - 1, !isP1, nextHash, nextSep) );
 
         if(bestScore < score) { bestScore = score; }
         alfa = std::max(alfa, score);
@@ -132,7 +136,7 @@ int Riposte_TT_Engine::captureSearch(const uint64_t set1, const uint64_t set2, c
     return bestScore - sgn(bestScore);
 }
 
-int Riposte_TT_Engine::captureRoot(const uint64_t set1, const uint64_t set2, uint64_t & hotSpot, const int depth, bool isP1, uint64_t hash) noexcept
+int Riposte_TT_Engine::captureRoot(const uint64_t set1, const uint64_t set2, uint64_t & hotSpot, const int depth, bool isP1, uint64_t hash, const int sepLeft) noexcept
 {
     if( __builtin_popcountll(set2) == 4) {
         hotSpot = set2 & -set2;
@@ -154,9 +158,10 @@ int Riposte_TT_Engine::captureRoot(const uint64_t set1, const uint64_t set2, uin
                             ^ (!isP1 ? zobristP1[newHotSpotIdx] : zobristP2[newHotSpotIdx])
                             ^ zobristTurn;
 
+        const int nextSep = std::max(0, sepLeft - 1);
         const int score = - ( allowRiposte
-                              ? search(nextSet2, set1, nextSpot, -WIN, WIN, depth - 1, !isP1, nextHash)
-                              : searchRestrict(nextSet2, set1, nextSpot, -WIN, WIN, depth - 1, !isP1, nextHash) );
+                              ? search(nextSet2, set1, nextSpot, -WIN, WIN, depth - 1, !isP1, nextHash, nextSep)
+                              : searchRestrict(nextSet2, set1, nextSpot, -WIN, WIN, depth - 1, !isP1, nextHash, nextSep) );
 
         if( bestScore < score ) {
             bestScore = score;
@@ -184,15 +189,15 @@ MoveData Riposte_TT_Engine::getCompactMoveData(const uint64_t set1, const uint64
     return move;
 }
 
-int Riposte_TT_Engine::searchRestrict(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, int alfa, int beta, const int depth, bool isP1, uint64_t hash) noexcept
+int Riposte_TT_Engine::searchRestrict(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, int alfa, int beta, const int depth, bool isP1, uint64_t hash, const int sepLeft) noexcept
 {
     if ( 0 == depth )
     {
-        return heuristic(set1, set2, hotSpot);
+        return heuristic(set1, set2, hotSpot, currentOffWeight, currentDefWeight);
     }
 
     // --- JAVÍTOTT MEGSZAKÍTÁSI LOGIKA ---
-    if (isSearchAborted) return heuristic(set1, set2, hotSpot);;
+    if (isSearchAborted) return heuristic(set1, set2, hotSpot, currentOffWeight, currentDefWeight);;
     if ( (++nodeCounter & 2047) == 0 && stopSearch.load(std::memory_order_relaxed) ) {
         isSearchAborted = true;
         return 0;
@@ -213,7 +218,7 @@ int Riposte_TT_Engine::searchRestrict(const uint64_t set1, const uint64_t set2, 
     {
         uint64_t nextSet1 = set1;
 
-        if( ! step(nextSet1, set2, stepID) || nextSet1 & hotSpot ) {
+        if( ! step(nextSet1, set2, stepID) || ((nextSet1 & hotSpot) && sepLeft > 0) ) {
             continue;
         }
 
@@ -225,7 +230,8 @@ int Riposte_TT_Engine::searchRestrict(const uint64_t set1, const uint64_t set2, 
                             ^ (isP1 ? zobristP1[fromIdx] : zobristP2[fromIdx])
                             ^ (isP1 ? zobristP1[toIdx] : zobristP2[toIdx]);
 
-        const int score = -search(set2, nextSet1, hotSpot, -beta, -alfa, depth - 1, !isP1, nextHash);
+        const int nextSep = std::max(0, sepLeft - 1);
+        const int score = -search(set2, nextSet1, hotSpot, -beta, -alfa, depth - 1, !isP1, nextHash, nextSep);
 
         bestScore = std::max(bestScore, score);
         alfa = std::max(alfa, score);
@@ -256,15 +262,15 @@ int Riposte_TT_Engine::searchRestrict(const uint64_t set1, const uint64_t set2, 
     return finalScore;
 }
 
-int Riposte_TT_Engine::search(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, int alfa, int beta, const int depth, bool isP1, uint64_t hash) noexcept
+int Riposte_TT_Engine::search(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, int alfa, int beta, const int depth, bool isP1, uint64_t hash, const int sepLeft) noexcept
 {
     if ( 0 == depth )
     {
-        return heuristic(set1, set2, hotSpot);
+        return heuristic(set1, set2, hotSpot, currentOffWeight, currentDefWeight);
     }
 
     // --- JAVÍTOTT MEGSZAKÍTÁSI LOGIKA ---
-    if (isSearchAborted) return heuristic(set1, set2, hotSpot);;
+    if (isSearchAborted) return heuristic(set1, set2, hotSpot, currentOffWeight, currentDefWeight);;
     if ( (++nodeCounter & 2047) == 0 && stopSearch.load(std::memory_order_relaxed) ) {
         isSearchAborted = true;
         return 0;
@@ -285,7 +291,7 @@ int Riposte_TT_Engine::search(const uint64_t set1, const uint64_t set2, const ui
     for(uint stepID = 0; stepID < __builtin_popcountll(set1) * 8; ++stepID)
     {
         uint64_t nextSet1 = set1;
-        if( ! step(nextSet1, set2, stepID) ) { continue; }
+        if( ! step(nextSet1, set2, stepID) || ((nextSet1 & hotSpot) && sepLeft > 0) ) { continue; }
 
         int fromIdx = __builtin_ctzll(set1 & ~nextSet1);
         int toIdx   = __builtin_ctzll(nextSet1 & ~set1);
@@ -294,13 +300,14 @@ int Riposte_TT_Engine::search(const uint64_t set1, const uint64_t set2, const ui
                                  ^ (isP1 ? zobristP1[fromIdx] : zobristP2[fromIdx])
                                  ^ (isP1 ? zobristP1[toIdx] : zobristP2[toIdx]);
 
+        const int nextSep = std::max(0, sepLeft - 1);
         if( nextSet1 & hotSpot ) [[unlikely]] {
-            const int score = captureSearch(nextSet1, set2, hotSpot, alfa, beta, depth, isP1, nextHash_base);
+            const int score = captureSearch(nextSet1, set2, hotSpot, alfa, beta, depth, isP1, nextHash_base, nextSep);
             bestScore = std::max(bestScore, score);
             if( score > 0) { break; }
         } else {
             uint64_t nextHash = nextHash_base ^ zobristTurn;
-            const int score = -search(set2, nextSet1, hotSpot, -beta, -alfa, depth - 1, !isP1, nextHash);
+            const int score = -search(set2, nextSet1, hotSpot, -beta, -alfa, depth - 1, !isP1, nextHash, nextSep);
             bestScore = std::max(bestScore, score);
             alfa = std::max(alfa, score);
 
@@ -330,7 +337,7 @@ int Riposte_TT_Engine::search(const uint64_t set1, const uint64_t set2, const ui
     return finalScore;
 }
 
-MoveData Riposte_TT_Engine::searchIDA(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, bool isP1, int threadID)
+MoveData Riposte_TT_Engine::searchIDA(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, bool isP1, int threadID, const int sepLeft)
 {
     // --- JAVÍTÁS: Gyökérszinten nullázzuk a flaget! ---
     isSearchAborted = false;
@@ -377,8 +384,10 @@ MoveData Riposte_TT_Engine::searchIDA(const uint64_t set1, const uint64_t set2, 
 
             if( nextSet1 & hotSpot ) [[unlikely]]
             {
+                if (sepLeft > 0) continue; // Illegal move during Halte
+
                 uint64_t nextSpot = hotSpot;
-                score = captureRoot(nextSet1, set2, nextSpot, idaDepth, isP1, nextHash_base);
+                score = captureRoot(nextSet1, set2, nextSpot, idaDepth, isP1, nextHash_base, sepLeft);
 
                 if( score == bestScore && 0 == rand() % count++ ) {
                     bestMove = getCompactMoveData( set1, nextSet1, nextSpot);
@@ -391,8 +400,9 @@ MoveData Riposte_TT_Engine::searchIDA(const uint64_t set1, const uint64_t set2, 
             }
             else
             {
+                const int nextSep = std::max(0, sepLeft - 1);
                 uint64_t nextHash = nextHash_base ^ zobristTurn;
-                score = -search(set2, nextSet1, hotSpot, -WIN, WIN, idaDepth, !isP1, nextHash);
+                score = -search(set2, nextSet1, hotSpot, -WIN, WIN, idaDepth, !isP1, nextHash, nextSep);
 
                 if( score == bestScore && 0 == rand() % count++ ) {
                     bestMove = getCompactMoveData(set1, nextSet1, hotSpot);
@@ -411,11 +421,13 @@ MoveData Riposte_TT_Engine::searchIDA(const uint64_t set1, const uint64_t set2, 
     return bestMove;
 }
 
-MoveData Riposte_TT_Engine::getBestStep(const int * board, const int playerID, const uint depth, const bool riposte)
+MoveData Riposte_TT_Engine::getBestStep(const int * board, const int playerID, const uint depth, const bool riposte, const int sepLeft, const int offW, const int defW)
 {
     init();
     maxDepth = depth;
     allowRiposte = riposte;
+    currentOffWeight = offW;
+    currentDefWeight = defW;
 
     uint64_t set1 = 0; uint64_t set2 = 0; uint64_t hotSpot = 0;
     for( uint64_t bitMask = (1ULL << 56), fieldID = 0; fieldID < 35; ++fieldID, bitMask >>=1) {
@@ -448,11 +460,11 @@ MoveData Riposte_TT_Engine::getBestStep(const int * board, const int playerID, c
     std::vector<std::thread> helpers;
     for (int i = 1; i < threadsToUse; ++i) {
         helpers.emplace_back([=]() {
-            searchIDA(set1, set2, hotSpot, isP1, i);
+            searchIDA(set1, set2, hotSpot, isP1, i, sepLeft);
         });
     }
 
-    MoveData bestMove = searchIDA(set1, set2, hotSpot, isP1, 0);
+    MoveData bestMove = searchIDA(set1, set2, hotSpot, isP1, 0, sepLeft);
 
     stopSearch.store(true, std::memory_order_relaxed);
 

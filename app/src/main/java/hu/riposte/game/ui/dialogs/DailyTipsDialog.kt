@@ -27,25 +27,45 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import hu.riposte.game.R
+import hu.riposte.game.engine.logic.AppSettings
 import hu.riposte.game.engine.logic.SoundManager
 import hu.riposte.game.ui.theme.LocalGameTheme
 
 @Composable
 fun DailyTipDialog(
+    appSettings: AppSettings,
     soundManager: SoundManager,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onSettingsUpdate: (AppSettings) -> Unit
 ) {
     val accentColor = LocalGameTheme.current.uiAccentColor
-    val tips = stringArrayResource(id = R.array.daily_tips)
+    val allTips = stringArrayResource(id = R.array.daily_tips)
 
-    var currentTipIndex by remember { mutableIntStateOf(tips.indices.random()) }
-    val currentTip = tips[currentTipIndex]
+    val usefulTips = stringArrayResource(id = R.array.daily_tips_useful)
+    val loreTips = stringArrayResource(id = R.array.daily_tips_lore)
+
+    val showUseful = !appSettings.lastTipWasUseful
+    val currentList = if (showUseful) usefulTips else loreTips
+
+    val initialIndex = if (showUseful) {
+        appSettings.usefulTipIndex % currentList.size
+    } else {
+        appSettings.loreTipIndex % currentList.size
+    }
+
+    var currentIndex by remember { mutableIntStateOf(initialIndex) }
+    val currentTip = currentList[currentIndex]
 
     val parts = currentTip.split("\n")
-    val title = parts.getOrNull(0) ?: stringResource(id = R.string.daily_tip_fallback)
+    // A cím a stringből is jöhet, de a kategória fejléce felülbírálhatja.
+    val tipTitle = parts.getOrNull(0) ?: stringResource(id = R.string.daily_tip_fallback)
     val body = parts.getOrNull(1) ?: currentTip
 
-    // Pulzáló fény a jelzéshez
+    // Dinamikus UI elemek
+    val headerText = if (showUseful) "RIPOSTE ACADEMY" else "FENCING LORE"
+    val buttonText = if (showUseful) "NEXT TIP ➔" else "MORE LORE ➔"
+
+    // Pulzáló fény a "Tap to close" jelzéshez
     val infinitePulse = rememberInfiniteTransition(label = "pulse")
     val textAlpha by infinitePulse.animateFloat(
         initialValue = 0.4f, targetValue = 1f,
@@ -54,8 +74,8 @@ fun DailyTipDialog(
 
     GlassDialog(
         onDismissRequest = {
-            // Az overlay-re (ablakon kívülre) kattintás bezárja
             soundManager.playClick()
+            onSettingsUpdate(appSettings.copy(lastTipWasUseful = showUseful))
             onDismiss()
         }
     ) {
@@ -67,15 +87,25 @@ fun DailyTipDialog(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null
                 ) {
-                    // A kártya bármely üres részére kattintás bezárja
                     soundManager.playClick()
+                    onSettingsUpdate(appSettings.copy(lastTipWasUseful = showUseful))
                     onDismiss()
                 }
                 .padding(top = 16.dp, start = 8.dp, end = 8.dp, bottom = 8.dp)
         ) {
-            // --- CÍM ---
+            // --- KATEGÓRIA FEJLÉC (ÚJ!) ---
             Text(
-                text = title.uppercase(),
+                text = headerText,
+                color = Color.White.copy(alpha = 0.5f),
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.sp,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+
+            // --- TIPP CÍM ---
+            Text(
+                text = tipTitle.uppercase(),
                 color = accentColor,
                 fontWeight = FontWeight.Black,
                 fontSize = 15.sp,
@@ -83,13 +113,13 @@ fun DailyTipDialog(
                 textAlign = TextAlign.Center
             )
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(16.dp))
 
             // --- NÉGYZETES, SCROLLOZHATÓ SZÖVEGMEZŐ ---
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(0.8f) // Ez kényszeríti a négyzet alakot
+                    .aspectRatio(0.8f) // Négyzet arány
                     .clip(RoundedCornerShape(16.dp))
                     .background(Color.White.copy(alpha = 0.03f))
                     .border(0.5.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(16.dp))
@@ -126,29 +156,27 @@ fun DailyTipDialog(
 
             Spacer(Modifier.height(32.dp))
 
-            // --- ALSÓ VEZÉRLŐK (Középre igazítva, nyíllal) ---
+            // --- ALSÓ VEZÉRLŐK (Dinamikus gombbal) ---
             Box(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "${stringResource(id = R.string.next_tip).uppercase()} ➔",
+                    text = buttonText,
                     color = accentColor.copy(alpha = 0.8f),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.sp,
                     modifier = Modifier
                         .clickable {
-                            // Mivel a belső clickable megfogja az eseményt,
-                            // a "Next Tip" gomb nem zárja be az ablakot.
                             soundManager.playClick()
-                            var nextIndex = tips.indices.random()
-                            if (tips.size > 1) {
-                                while (nextIndex == currentTipIndex) {
-                                    nextIndex = tips.indices.random()
-                                }
+                            // Szekvenciális léptetés és azonnali mentés
+                            currentIndex = (currentIndex + 1) % currentList.size
+                            if (showUseful) {
+                                onSettingsUpdate(appSettings.copy(usefulTipIndex = currentIndex))
+                            } else {
+                                onSettingsUpdate(appSettings.copy(loreTipIndex = currentIndex))
                             }
-                            currentTipIndex = nextIndex
                         }
                         .padding(8.dp)
                 )

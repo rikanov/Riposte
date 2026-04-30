@@ -12,7 +12,7 @@ typedef unsigned int uint;
 class Riposte_TT_Engine {
 public:
     static void init();
-    static MoveData getBestStep(const int * board, const int playerID, const uint depth, const bool riposte);
+    static MoveData getBestStep(const int * board, const int playerID, const uint depth, const bool riposte, const int sepLeft, const int offW, const int defW);
 
 private:
     // --- BITBOARD  ---
@@ -49,13 +49,13 @@ private:
     // --- SEARCHING FUNCTIONS ---
     static uint64_t computeHash(uint64_t set1, uint64_t set2, uint64_t hotSpot, bool isP1) noexcept;
 
-    static int captureSearch(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, int alfa, int beta, const int depth, bool isP1, uint64_t hash) noexcept;
-    static int captureRoot(const uint64_t set1, const uint64_t set2, uint64_t & hotSpot, const int depth, bool isP1, uint64_t hash) noexcept;
+    static int captureSearch(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, int alfa, int beta, const int depth, bool isP1, uint64_t hash, const int sepLeft) noexcept;
+    static int captureRoot(const uint64_t set1, const uint64_t set2, uint64_t & hotSpot, const int depth, bool isP1, uint64_t hash, const int sepLeft) noexcept;
     static int heuristicScore(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot);
-    static int searchRestrict(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, int alfa, int beta, const int depth, bool isP1, uint64_t hash) noexcept;
-    static int search(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, int alfa, int beta, const int depth, bool isP1, uint64_t hash) noexcept;
+    static int searchRestrict(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, int alfa, int beta, const int depth, bool isP1, uint64_t hash, const int sepLeft) noexcept;
+    static int search(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, int alfa, int beta, const int depth, bool isP1, uint64_t hash, const int sepLeft) noexcept;
 
-    static MoveData searchIDA(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, bool isP1, int threadID);
+    static MoveData searchIDA(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, bool isP1, int threadID, const int sepLeft);
 };
 
 #endif // RIPOSTE_ENGINE_H

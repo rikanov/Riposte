@@ -42,14 +42,25 @@ data class Piece(
     var pos: Coord,
     val state: PieceState = PieceState.IN_PLAY // A két Boolean helyett!
 )
+
+/**
+ * Optimized bitboard hash for a 5x7 grid.
+ */
+data class BoardHash(val p1: Long, val p2: Long)
+
 data class GameStateSnapshot(
     val board: IntArray,
     val pieces: List<Piece>, // A Piece data class, így a copy() miatt biztonságos
     val playerCaptured: IntArray,
     val currentPlayerId: Int,
     val afterTouche: Boolean,
-    val gamePhase: GameWaitingFor
+    val gamePhase: GameWaitingFor,
+    // History & Separation state
+    val historyBaseIndex: Int,
+    val historyStackSize: Int,
+    val separationStepsLeft: Int
 )
+
 enum class TutorialPhase {
     NOT_ACTIVE,
     SWIPE_TO_MOVE,
@@ -59,12 +70,6 @@ enum class TutorialPhase {
     SHOW_CAPTURE,
     SHOW_WIN_COND,
     FINISHED
-}
-enum class MenuScreen {
-    MAIN,
-    VS_AI_SETTINGS,
-    ONLINE_LOBBY,
-    HOW_TO_PLAY
 }
 enum class SoundType {
     MOVE,
@@ -76,13 +81,4 @@ data class SoundEvent(
     val playerId: Int,
     val triggerId:
     Long = System.currentTimeMillis()
-)
-enum class CombatTextType {
-    RIPOSTE, REMISE, LUNGE, FLECHE, TOUCHE
-}
-
-data class CombatTextEvent(
-    val type: CombatTextType,
-    val coord: Coord,
-    val id: Long = System.currentTimeMillis() // Egyedi ID, hogy a Compose tudja, ha új animáció kell
 )

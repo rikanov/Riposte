@@ -10,18 +10,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import hu.riposte.game.engine.data.Coord
-import hu.riposte.game.engine.data.GameMode
-import hu.riposte.game.engine.data.GameSettings
-import hu.riposte.game.engine.data.GameStateSnapshot
-import hu.riposte.game.engine.data.GameWaitingFor
-import hu.riposte.game.engine.data.MoveData
-import hu.riposte.game.engine.data.Piece
-import hu.riposte.game.engine.data.PieceState
-import hu.riposte.game.engine.data.SoundEvent
-import hu.riposte.game.engine.data.SoundType
-import hu.riposte.game.engine.data.StartingPlayer
-import hu.riposte.game.engine.data.TutorialPhase
+import hu.riposte.game.engine.data.*
+import hu.riposte.game.engine.logic.AppSettings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -44,11 +34,17 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     // --- INFRASTRUCTURE ---
     val settingsManager = SettingsManager(application)
     val tournamentManager = TournamentManager()
+    val soundManager = SoundManager(application)
     private var timerJob: Job? = null
     private val undoStack = mutableListOf<GameStateSnapshot>()
 
+    // --- HISTORY & DEADLOCK DETECTION ---
+    private val historyStack = mutableListOf<BoardHash>()
+    private var historyBaseIndex = 0
+    var separationStepsLeft by mutableIntStateOf(0)
+
     // --- GLOBAL STATE ---
-    var isPremiumVersion: Boolean by mutableStateOf(true)
+    var isPremiumVersion: Boolean by mutableStateOf(false)
     var isGamePaused by mutableStateOf(false)
     var isInterruptedGame by mutableStateOf(false)
     var settings by mutableStateOf(GameSettings())
@@ -82,8 +78,6 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     // --- STATS & VFX EVENTS ---
     var lastViewedRating: Int? = null
     var lastViewedRank: Int? = null
-    var tacticalMultiplier by mutableStateOf(1.0f)
-        private set
     var soundEvent by mutableStateOf<SoundEvent?>(null)
         private set
 
@@ -95,13 +89,6 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     fun triggerSound(type: SoundType, playerId: Int) {
         soundEvent = SoundEvent(type, playerId)
-    }
-
-    /**
-     * Increments tactical bonus for skilled moves (Riposte/Remise).
-     */
-    fun onTacticalMoveExecuted() {
-        tacticalMultiplier += 0.1f
     }
 
     private fun resetBoard() {
@@ -127,11 +114,16 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         undoStack.clear()
         soundEvent = null
         timerJob?.cancel()
+
+        // History reset
+        historyStack.clear()
+        historyBaseIndex = 0
+        separationStepsLeft = 0
+        historyStack.add(calculateBoardHash())
     }
 
     fun restartGame() {
         resetBoard()
-        tacticalMultiplier = 1.0f
 
         currentPlayerId = if (isTournamentMode) {
             if (tournamentManager.isDefending) 1 else 2
@@ -185,6 +177,35 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             riposteAllowed = true
         )
         restartGame()
+    }
+
+    // --- HISTORY & DEADLOCK LOGIC ---
+
+    private fun calculateBoardHash(): BoardHash {
+        var p1 = 0L
+        var p2 = 0L
+        for (i in 0..34) {
+            if (board[i] == 1) p1 = p1 or (1L shl i)
+            if (board[i] == 2) p2 = p2 or (1L shl i)
+        }
+        return BoardHash(p1, p2)
+    }
+
+    private fun recordStateAndCheckDeadlock() {
+        val currentHash = calculateBoardHash()
+
+        var count = 0
+        for (i in historyBaseIndex until historyStack.size) {
+            if (historyStack[i] == currentHash) count++
+        }
+
+        if (count >= 2) {
+            separationStepsLeft = 2
+            historyBaseIndex = historyStack.size
+            println("⚔️ HALTE! DEADLOCK DETECTED! Separation phase started! ⚔️")
+        } else {
+            historyStack.add(currentHash)
+        }
     }
 
     // --- CHESS CLOCK LOGIC ---
@@ -252,6 +273,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                     tutorialPhase = TutorialPhase.SHOW_CAPTURE
                 }
             } else {
+                if (separationStepsLeft > 0) separationStepsLeft-- else recordStateAndCheckDeadlock()
                 finalizeTurn()
             }
         }
@@ -270,12 +292,10 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         val targetIndex = MoveLogic.calculateTargetIndex(board, index, offset)
 
         if (targetIndex != index) {
-            if (settings.riposteAllowed || !afterTouche || board[targetIndex] != 4) {
-                // Tactical Bonus Check (Riposte)
-                if (afterTouche && board[targetIndex] == 4) {
-                    onTacticalMoveExecuted()
-                }
+            // Separation Rule Block: Can't move to Touché point during Halte!
+            if (separationStepsLeft > 0 && board[targetIndex] == 4) return
 
+            if (settings.riposteAllowed || !afterTouche || board[targetIndex] != 4) {
                 saveState()
                 gamePhase = GameWaitingFor.ANIMATION
                 afterTouche = false
@@ -297,6 +317,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                     pieces[pIdx] = pieces[pIdx].copy(state = PieceState.BEING_CAPTURED)
                     board[index] = 4
                     afterTouche = true
+                    historyBaseIndex = historyStack.size // Reset repetition possibility after capture
 
                     playerCaptured[currentPlayerId]++
                     gamePhase = GameWaitingFor.ANIMATION
@@ -339,13 +360,13 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         if (gamePhase != GameWaitingFor.MOVE_PIECE) return
         viewModelScope.launch {
             val move = withContext(Dispatchers.Default) {
-                getBestStepNative(board.toIntArray(), currentPlayerId, 7, settings.riposteAllowed)
+                getBestStepNative(board.toIntArray(), currentPlayerId, 7, settings.riposteAllowed, separationStepsLeft, 10, 10)
             }
             if (move.from != -1) activeHint = move
         }
     }
 
-    private fun getRandomOpeningMove(currentBoard: List<Int>): MoveData {
+    private fun getRandomOpeningMove(currentBoard: List<Int>, offW: Int, defW: Int): MoveData {
         val validMoves = mutableListOf<MoveData>()
         val offsets = intArrayOf(1, 4, 5, 6, -1, -4, -5, -6)
         val hotSpot = currentBoard.indexOf(4)
@@ -363,7 +384,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         return if (validMoves.isNotEmpty()) {
             validMoves.random()
         } else {
-            getBestStepNative(currentBoard.toIntArray(), 1, settings.difficulty, settings.riposteAllowed)
+            getBestStepNative(currentBoard.toIntArray(), 1, settings.difficulty, settings.riposteAllowed, separationStepsLeft, offW, defW)
         }
     }
 
@@ -376,13 +397,23 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             val move = withContext(Dispatchers.Default) {
                 val isFirstMove = (0..4).all { board[it] == 1 }
 
+                var currentOffW = 10
+                var currentDefW = 10
+                if (isTournamentMode && tournamentOpponentNameRes != null) {
+                    val opponent = TournamentRoster.opponents.values.find { it.nameRes == tournamentOpponentNameRes }
+                    if (opponent != null) {
+                        currentOffW = opponent.offensiveWeight
+                        currentDefW = opponent.defensiveWeight
+                    }
+                }
+
                 if(isFirstMove) {
-                    getRandomOpeningMove(board.toList())
+                    getRandomOpeningMove(board.toList(), currentOffW, currentDefW)
                 }
                 else if (settings.difficulty >= 10) {
-                    getBestStepNativeTT(board.toIntArray(), 1, settings.difficulty, settings.riposteAllowed)
+                    getBestStepNativeTT(board.toIntArray(), 1, settings.difficulty, settings.riposteAllowed, separationStepsLeft, currentOffW, currentDefW)
                 } else {
-                    getBestStepNative(board.toIntArray(), 1, settings.difficulty, settings.riposteAllowed)
+                    getBestStepNative(board.toIntArray(), 1, settings.difficulty, settings.riposteAllowed, separationStepsLeft, currentOffW, currentDefW)
                 }
             }
             val thinkTime = System.currentTimeMillis() - startTime
@@ -461,7 +492,10 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 playerCaptured = playerCaptured.copyOf(),
                 currentPlayerId = currentPlayerId,
                 afterTouche = afterTouche,
-                gamePhase = gamePhase
+                gamePhase = gamePhase,
+                historyBaseIndex = historyBaseIndex,
+                historyStackSize = historyStack.size,
+                separationStepsLeft = separationStepsLeft
             )
         )
     }
@@ -477,6 +511,14 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             currentPlayerId = lastState.currentPlayerId
             afterTouche = lastState.afterTouche
             gamePhase = lastState.gamePhase
+            
+            // Restore History & Separation state
+            historyBaseIndex = lastState.historyBaseIndex
+            while (historyStack.size > lastState.historyStackSize) {
+                historyStack.removeAt(historyStack.size - 1)
+            }
+            separationStepsLeft = lastState.separationStepsLeft
+
             activeHint = null
         }
     }
@@ -492,7 +534,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         } else {
             val timeDiffSec = (playerTimeMs - opponentTimeMs) / 1000f
             val timeBonus = if (timeDiffSec > 0) (timeDiffSec / 60f).coerceAtMost(1.0f) * 0.2f else 0.0f
-            (baseScore * (tacticalMultiplier + timeBonus)).toInt()
+            (baseScore * (1.0f + timeBonus)).toInt()
         }
 
         return tournamentManager.onMatchFinished(isWin, finalScore)
@@ -579,8 +621,14 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private external fun getBestStepNative(b: IntArray, p: Int, d: Int, r: Boolean): MoveData
-    private external fun getBestStepNativeTT(b: IntArray, p: Int, d: Int, r: Boolean): MoveData
+    override fun onCleared() {
+        super.onCleared()
+        soundManager.releaseMusic()
+        soundManager.release()
+    }
+
+    private external fun getBestStepNative(b: IntArray, p: Int, d: Int, r: Boolean, sep: Int, offW: Int, defW: Int): MoveData
+    private external fun getBestStepNativeTT(b: IntArray, p: Int, d: Int, r: Boolean, sep: Int, offW: Int, defW: Int): MoveData
 
     companion object {
         init {

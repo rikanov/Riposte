@@ -23,6 +23,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.PathOperation
@@ -193,20 +195,21 @@ fun RiposteBoardArea(
 
         // 4. TOUCHE POINT
         val toucheIdx = gameViewModel.board.indexOf(4)
+        val isHalte = gameViewModel.separationStepsLeft > 0
         val infiniteTransitionTouche = rememberInfiniteTransition(label = "TouchePulseAnim")
 
         val animGoldScale by infiniteTransitionTouche.animateFloat(initialValue = currentTheme.toucheScaleMin, targetValue = currentTheme.toucheScaleMax, animationSpec = infiniteRepeatable(tween(currentTheme.touchePulseDuration, easing = FastOutSlowInEasing), RepeatMode.Reverse), label = "GoldPulse")
         val animGoldRotation by infiniteTransitionTouche.animateFloat(initialValue = 360f, targetValue = 0f, animationSpec = infiniteRepeatable(tween(currentTheme.toucheRotationDuration, easing = LinearEasing), RepeatMode.Restart), label = "GoldRotate")
 
-        val finalGoldScale = if (isNightModeEnabled) 1f else animGoldScale
-        val finalGoldRotation = if (isNightModeEnabled) 0f else animGoldRotation
+        val finalGoldScale = if (isNightModeEnabled || isHalte) 1f else animGoldScale
+        val finalGoldRotation = if (isNightModeEnabled || isHalte) 0f else animGoldRotation
 
         if (toucheIdx != -1) {
             val tPos = Coord.fromIndex(toucheIdx)
             val starX = tPos.x * cellWidth
             val starY = tPos.y * cellHeight
 
-            val shimmerIntensity = if (isNightModeEnabled) 0f else ((finalGoldScale - 0.8f) * 5f).coerceIn(0f, 1f)
+            val shimmerIntensity = if (isNightModeEnabled || isHalte) 0f else ((finalGoldScale - 0.8f) * 5f).coerceIn(0f, 1f)
 
             Box(
                 modifier = Modifier
@@ -216,7 +219,7 @@ fun RiposteBoardArea(
             ) {
                 Box(
                     modifier = Modifier.fillMaxSize(1.8f).drawBehind {
-                        if (!isNightModeEnabled) {
+                        if (!isNightModeEnabled && !isHalte) {
                             val glowRadius = (size.minDimension / 2f) * (0.8f + 0.4f * shimmerIntensity)
                             val glowAlpha = 0.2f + 0.5f * shimmerIntensity
                             val glowBrush = Brush.radialGradient(colors = listOf(currentTheme.auraP1Color.copy(alpha = glowAlpha), currentTheme.auraP1Color.copy(alpha = glowAlpha * 0.4f), Color.Transparent), radius = glowRadius)
@@ -224,7 +227,17 @@ fun RiposteBoardArea(
                         }
                     }
                 )
-                Image(painter = painterResource(id = currentTheme.toucheStarRes), contentDescription = null, modifier = Modifier.fillMaxSize(0.85f).graphicsLayer { scaleX = finalGoldScale; scaleY = finalGoldScale; rotationZ = finalGoldRotation })
+                Image(
+                    painter = painterResource(id = currentTheme.toucheStarRes),
+                    contentDescription = null,
+                    colorFilter = if (isHalte) ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(0f) }) else null,
+                    modifier = Modifier.fillMaxSize(0.85f).graphicsLayer {
+                        scaleX = finalGoldScale
+                        scaleY = finalGoldScale
+                        rotationZ = finalGoldRotation
+                        alpha = if (isHalte) 0.4f else 1f
+                    }
+                )
             }
         }
 

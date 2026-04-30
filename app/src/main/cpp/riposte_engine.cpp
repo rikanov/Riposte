@@ -6,6 +6,9 @@ using namespace Heuristic;
 
 static int maxDepth = 11;
 static int allowRiposte = true;
+static int currentOffWeight = 10;
+static int currentDefWeight = 10;
+
 static inline int regression(int x)
 {
     return x + (x < heuristicLow) - (x > heuristicHigh);
@@ -54,7 +57,7 @@ constexpr bool RiposteEngine::step(uint64_t& set1, const uint64_t set2, const ui
     return currentPos != ball; // valid if the ball has moved
 }
 
-constexpr int RiposteEngine::captureSearch(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, int alfa, int beta, const int depth) noexcept
+constexpr int RiposteEngine::captureSearch(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, int alfa, int beta, const int depth, const int sepLeft) noexcept
 {
     if( __builtin_popcountll(set2) == 4)
     {
@@ -66,7 +69,8 @@ constexpr int RiposteEngine::captureSearch(const uint64_t set1, const uint64_t s
 
         uint64_t nextSet2 = set2;
         const uint64_t nextSpot = take(nextSet2, ballID);
-        const int score = - ( allowRiposte ? search(nextSet2, set1, nextSpot, -beta, -alfa, depth - 1) : searchRestrict(nextSet2, set1, nextSpot, -beta, -alfa, depth - 1) );
+        const int nextSep = std::max(0, sepLeft - 1);
+        const int score = - ( allowRiposte ? search(nextSet2, set1, nextSpot, -beta, -alfa, depth - 1, nextSep) : searchRestrict(nextSet2, set1, nextSpot, -beta, -alfa, depth - 1, nextSep) );
 
         if(bestScore < score)
         {
@@ -82,7 +86,7 @@ constexpr int RiposteEngine::captureSearch(const uint64_t set1, const uint64_t s
     return regression(bestScore);
 }
 
-constexpr int RiposteEngine::captureRoot(const uint64_t set1, const uint64_t set2, uint64_t & hotSpot, const int depth) noexcept
+constexpr int RiposteEngine::captureRoot(const uint64_t set1, const uint64_t set2, uint64_t & hotSpot, const int depth, const int sepLeft) noexcept
 {
     if( __builtin_popcountll(set2) == 4)
     {
@@ -96,8 +100,9 @@ constexpr int RiposteEngine::captureRoot(const uint64_t set1, const uint64_t set
 
         uint64_t nextSet2 = set2;
         const uint64_t nextSpot = take(nextSet2,ballID);
+        const int nextSep = std::max(0, sepLeft - 1);
 
-        const int score = - ( allowRiposte ? search(nextSet2, set1, nextSpot, -WIN, WIN, depth - 1) : searchRestrict(nextSet2, set1, nextSpot, -WIN, WIN, depth - 1) );
+        const int score = - ( allowRiposte ? search(nextSet2, set1, nextSpot, -WIN, WIN, depth - 1, nextSep) : searchRestrict(nextSet2, set1, nextSpot, -WIN, WIN, depth - 1, nextSep) );
 
         if( bestScore < score )
         {
@@ -108,11 +113,11 @@ constexpr int RiposteEngine::captureRoot(const uint64_t set1, const uint64_t set
     return regression(bestScore);
 }
 
-constexpr int RiposteEngine::searchRestrict(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, int alfa, int beta, const int depth) noexcept
+constexpr int RiposteEngine::searchRestrict(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, int alfa, int beta, const int depth, const int sepLeft) noexcept
 {
     if( 0 == depth )
     {
-        return heuristic(set1, set2, hotSpot);
+        return heuristic(set1, set2, hotSpot, currentOffWeight, currentDefWeight);
     }
 
     int bestScore = -WIN;
@@ -120,11 +125,23 @@ constexpr int RiposteEngine::searchRestrict(const uint64_t set1, const uint64_t 
     {
         uint64_t nextSet1 = set1;
 
-        if( ! step(nextSet1, set2, stepID) || nextSet1 & hotSpot )
+        if( ! step(nextSet1, set2, stepID) || ((nextSet1 & hotSpot) && sepLeft > 0) )
         {
             continue;
         }
-        const int score = -search(set2, nextSet1, hotSpot, -beta, -alfa, depth - 1);
+
+        int score = 0;
+        const int nextSep = std::max(0, sepLeft - 1);
+
+        if( nextSet1 & hotSpot ) [[unlikely]]
+        {
+            score = captureSearch(nextSet1, set2, hotSpot, alfa, beta, depth, nextSep);
+        }
+        else
+        {
+            score = -search(set2, nextSet1, hotSpot, -beta, -alfa, depth - 1, nextSep);
+        }
+
         bestScore = std::max(bestScore, score);
         alfa = std::max(alfa, score);
 
@@ -136,11 +153,11 @@ constexpr int RiposteEngine::searchRestrict(const uint64_t set1, const uint64_t 
     return regression(bestScore);
 }
 
-constexpr int RiposteEngine::search(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, int alfa, int beta, const int depth) noexcept
+constexpr int RiposteEngine::search(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, int alfa, int beta, const int depth, const int sepLeft) noexcept
 {
     if( 0 == depth )
     {
-        return heuristic(set1, set2, hotSpot);
+        return heuristic(set1, set2, hotSpot, currentOffWeight, currentDefWeight);
     }
 
     int bestScore = -WIN;
@@ -148,18 +165,21 @@ constexpr int RiposteEngine::search(const uint64_t set1, const uint64_t set2, co
     {
         uint64_t nextSet1 = set1;
 
-        if( ! step(nextSet1, set2, stepID) )
+        if( ! step(nextSet1, set2, stepID) || ((nextSet1 & hotSpot) && sepLeft > 0) )
         {
             continue;
         }
+
         int score = 0;
+        const int nextSep = std::max(0, sepLeft - 1);
+
         if( nextSet1 & hotSpot ) [[unlikely]]
         {
-            score = captureSearch(nextSet1, set2, hotSpot, alfa, beta, depth);
+            score = captureSearch(nextSet1, set2, hotSpot, alfa, beta, depth, nextSep);
         }
         else
         {
-            score = -search(set2, nextSet1, hotSpot, -beta, -alfa, depth - 1);
+            score = -search(set2, nextSet1, hotSpot, -beta, -alfa, depth - 1, nextSep);
         }
         bestScore = std::max(bestScore, score);
         alfa = std::max(alfa, score);
@@ -171,7 +191,7 @@ constexpr int RiposteEngine::search(const uint64_t set1, const uint64_t set2, co
     return regression(bestScore);
 }
 
-MoveData RiposteEngine::searchIDA(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot)
+MoveData RiposteEngine::searchIDA(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, const int sepLeft)
 {
     uint64_t deadBranches = 0;
 
@@ -199,8 +219,10 @@ MoveData RiposteEngine::searchIDA(const uint64_t set1, const uint64_t set2, cons
 
             if( nextSet1 & hotSpot ) [[unlikely]]
             {
+                if (sepLeft > 0) continue; // Illegal move during Halte
+
                 uint64_t nextSpot = hotSpot;
-                score = captureRoot(nextSet1, set2, nextSpot, idaDepth);
+                score = captureRoot(nextSet1, set2, nextSpot, idaDepth, sepLeft);
                 if( score == bestScore && 0 == rand() % count++ )
                 {
                     bestMove = getCompactMoveData( set1, nextSet1, nextSpot);
@@ -214,7 +236,8 @@ MoveData RiposteEngine::searchIDA(const uint64_t set1, const uint64_t set2, cons
             }
             else
             {
-                score = -search(set2, nextSet1, hotSpot, -WIN, WIN, idaDepth);
+                const int nextSep = std::max(0, sepLeft - 1);
+                score = -search(set2, nextSet1, hotSpot, -WIN, WIN, idaDepth, nextSep);
                 if( score == bestScore && 0 == rand() % count++ )
                 {
                     bestMove = getCompactMoveData(set1, nextSet1, hotSpot);
@@ -258,10 +281,13 @@ constexpr MoveData RiposteEngine::getCompactMoveData(const uint64_t set1, const 
     return move;
 }
 
-MoveData RiposteEngine::getBestStep(const int * board, const int playerID, const uint depth, const bool riposte)
+MoveData RiposteEngine::getBestStep(const int * board, const int playerID, const uint depth, const bool riposte, const int sepLeft, const int offW, const int defW)
 {
     maxDepth = depth;
     allowRiposte = riposte;
+    currentOffWeight = offW;
+    currentDefWeight = defW;
+
     uint64_t set1 = 0;
     uint64_t set2 = 0;
     uint64_t hotSpot = 0;
@@ -294,5 +320,5 @@ MoveData RiposteEngine::getBestStep(const int * board, const int playerID, const
         }
     }
 
-    return searchIDA(set1,set2,hotSpot);
+    return searchIDA(set1,set2,hotSpot, sepLeft);
 }

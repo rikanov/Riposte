@@ -118,8 +118,8 @@ object ThemeRegistry {
     val DaturaBlossom = GameTheme(
         id = "datura_blossom",
         displayName = "Datura Blossom",
-        backgroundRes = R.drawable.bg_board_datura,
-        boardBackgroundRes = R.drawable.bg_datura,
+        backgroundRes = R.drawable.bg_datura,
+        boardBackgroundRes = R.drawable.bg_board_datura,
         pieceP1Res = R.drawable.ic_datura_p1,
         pieceP2Res = R.drawable.ic_datura_p2,
         toucheStarRes = R.drawable.ic_touche_star,

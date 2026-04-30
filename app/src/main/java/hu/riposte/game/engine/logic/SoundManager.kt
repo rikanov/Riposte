@@ -18,27 +18,15 @@ import kotlin.coroutines.coroutineContext
 
 class SoundManager(private val context: Context) {
 
-    // --- GLOBÁLIS ZENEI ÁLLAPOT (Minden képernyő ezt osztja meg) ---
-    companion object {
-        private var mediaPlayer: MediaPlayer? = null
-        private var currentMusicRes: Int? = null
-        private var crossfadeJob: Job? = null
-        private val soundScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    private var mediaPlayer: MediaPlayer? = null
+    private var currentMusicRes: Int? = null
+    private var crossfadeJob: Job? = null
+    private val soundScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
-        var isMusicGloballyEnabled: Boolean = true
+    var isMusicGloballyEnabled: Boolean = true
+    private var isAppPaused: Boolean = false
 
-        fun releaseMusic() {
-            crossfadeJob?.cancel()
-            soundScope.cancel()
-            try {
-                mediaPlayer?.stop()
-            } catch (e: Exception) { }
-            mediaPlayer?.release()
-            mediaPlayer = null
-        }
-    }
-
-    // --- 1. HANGEFFEKTEK (SoundPool - Ez marad példányszintű) ---
+    // --- 1. HANGEFFEKTEK (SoundPool) ---
     private val audioAttributes = AudioAttributes.Builder()
         .setUsage(AudioAttributes.USAGE_GAME)
         .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
@@ -86,7 +74,7 @@ class SoundManager(private val context: Context) {
     fun playWin() { soundPool.play(soundWin, 1f, 1f, 1, 0, 1f) }
     fun playLose() { soundPool.play(soundLose, 1f, 1f, 1, 0, 1f) }
 
-    // --- 2. ALÁFESTŐ ZENE (Mostantól a Companion-t használja) ---
+    // --- 2. ALÁFESTŐ ZENE ---
 
     fun startMusic() {
         if (!isMusicGloballyEnabled) return
@@ -96,20 +84,22 @@ class SoundManager(private val context: Context) {
                 setVolume(0.4f, 0.4f)
             }
         }
-        mediaPlayer?.start()
+        if (!isAppPaused) {
+            mediaPlayer?.start()
+        }
     }
 
     fun pauseMusic() {
+        isAppPaused = true
         try {
             if (mediaPlayer?.isPlaying == true) {
                 mediaPlayer?.pause()
             }
-        } catch (e: Exception) {
-            // Player state might be invalid, fail silently
-        }
+        } catch (e: Exception) {}
     }
 
     fun resumeMusic() {
+        isAppPaused = false
         if (!isMusicGloballyEnabled) return
         try {
             if (mediaPlayer != null) {
@@ -120,7 +110,6 @@ class SoundManager(private val context: Context) {
                 startMusic()
             }
         } catch (e: Exception) {
-            // Robust Recovery: OS might have invalidated the player
             try {
                 mediaPlayer?.release()
             } catch (ex: Exception) {}
@@ -134,7 +123,6 @@ class SoundManager(private val context: Context) {
             currentMusicRes = musicResId
             return
         }
-        // Ha UGYANAZ a zene szólna (pl. Menüből mész a Bajnokságba és ugyanaz az alap téma), ne indítsa újra!
         if (currentMusicRes == musicResId && mediaPlayer?.isPlaying == true) return
 
         crossfadeJob?.cancel()
@@ -164,7 +152,10 @@ class SoundManager(private val context: Context) {
         mediaPlayer = MediaPlayer.create(context, newMusicResId)?.apply {
             isLooping = true
             setVolume(0f, 0f)
-            start()
+            // Csak akkor indul el, ha az app nincs paused állapotban
+            if (!isAppPaused) {
+                start()
+            }
         }
 
         mediaPlayer?.let { player ->
@@ -179,7 +170,17 @@ class SoundManager(private val context: Context) {
             } catch (e: Exception) { }
         }
     }
-    // A memóriatakarításnál csak a hangeffekteket (SoundPool) dobjuk el, a zenét HAGYJUK SZÓLNI!
+
+    fun releaseMusic() {
+        crossfadeJob?.cancel()
+        soundScope.cancel()
+        try {
+            mediaPlayer?.stop()
+        } catch (e: Exception) { }
+        mediaPlayer?.release()
+        mediaPlayer = null
+    }
+
     fun release() {
         soundPool.release()
     }

@@ -13,7 +13,10 @@ Java_hu_riposte_game_engine_logic_GameViewModel_getBestStepNative(
         jintArray jBoard,
         jint playerId,
         jint depth,
-        jboolean isRiposteAllowed) {
+        jboolean isRiposteAllowed,
+        jint sepLeft,
+        jint offW,
+        jint defW) {
     LOGI("Start function...");
     jint *boardPtr = env->GetIntArrayElements(jBoard, nullptr);
     int board[35];
@@ -21,7 +24,8 @@ Java_hu_riposte_game_engine_logic_GameViewModel_getBestStepNative(
 
     LOGI("Start JNI call..");
     MoveData result = RiposteEngine::getBestStep(board, (int) playerId, (int) depth,
-                                                 (bool) isRiposteAllowed);
+                                                 (bool) isRiposteAllowed, (int) sepLeft,
+                                                 (int) offW, (int) defW);
     LOGI("Engine finished: from=%d, to=%d, hs=%d", result[0], result[1], result[2]);
 
     env->ReleaseIntArrayElements(jBoard, boardPtr, JNI_ABORT);
@@ -43,10 +47,13 @@ Java_hu_riposte_game_engine_logic_GameViewModel_getBestStepNativeTT(
         jintArray b,
         jint p,
         jint d,
-        jboolean r) {
+        jboolean r,
+        jint s,
+        jint offW,
+        jint defW) {
 
     jint *board = env->GetIntArrayElements(b, nullptr);
-    MoveData bestMove = Riposte_TT_Engine::getBestStep(board, p, d, r);
+    MoveData bestMove = Riposte_TT_Engine::getBestStep(board, p, d, r, s, (int)offW, (int)defW);
 
     env->ReleaseIntArrayElements(b, board, JNI_ABORT);
 

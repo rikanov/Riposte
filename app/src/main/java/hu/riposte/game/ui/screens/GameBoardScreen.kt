@@ -13,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -51,6 +52,7 @@ import hu.riposte.game.ui.dialogs.ThemeSelectorDialog
 import hu.riposte.game.ui.dialogs.TutorialCompleteDialog
 import hu.riposte.game.ui.dialogs.TutorialWelcomeDialog
 import hu.riposte.game.ui.dialogs.GameOverOverlay
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.max
 
@@ -148,6 +150,15 @@ fun RiposteGameBoard(
     var previewThemeId by remember { mutableStateOf<String?>(null) }
     var localSavedThemeId by remember(appSettings.themeId) { mutableStateOf(appSettings.themeId) }
     var isGridVisible by remember { mutableStateOf(true) }
+    var showHaltePopup by remember { mutableStateOf(false) }
+
+    LaunchedEffect(gameViewModel.separationStepsLeft) {
+        if (gameViewModel.separationStepsLeft == 2) {
+            showHaltePopup = true
+            delay(1500)
+            showHaltePopup = false
+        }
+    }
 
     val activeThemeId = previewThemeId ?: localSavedThemeId
     val activeTheme = remember(activeThemeId) { ThemeRegistry.getThemeById(activeThemeId) }
@@ -198,314 +209,346 @@ fun RiposteGameBoard(
         }
     }
 
-    AnimatedContent(
-        targetState = activeTheme,
-        transitionSpec = {
-            fadeIn(animationSpec = tween(800)) togetherWith fadeOut(
-                animationSpec = tween(800)
-            )
-        },
-        label = "ThemeTransition"
-    ) { currentTheme ->
+    // ROOT CONTAINER
+    Box(modifier = Modifier.fillMaxSize()) {
 
-        CompositionLocalProvider(LocalGameTheme provides currentTheme) {
-
-            Box(modifier = Modifier.fillMaxSize()) {
-
-                // 1. HÁTTÉR ÉS GIROSZKÓP
-                Image(
-                    painter = painterResource(id = currentTheme.backgroundRes),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize().graphicsLayer {
-                        scaleX = 1.15f; scaleY = 1.15f
-                        val maxBgShift = 30f * density
-                        translationX = (deviceTilt.x * 4.8f * density).coerceIn(-maxBgShift, maxBgShift)
-                        translationY = (-deviceTilt.y * 6f * density).coerceIn(-maxBgShift, maxBgShift)
-                    }
+        // 1. ANIMATED GAME UI LAYER
+        AnimatedContent(
+            targetState = activeTheme,
+            transitionSpec = {
+                fadeIn(animationSpec = tween(800)) togetherWith fadeOut(
+                    animationSpec = tween(800)
                 )
+            },
+            label = "ThemeTransition"
+        ) { currentTheme ->
 
-                // --- 1.5 AMBIENT PARTICLE LAYER (New ParallaxDustVFX) ---
-                ParallaxDustVFX(deviceTilt = deviceTilt, accentColor = currentTheme.uiAccentColor)
+            CompositionLocalProvider(LocalGameTheme provides currentTheme) {
 
-                // 2. JÁTÉKTÁBLA
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(top = 80.dp, bottom = 180.dp)
-                        .graphicsLayer {
-                            scaleX = 0.95f; scaleY = 0.95f
-                            val maxShiftX = 30f * density
-                            val maxShiftY = 60f * density
-                            translationX = (-deviceTilt.x * 2.4f * density).coerceIn(-maxShiftX, maxShiftX) + shakeOffset.value
-                            translationY = (deviceTilt.y * 3f * density).coerceIn(-maxShiftY, maxShiftY) + (shakeOffset.value * 0.5f)
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    BoxWithConstraints(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        val targetAspect = 5f / 7f
-                        val screenAspect = maxWidth / maxHeight
-                        val containerWidth = if (screenAspect > targetAspect) maxHeight * targetAspect else maxWidth
-                        val containerHeight = if (screenAspect > targetAspect) maxHeight else maxWidth / targetAspect
+                Box(modifier = Modifier.fillMaxSize()) {
 
-                        Box(modifier = Modifier.size(containerWidth, containerHeight)) {
-                            RiposteBoardArea(
-                                gameViewModel = gameViewModel,
-                                isGridVisible = isGridVisible,
-                                isAnimationEnabled = true,
-                                isVisualAssistEnabled = appSettings.visualAssistsEnabled,
-                                isNightModeEnabled = appSettings.nightModeEnabled,
-                                isHapticEnabled = appSettings.hapticEnabled,
-                                deviceTilt = deviceTilt
-                            )
+                    // 1. HÁTTÉR ÉS GIROSZKÓP
+                    Image(
+                        painter = painterResource(id = currentTheme.backgroundRes),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize().graphicsLayer {
+                            scaleX = 1.15f; scaleY = 1.15f
+                            val maxBgShift = 30f * density
+                            translationX = (deviceTilt.x * 4.8f * density).coerceIn(-maxBgShift, maxBgShift)
+                            translationY = (-deviceTilt.y * 6f * density).coerceIn(-maxBgShift, maxBgShift)
                         }
-                    }
-                }
-
-                // --- 3. TOURNAMENT FEJLÉC (CHESS CLOCK) ---
-                if (gameViewModel.isTournamentMode && gameViewModel.tournamentOpponentNameRes != null) {
-                    val oppName = stringResource(id = gameViewModel.tournamentOpponentNameRes!!).uppercase()
-                    val targetRank = gameViewModel.tournamentTargetRank ?: 20
-
-                    val playerTime = gameViewModel.playerTimeMs
-                    val oppTime = gameViewModel.opponentTimeMs
-
-                    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
-                    val pulseAlpha by infiniteTransition.animateFloat(
-                        initialValue = 0.5f, targetValue = 1f,
-                        animationSpec = infiniteRepeatable(
-                            tween(800, easing = EaseInOutSine),
-                            RepeatMode.Reverse
-                        ), label = "clockPulse"
                     )
 
-                    val isPlayerActive = gameViewModel.currentPlayerId == 2 && gameViewModel.gamePhase == GameWaitingFor.MOVE_PIECE && !gameViewModel.isGamePaused
-                    val isOppActive = gameViewModel.currentPlayerId == 1 && gameViewModel.gamePhase == GameWaitingFor.AI_MOVE && !gameViewModel.isGamePaused
+                    // --- 1.5 AMBIENT PARTICLE LAYER (New ParallaxDustVFX) ---
+                    ParallaxDustVFX(deviceTilt = deviceTilt, accentColor = currentTheme.uiAccentColor)
 
+                    // 2. JÁTÉKTÁBLA
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 12.dp, start = 8.dp, end = 8.dp)
-                            .align(Alignment.TopCenter)
-                            .background(Color(0xFF0A0C10).copy(alpha = 0.35f), RoundedCornerShape(12.dp))
-                            .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
-                            .padding(12.dp)
+                            .fillMaxSize()
+                            .padding(top = 80.dp, bottom = 180.dp)
+                            .graphicsLayer {
+                                scaleX = 0.95f; scaleY = 0.95f
+                                val maxShiftX = 30f * density
+                                val maxShiftY = 60f * density
+                                translationX = (-deviceTilt.x * 2.4f * density).coerceIn(-maxShiftX, maxShiftX) + shakeOffset.value
+                                translationY = (deviceTilt.y * 3f * density).coerceIn(-maxShiftY, maxShiftY) + (shakeOffset.value * 0.5f)
+                            },
+                        contentAlignment = Alignment.Center
                     ) {
-                        // BAL OLDAL (Játékos)
-                        Column(modifier = Modifier.align(Alignment.CenterStart).width(100.dp)) {
-                            Text(
-                                text = gameViewModel.tournamentChallengerName,
-                                color = Color(0xFFD4AF37),
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            Text(
-                                text = formatTime(playerTime),
-                                color = if (playerTime < 30000) Color(0xFFFF5555) else Color.White,
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Black,
-                                modifier = Modifier.graphicsLayer { alpha = if (isPlayerActive) pulseAlpha else 0.4f }
-                            )
-                        }
-
-                        // KÖZÉP (TÉT)
-                        Column(
-                            modifier = Modifier.align(Alignment.Center),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                        BoxWithConstraints(
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                            contentAlignment = Alignment.Center
                         ) {
+                            val targetAspect = 5f / 7f
+                            val screenAspect = maxWidth / maxHeight
+                            val containerWidth = if (screenAspect > targetAspect) maxHeight * targetAspect else maxWidth
+                            val containerHeight = if (screenAspect > targetAspect) maxHeight else maxWidth / targetAspect
+
+                            Box(modifier = Modifier.size(containerWidth, containerHeight)) {
+                                RiposteBoardArea(
+                                    gameViewModel = gameViewModel,
+                                    isGridVisible = isGridVisible,
+                                    isAnimationEnabled = true,
+                                    isVisualAssistEnabled = appSettings.visualAssistsEnabled,
+                                    isNightModeEnabled = appSettings.nightModeEnabled,
+                                    isHapticEnabled = appSettings.hapticEnabled,
+                                    deviceTilt = deviceTilt
+                                )
+                            }
+                        }
+                    }
+
+                    // --- 3. TOURNAMENT FEJLÉC (CHESS CLOCK) ---
+                    if (gameViewModel.isTournamentMode && gameViewModel.tournamentOpponentNameRes != null) {
+                        val targetRank = gameViewModel.tournamentTargetRank ?: 20
+
+                        val playerTime = gameViewModel.playerTimeMs
+                        val oppTime = gameViewModel.opponentTimeMs
+
+                        val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+                        val pulseAlpha by infiniteTransition.animateFloat(
+                            initialValue = 0.5f, targetValue = 1f,
+                            animationSpec = infiniteRepeatable(
+                                tween(800, easing = EaseInOutSine),
+                                RepeatMode.Reverse
+                            ), label = "clockPulse"
+                        )
+
+                        val isPlayerActive = gameViewModel.currentPlayerId == 2 && gameViewModel.gamePhase == GameWaitingFor.MOVE_PIECE && !gameViewModel.isGamePaused
+                        val isOppActive = gameViewModel.currentPlayerId == 1 && gameViewModel.gamePhase == GameWaitingFor.AI_MOVE && !gameViewModel.isGamePaused
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 12.dp, start = 8.dp, end = 8.dp)
+                                .align(Alignment.TopCenter)
+                                .background(Color(0xFF0A0C10).copy(alpha = 0.35f), RoundedCornerShape(12.dp))
+                                .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
+                                .padding(12.dp)
+                        ) {
+                            // BAL OLDAL (Játékos)
+                            Column(modifier = Modifier.align(Alignment.CenterStart).width(100.dp)) {
+                                Text(
+                                    text = gameViewModel.tournamentChallengerName,
+                                    color = Color(0xFFD4AF37),
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Text(
+                                    text = formatTime(playerTime),
+                                    color = if (playerTime < 30000) Color(0xFFFF5555) else Color.White,
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Black,
+                                    modifier = Modifier.graphicsLayer { alpha = if (isPlayerActive) pulseAlpha else 0.4f }
+                                )
+                            }
+
+                            // KÖZÉP (TÉT)
+                            Column(
+                                modifier = Modifier.align(Alignment.Center),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = stringResource(id = R.string.tournament_rank_label, targetRank),
+                                    color = Color.White.copy(alpha = 0.5f),
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = stringResource(id = R.string.tournament_vs),
+                                    color = Color.White.copy(alpha = 0.8f),
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Black
+                                )
+                            }
+
+                            // JOBB OLDAL (Ellenfél)
+                            Column(
+                                modifier = Modifier.align(Alignment.CenterEnd).width(100.dp),
+                                horizontalAlignment = Alignment.End
+                            ) {
+                                val currentOppName = stringResource(id = gameViewModel.tournamentOpponentNameRes!!).uppercase()
+                                Text(
+                                    text = currentOppName,
+                                    color = Color.White.copy(alpha = 0.7f),
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    textAlign = TextAlign.End
+                                )
+                                Text(
+                                    text = formatTime(oppTime),
+                                    color = if (oppTime < 30000) Color(0xFFFF5555) else Color.White,
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Black,
+                                    modifier = Modifier.graphicsLayer { alpha = if (isOppActive) pulseAlpha else 0.4f }
+                                )
+                            }
+                        }
+                    }
+
+                    // --- 3.5 HALTE! POPUP ---
+                    AnimatedVisibility(
+                        visible = showHaltePopup,
+                        enter = fadeIn() + scaleIn(initialScale = 0.8f),
+                        exit = fadeOut() + scaleOut(targetScale = 0.8f),
+                        modifier = Modifier.align(Alignment.Center)
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
-                                text = stringResource(id = R.string.tournament_rank_label, targetRank),
-                                color = Color.White.copy(alpha = 0.5f),
-                                fontSize = 9.sp,
+                                text = "HALTE!",
+                                color = currentTheme.uiAccentColor,
+                                fontSize = 64.sp,
+                                fontWeight = FontWeight.Black,
+                                modifier = Modifier.shadow(8.dp, spotColor = Color.Black)
+                            )
+                            Text(
+                                text = "Corps à corps",
+                                color = Color.White.copy(alpha = 0.7f),
+                                fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold
                             )
-                            Text(
-                                text = stringResource(id = R.string.tournament_vs),
-                                color = Color.White.copy(alpha = 0.8f),
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Black
-                            )
-                        }
-
-                        // JOBB OLDAL (Ellenfél)
-                        Column(
-                            modifier = Modifier.align(Alignment.CenterEnd).width(100.dp),
-                            horizontalAlignment = Alignment.End
-                        ) {
-                            Text(
-                                text = oppName,
-                                color = Color.White.copy(alpha = 0.7f),
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                textAlign = TextAlign.End
-                            )
-                            Text(
-                                text = formatTime(oppTime),
-                                color = if (oppTime < 30000) Color(0xFFFF5555) else Color.White,
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Black,
-                                modifier = Modifier.graphicsLayer { alpha = if (isOppActive) pulseAlpha else 0.4f }
-                            )
                         }
                     }
-                }
 
-                // --- 4. GAME OVER SÖTÉTÍTŐ RÉTEG ---
-                AnimatedVisibility(
-                    visible = gameViewModel.gamePhase == GameWaitingFor.GAME_OVER && !gameViewModel.isTutorialMode,
-                    enter = fadeIn(animationSpec = tween(1500)),
-                    exit = fadeOut(animationSpec = tween(800)),
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    val isWin = gameViewModel.winner?.contains("You", ignoreCase = true) == true || gameViewModel.winner?.contains("Player", ignoreCase = true) == true
-                    val isTimeOut = gameViewModel.winner?.contains("Time", ignoreCase = true) == true
+                    // --- 4. GAME OVER SÖTÉTÍTŐ RÉTEG ---
+                    AnimatedVisibility(
+                        visible = gameViewModel.gamePhase == GameWaitingFor.GAME_OVER && !gameViewModel.isTutorialMode,
+                        enter = fadeIn(animationSpec = tween(1500)),
+                        exit = fadeOut(animationSpec = tween(800)),
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        val isWin = gameViewModel.winner?.contains("You", ignoreCase = true) == true || gameViewModel.winner?.contains("Player", ignoreCase = true) == true
+                        val isTimeOut = gameViewModel.winner?.contains("Time", ignoreCase = true) == true
 
-                    val fallbackSubText = if (isWin) stringResource(id = R.string.game_over_bout_yours) else stringResource(id = R.string.game_over_bout_opponent)
-                    val subText = gameViewModel.winner ?: fallbackSubText
+                        val fallbackSubText = if (isWin) stringResource(id = R.string.game_over_bout_yours) else stringResource(id = R.string.game_over_bout_opponent)
+                        val subText = gameViewModel.winner ?: fallbackSubText
 
-                    // ITT HÍVJUK MEG AZ ÚJ KOMPONENST!
-                    GameOverOverlay(
-                        isWin = isWin,
-                        isTimeOut = isTimeOut,
-                        subText = subText,
-                        accentColor = currentTheme.uiAccentColor
-                    )
-                }
+                        GameOverOverlay(
+                            isWin = isWin,
+                            isTimeOut = isTimeOut,
+                            subText = subText,
+                            accentColor = currentTheme.uiAccentColor
+                        )
+                    }
 
-                // --- 5. BOTTOM DOCK ---
-                Box(
-                    modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 24.dp).padding(horizontal = 16.dp)
-                ) {
-                    AnimatedContent(
-                        targetState = gameViewModel.gamePhase == GameWaitingFor.GAME_OVER && !gameViewModel.isTutorialMode,
-                        label = "DockTransition"
-                    ) { isGameOver ->
-                        if (isGameOver) {
-                            if (gameViewModel.isTournamentMode) {
-                                // BAJNOKSÁG GAME OVER GOMB
-                                RiposteDialogButton(
-                                    text = stringResource(id = R.string.btn_continue_tournament),
-                                    isHanging = true,
-                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
-                                    onClick = {
-                                        soundManager.playClick()
-                                        val isWin = gameViewModel.winner?.contains("You", ignoreCase = true) == true || gameViewModel.winner?.contains("Time's Up! You", ignoreCase = true) == true
+                    // --- 5. BOTTOM DOCK ---
+                    Box(
+                        modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 24.dp).padding(horizontal = 16.dp)
+                    ) {
+                        AnimatedContent(
+                            targetState = gameViewModel.gamePhase == GameWaitingFor.GAME_OVER && !gameViewModel.isTutorialMode,
+                            label = "DockTransition"
+                        ) { isGameOver ->
+                            if (isGameOver) {
+                                if (gameViewModel.isTournamentMode) {
+                                    // BAJNOKSÁG GAME OVER GOMB
+                                    RiposteDialogButton(
+                                        text = stringResource(id = R.string.btn_continue_tournament),
+                                        isHanging = true,
+                                        modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
+                                        onClick = {
+                                            soundManager.playClick()
+                                            val isWin = gameViewModel.winner?.contains("You", ignoreCase = true) == true || gameViewModel.winner?.contains("Time's Up! You", ignoreCase = true) == true
 
-                                        val historyStr = gameViewModel.processTournamentMatchEnd(isWin)
-                                        gameViewModel.isInterruptedGame = false
+                                            val historyStr = gameViewModel.processTournamentMatchEnd(isWin)
+                                            gameViewModel.isInterruptedGame = false
 
-                                        coroutineScope.launch {
-                                            settingsManager.updateSettings(
-                                                appSettings.copy(
-                                                    tournamentRank = gameViewModel.tournamentManager.currentRank,
-                                                    tournamentHighest = gameViewModel.tournamentManager.highestRank,
-                                                    tournamentDefending = gameViewModel.tournamentManager.isDefending,
-                                                    tournamentMatchHistory = historyStr,
-                                                    hasSavedTournamentMatch = false
+                                            coroutineScope.launch {
+                                                settingsManager.updateSettings(
+                                                    appSettings.copy(
+                                                        tournamentRank = gameViewModel.tournamentManager.currentRank,
+                                                        tournamentHighest = gameViewModel.tournamentManager.highestRank,
+                                                        tournamentDefending = gameViewModel.tournamentManager.isDefending,
+                                                        tournamentMatchHistory = historyStr,
+                                                        hasSavedTournamentMatch = false
+                                                    )
                                                 )
-                                            )
+                                            }
+                                            onBackToMenu()
+                                        }
+                                    )
+                                } else {
+                                    // NORMÁL GAME OVER GOMBOK
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
+                                        horizontalArrangement = Arrangement.SpaceEvenly,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = stringResource(id = R.string.btn_main_menu),
+                                            color = Color.White.copy(alpha = 0.6f), fontSize = 14.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp,
+                                            modifier = Modifier.clickable {
+                                                soundManager.playClick(); onBackToMenu()
+                                            }.padding(16.dp)
+                                        )
+                                        RiposteDialogButton(
+                                            text = stringResource(id = R.string.btn_rematch),
+                                            onClick = {
+                                                soundManager.playClick(); gameViewModel.restartGame()
+                                            }
+                                        )
+                                    }
+                                }
+                            } else {
+                                // NORMÁL DOKK
+                                RiposteBottomDock(
+                                    appSettings = appSettings,
+                                    isTutorialMode = gameViewModel.isTutorialMode,
+                                    isGridVisible = isGridVisible,
+                                    onGridToggle = { soundManager.playClick(); isGridVisible = it },
+                                    onMusicToggle = {
+                                        soundManager.playClick()
+                                        coroutineScope.launch { settingsManager.updateSettings(appSettings.copy(musicEnabled = !appSettings.musicEnabled)) }
+                                    },
+                                    onSfxToggle = {
+                                        soundManager.playToggle(!appSettings.sfxEnabled)
+                                        coroutineScope.launch { settingsManager.updateSettings(appSettings.copy(sfxEnabled = !appSettings.sfxEnabled)) }
+                                    },
+                                    onNightModeToggle = {
+                                        soundManager.playClick()
+                                        coroutineScope.launch { settingsManager.updateSettings(appSettings.copy(nightModeEnabled = !appSettings.nightModeEnabled)) }
+                                    },
+                                    onThemeClick = {
+                                        soundManager.playClick()
+                                        showThemeDialog = true
+                                        gameViewModel.isGamePaused = true
+                                    },
+                                    onMenuClick = {
+                                        soundManager.playClick()
+                                        gameViewModel.isInterruptedGame = true
+                                        gameViewModel.isGamePaused = true
+                                        if (gameViewModel.isTournamentMode) {
+                                            coroutineScope.launch { gameViewModel.saveTournamentStateToDisk() }
                                         }
                                         onBackToMenu()
-                                    }
-                                )
-                            } else {
-                                // NORMÁL GAME OVER GOMBOK
-                                Row(
-                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
-                                    horizontalArrangement = Arrangement.SpaceEvenly,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = stringResource(id = R.string.btn_main_menu),
-                                        color = Color.White.copy(alpha = 0.6f), fontSize = 14.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp,
-                                        modifier = Modifier.clickable {
-                                            soundManager.playClick(); onBackToMenu()
-                                        }.padding(16.dp)
-                                    )
-                                    RiposteDialogButton(
-                                        text = stringResource(id = R.string.btn_rematch),
-                                        onClick = {
-                                            soundManager.playClick(); gameViewModel.restartGame()
+                                    },
+                                    onSkipTutorial = {
+                                        soundManager.playClick()
+                                        coroutineScope.launch { settingsManager.updateSettings(appSettings.copy(hasSeenTutorial = true)) }
+                                        showTutorialComplete = true
+                                    },
+                                    onUndoClick = { soundManager.playClick(); gameViewModel.undo() },
+                                    onHintClick = {
+                                        soundManager.playClick()
+                                        if (gameViewModel.isTournamentMode) {
+                                            showOpponentCard = true
+                                            gameViewModel.isGamePaused = true
+                                        } else {
+                                            gameViewModel.requestHint()
                                         }
-                                    )
-                                }
+                                    },
+                                    isTournamentMode = gameViewModel.isTournamentMode
+                                )
                             }
-                        } else {
-                            // NORMÁL DOKK
-                            RiposteBottomDock(
-                                appSettings = appSettings,
-                                isTutorialMode = gameViewModel.isTutorialMode,
-                                isGridVisible = isGridVisible,
-                                onGridToggle = { soundManager.playClick(); isGridVisible = it },
-                                onMusicToggle = {
-                                    soundManager.playClick()
-                                    coroutineScope.launch { settingsManager.updateSettings(appSettings.copy(musicEnabled = !appSettings.musicEnabled)) }
-                                },
-                                onSfxToggle = {
-                                    soundManager.playToggle(!appSettings.sfxEnabled)
-                                    coroutineScope.launch { settingsManager.updateSettings(appSettings.copy(sfxEnabled = !appSettings.sfxEnabled)) }
-                                },
-                                onNightModeToggle = {
-                                    soundManager.playClick()
-                                    coroutineScope.launch { settingsManager.updateSettings(appSettings.copy(nightModeEnabled = !appSettings.nightModeEnabled)) }
-                                },
-                                onThemeClick = {
-                                    soundManager.playClick()
-                                    showThemeDialog = true
-                                    gameViewModel.isGamePaused = true
-                                },
-                                onMenuClick = {
-                                    soundManager.playClick()
-                                    gameViewModel.isInterruptedGame = true
-                                    gameViewModel.isGamePaused = true
-                                    if (gameViewModel.isTournamentMode) {
-                                        coroutineScope.launch { gameViewModel.saveTournamentStateToDisk() }
-                                    }
-                                    onBackToMenu()
-                                },
-                                onSkipTutorial = {
-                                    soundManager.playClick()
-                                    coroutineScope.launch { settingsManager.updateSettings(appSettings.copy(hasSeenTutorial = true)) }
-                                    showTutorialComplete = true
-                                },
-                                onUndoClick = { soundManager.playClick(); gameViewModel.undo() },
-                                onHintClick = {
-                                    soundManager.playClick()
-                                    if (gameViewModel.isTournamentMode) {
-                                        showOpponentCard = true
-                                        gameViewModel.isGamePaused = true
-                                    } else {
-                                        gameViewModel.requestHint()
-                                    }
-                                },
-                                isTournamentMode = gameViewModel.isTournamentMode
-                            )
                         }
                     }
-                }
 
-                // --- 6. ELLENFÉL KÁRTYA OVERLAY ---
-                if (gameViewModel.isTournamentMode) {
-                    val opponent = TournamentRoster.opponents.values.find { it.nameRes == gameViewModel.tournamentOpponentNameRes }
-                    OpponentCardOverlay(
-                        opponent = opponent,
-                        isVisible = showOpponentCard,
-                        onClose = {
-                            soundManager.playClick()
-                            showOpponentCard = false
-                            gameViewModel.isGamePaused = false
-                        }
-                    )
-                }
-            } // Box vége
+                    // --- 6. ELLENFÉL KÁRTYA OVERLAY ---
+                    if (gameViewModel.isTournamentMode) {
+                        val opponent = TournamentRoster.opponents.values.find { it.nameRes == gameViewModel.tournamentOpponentNameRes }
+                        OpponentCardOverlay(
+                            opponent = opponent,
+                            isVisible = showOpponentCard,
+                            onClose = {
+                                soundManager.playClick()
+                                showOpponentCard = false
+                                gameViewModel.isGamePaused = false
+                            }
+                        )
+                    }
+                } // Box (UI Layer) vége
+            } // CompositionLocalProvider (Layer) vége
+        } // AnimatedContent vége
 
+        // 2. PERSISTENT DIALOGS LAYER (Outside AnimatedContent)
+        CompositionLocalProvider(LocalGameTheme provides activeTheme) {
+            
             // --- 7. DIALOGOK ---
             if (gameViewModel.gamePhase == GameWaitingFor.TUTORIAL_WELCOME) {
                 TutorialWelcomeDialog(
@@ -566,6 +609,7 @@ fun RiposteGameBoard(
             // --- 8. DAILY TIP DIALOG ---
             if (showDailyTip) {
                 DailyTipDialog(
+                    appSettings = appSettings,
                     soundManager = soundManager,
                     onDismiss = {
                         showDailyTip = false
@@ -573,9 +617,14 @@ fun RiposteGameBoard(
                         coroutineScope.launch {
                             settingsManager.updateSettings(appSettings.copy(lastTipTime = System.currentTimeMillis()))
                         }
+                    },
+                    onSettingsUpdate = { newSettings ->
+                        coroutineScope.launch {
+                            settingsManager.updateSettings(newSettings)
+                        }
                     }
                 )
             }
-        } // CompositionLocalProvider vége
-    } // AnimatedContent vége
+        } // CompositionLocalProvider (Dialogs) vége
+    } // Root Container vége
 }

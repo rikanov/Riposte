@@ -1,5 +1,6 @@
 package hu.riposte.game.ui.dialogs
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -42,20 +43,22 @@ fun ThemeSelectorDialog(
     soundManager: SoundManager
 ) {
     val coroutineScope = rememberCoroutineScope()
-    val accentColor = LocalGameTheme.current.uiAccentColor
+    val targetAccentColor = LocalGameTheme.current.uiAccentColor
+    val accentColor by animateColorAsState(
+        targetValue = targetAccentColor,
+        animationSpec = tween(durationMillis = 800),
+        label = "DialogAccentColor"
+    )
 
-    // JAVÍTÁS 1: A megnyitáskor az aktív témához tartozó fület nyitjuk meg!
     var selectedTabIndex by remember {
         mutableStateOf(if (ThemeRegistry.zenThemes.any { it.id == currentThemeId }) 1 else 0)
     }
 
     val currentThemeList = if (selectedTabIndex == 0) ThemeRegistry.duelistThemes else ThemeRegistry.zenThemes
 
-    // PAGER STATE
     val initialPage = currentThemeList.indexOfFirst { it.id == currentThemeId }.coerceAtLeast(0)
     val pagerState = rememberPagerState(initialPage = initialPage, pageCount = { currentThemeList.size })
 
-    // JAVÍTÁS 2: Csak akkor töltünk előnézetet és zenét, ha a kártya MEGÁLLT (settledPage), így megszűnik az akadozás!
     LaunchedEffect(pagerState.settledPage, currentThemeList) {
         if (pagerState.settledPage in currentThemeList.indices) {
             val selectedTheme = currentThemeList[pagerState.settledPage]
@@ -64,7 +67,6 @@ fun ThemeSelectorDialog(
     }
 
     GlassDialog(onDismissRequest = {
-        // Ha kilépünk, visszaállítjuk az eredetit
         onThemePreview(currentThemeId)
         onDismiss()
     }) {
@@ -82,13 +84,24 @@ fun ThemeSelectorDialog(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // --- ÚJ: COLLECTION CÍM ---
+            Text(
+                text = "SELECT COLLECTION",
+                color = Color.White.copy(alpha = 0.5f),
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.sp
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
             // --- CATEGORY TABS ---
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
+                // ÚJ: Név egyszerűsítve
                 ThemeCategoryTab(
-                    text = "THE DUELIST",
+                    text = "DUELIST",
                     isSelected = selectedTabIndex == 0,
                     accentColor = accentColor,
                     onClick = {
@@ -100,7 +113,7 @@ fun ThemeSelectorDialog(
                     }
                 )
                 ThemeCategoryTab(
-                    text = "THE ZEN",
+                    text = "ZEN",
                     isSelected = selectedTabIndex == 1,
                     accentColor = accentColor,
                     onClick = {
@@ -115,26 +128,61 @@ fun ThemeSelectorDialog(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // JAVÍTÁS 3: Eltávolítva a contentPadding, így nem lóg be a szomszédos kártya!
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier
-                    .height(280.dp)
-                    .fillMaxWidth(),
-                pageSpacing = 32.dp
-            ) { page ->
-                val theme = currentThemeList[page]
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    ThemeCard(theme = theme, isSelected = pagerState.currentPage == page)
+            // --- ÚJ: NYILAK ÉS PAGER ROW ---
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                // Bal nyíl
+                val canScrollBackward = pagerState.currentPage > 0
+                Text(
+                    text = "◀",
+                    color = if (canScrollBackward) accentColor else Color.Transparent,
+                    fontSize = 24.sp,
+                    modifier = Modifier
+                        .padding(start = 8.dp)
+                        .clickable(enabled = canScrollBackward) {
+                            soundManager.playClick()
+                            coroutineScope.launch { pagerState.animateScrollToPage(pagerState.currentPage - 1) }
+                        }
+                )
+
+                // Pager
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(280.dp),
+                    pageSpacing = 32.dp
+                ) { page ->
+                    val theme = currentThemeList[page]
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        ThemeCard(theme = theme, isSelected = pagerState.currentPage == page)
+                    }
                 }
+
+                // Jobb nyíl
+                val canScrollForward = pagerState.currentPage < currentThemeList.size - 1
+                Text(
+                    text = "▶",
+                    color = if (canScrollForward) accentColor else Color.Transparent,
+                    fontSize = 24.sp,
+                    modifier = Modifier
+                        .padding(end = 8.dp)
+                        .clickable(enabled = canScrollForward) {
+                            soundManager.playClick()
+                            coroutineScope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) }
+                        }
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Display Name (Szintén settledPage alapján, hogy ne ugráljon a szöveg)
+            // Display Name
             if (pagerState.settledPage in currentThemeList.indices) {
                 Text(
                     text = currentThemeList[pagerState.settledPage].displayName.uppercase(),
@@ -179,7 +227,7 @@ fun ThemeSelectorDialog(
                         .background(Color.Black.copy(alpha = 0.3f))
                         .clickable {
                             soundManager.playClick()
-                            onThemePreview(currentThemeId) // Visszaállítjuk az eredetit a bezáráskor!
+                            onThemePreview(currentThemeId)
                             onDismiss()
                         },
                     contentAlignment = Alignment.Center
@@ -190,7 +238,6 @@ fun ThemeSelectorDialog(
         }
     }
 }
-
 @Composable
 fun ThemeCategoryTab(
     text: String,

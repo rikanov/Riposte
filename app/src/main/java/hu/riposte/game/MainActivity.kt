@@ -15,6 +15,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.viewmodel.compose.viewModel
+import hu.riposte.game.engine.logic.GameViewModel
 import hu.riposte.game.engine.logic.SoundManager
 import hu.riposte.game.ui.theme.RiposteTheme
 
@@ -25,7 +27,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             val context = LocalContext.current
             val lifecycleOwner = LocalLifecycleOwner.current
-            val soundManager = remember { SoundManager(context) }
+            val gameViewModel: GameViewModel = viewModel()
+            val soundManager = gameViewModel.soundManager
 
             // Binding SoundManager to App Lifecycle
             DisposableEffect(lifecycleOwner) {
@@ -39,14 +42,6 @@ class MainActivity : ComponentActivity() {
                 lifecycleOwner.lifecycle.addObserver(observer)
                 onDispose {
                     lifecycleOwner.lifecycle.removeObserver(observer)
-                }
-            }
-
-            DisposableEffect(Unit) {
-                onDispose {
-                    // Global music and sound pool release
-                    SoundManager.releaseMusic()
-                    soundManager.release()
                 }
             }
 

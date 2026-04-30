@@ -12,7 +12,9 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -158,14 +160,14 @@ fun OpponentCardOverlay(
                                 .background(Color(0xFFD4AF37).copy(alpha = 0.3f))
                         )
 
-                        // Leírás (Bio)
+                        // Leírás (Bio) - SCROLLABLE UPGRADE
                         Text(
                             text = stringResource(id = opponent.descriptionRes),
                             color = Color.White.copy(alpha = 0.7f),
                             fontSize = 14.sp,
                             lineHeight = 20.sp,
                             textAlign = TextAlign.Center,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())
                         )
 
                         // Idézet
