@@ -12,7 +12,7 @@ typedef unsigned int uint;
 class Riposte_TT_Engine {
 public:
     static void init();
-    static MoveData getBestStep(const int * board, const int playerID, const uint depth, const bool riposte, const int sepLeft, const int offW, const int defW);
+    static MoveData getBestStep(const uint64_t p1_in, const uint64_t p2_in, const int playerID, const uint depth, const bool riposte, const int sepLeft, const int offW, const int defW);
 
 private:
     // --- BITBOARD  ---

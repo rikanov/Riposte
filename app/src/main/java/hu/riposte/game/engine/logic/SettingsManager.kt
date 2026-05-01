@@ -41,7 +41,8 @@ data class AppSettings(
     // Napi tippek perzisztencia
     val usefulTipIndex: Int = 0,
     val loreTipIndex: Int = 0,
-    val lastTipWasUseful: Boolean = false
+    val lastTipWasUseful: Boolean = false,
+    val recentThreats: String = ""
 )
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "riposte_settings")
@@ -83,6 +84,7 @@ class SettingsManager(private val context: Context) {
         val USEFUL_TIP_INDEX_KEY = intPreferencesKey("useful_tip_index")
         val LORE_TIP_INDEX_KEY = intPreferencesKey("lore_tip_index")
         val LAST_TIP_WAS_USEFUL_KEY = booleanPreferencesKey("last_tip_was_useful")
+        val RECENT_THREATS_KEY = stringPreferencesKey("recent_threats")
     }
 
     val settingsFlow: Flow<AppSettings> = context.dataStore.data.map { preferences ->
@@ -118,7 +120,8 @@ class SettingsManager(private val context: Context) {
 
             usefulTipIndex = preferences[USEFUL_TIP_INDEX_KEY] ?: 0,
             loreTipIndex = preferences[LORE_TIP_INDEX_KEY] ?: 0,
-            lastTipWasUseful = preferences[LAST_TIP_WAS_USEFUL_KEY] ?: false
+            lastTipWasUseful = preferences[LAST_TIP_WAS_USEFUL_KEY] ?: false,
+            recentThreats = preferences[RECENT_THREATS_KEY] ?: ""
         )
     }
 
@@ -156,6 +159,7 @@ class SettingsManager(private val context: Context) {
             preferences[USEFUL_TIP_INDEX_KEY] = settings.usefulTipIndex
             preferences[LORE_TIP_INDEX_KEY] = settings.loreTipIndex
             preferences[LAST_TIP_WAS_USEFUL_KEY] = settings.lastTipWasUseful
+            preferences[RECENT_THREATS_KEY] = settings.recentThreats
         }
     }
 }

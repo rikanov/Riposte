@@ -25,7 +25,7 @@ private:
 public:
     RiposteEngine() = delete;
     static void init();
-    static MoveData getBestStep(const int *, const int playerID, const uint depth, const bool riposte, const int sepLeft, const int offW, const int defW);
+    static MoveData getBestStep(const uint64_t p1_in, const uint64_t p2_in, const int playerID, const uint depth, const bool riposte, const int sepLeft, const int offW, const int defW);
 };
 
 #endif

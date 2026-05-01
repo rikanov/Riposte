@@ -39,8 +39,6 @@ fun DailyTipDialog(
     onSettingsUpdate: (AppSettings) -> Unit
 ) {
     val accentColor = LocalGameTheme.current.uiAccentColor
-    val allTips = stringArrayResource(id = R.array.daily_tips)
-
     val usefulTips = stringArrayResource(id = R.array.daily_tips_useful)
     val loreTips = stringArrayResource(id = R.array.daily_tips_lore)
 
@@ -75,7 +73,13 @@ fun DailyTipDialog(
     GlassDialog(
         onDismissRequest = {
             soundManager.playClick()
-            onSettingsUpdate(appSettings.copy(lastTipWasUseful = showUseful))
+            val nextIndex = (currentIndex + 1) % currentList.size
+            val updatedSettings = if (showUseful) {
+                appSettings.copy(lastTipWasUseful = true, usefulTipIndex = nextIndex)
+            } else {
+                appSettings.copy(lastTipWasUseful = false, loreTipIndex = nextIndex)
+            }
+            onSettingsUpdate(updatedSettings)
             onDismiss()
         }
     ) {
@@ -88,7 +92,13 @@ fun DailyTipDialog(
                     indication = null
                 ) {
                     soundManager.playClick()
-                    onSettingsUpdate(appSettings.copy(lastTipWasUseful = showUseful))
+                    val nextIndex = (currentIndex + 1) % currentList.size
+                    val updatedSettings = if (showUseful) {
+                        appSettings.copy(lastTipWasUseful = true, usefulTipIndex = nextIndex)
+                    } else {
+                        appSettings.copy(lastTipWasUseful = false, loreTipIndex = nextIndex)
+                    }
+                    onSettingsUpdate(updatedSettings)
                     onDismiss()
                 }
                 .padding(top = 16.dp, start = 8.dp, end = 8.dp, bottom = 8.dp)

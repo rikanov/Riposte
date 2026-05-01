@@ -10,25 +10,19 @@ JNIEXPORT jobject JNICALL
 Java_hu_riposte_game_engine_logic_GameViewModel_getBestStepNative(
         JNIEnv *env,
         jobject thiz,
-        jintArray jBoard,
+        jlong p1,
+        jlong p2,
         jint playerId,
         jint depth,
         jboolean isRiposteAllowed,
         jint sepLeft,
         jint offW,
         jint defW) {
-    LOGI("Start function...");
-    jint *boardPtr = env->GetIntArrayElements(jBoard, nullptr);
-    int board[35];
-    for (int i = 0; i < 35; i++) board[i] = boardPtr[i];
-
     LOGI("Start JNI call..");
-    MoveData result = RiposteEngine::getBestStep(board, (int) playerId, (int) depth,
+    MoveData result = RiposteEngine::getBestStep((uint64_t)p1, (uint64_t)p2, (int) playerId, (int) depth,
                                                  (bool) isRiposteAllowed, (int) sepLeft,
                                                  (int) offW, (int) defW);
     LOGI("Engine finished: from=%d, to=%d, hs=%d", result[0], result[1], result[2]);
-
-    env->ReleaseIntArrayElements(jBoard, boardPtr, JNI_ABORT);
 
     jclass moveDataClass = env->FindClass("hu/riposte/game/engine/data/MoveData");
     jmethodID constructor = env->GetMethodID(moveDataClass, "<init>", "(III)V");
@@ -44,7 +38,8 @@ extern "C" JNIEXPORT jobject JNICALL
 Java_hu_riposte_game_engine_logic_GameViewModel_getBestStepNativeTT(
         JNIEnv *env,
         jobject /* this */,
-        jintArray b,
+        jlong p1,
+        jlong p2,
         jint p,
         jint d,
         jboolean r,
@@ -52,10 +47,7 @@ Java_hu_riposte_game_engine_logic_GameViewModel_getBestStepNativeTT(
         jint offW,
         jint defW) {
 
-    jint *board = env->GetIntArrayElements(b, nullptr);
-    MoveData bestMove = Riposte_TT_Engine::getBestStep(board, p, d, r, s, (int)offW, (int)defW);
-
-    env->ReleaseIntArrayElements(b, board, JNI_ABORT);
+    MoveData bestMove = Riposte_TT_Engine::getBestStep((uint64_t)p1, (uint64_t)p2, p, d, r, s, (int)offW, (int)defW);
 
     jclass moveDataClass = env->FindClass("hu/riposte/game/engine/data/MoveData");
     jmethodID constructor = env->GetMethodID(moveDataClass, "<init>", "(III)V");

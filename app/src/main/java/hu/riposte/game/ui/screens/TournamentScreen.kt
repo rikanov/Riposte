@@ -277,18 +277,8 @@ fun TournamentScreen(
             )
 
             if (showPlayerStats && appSettings != null) {
-                val startRating = gameViewModel.lastViewedRating ?: manager.riposteRating
-                val startRank = gameViewModel.lastViewedRank ?: manager.currentRank
-
                 PlayerStatsOverlay(
-                    playerName = appSettings!!.playerName,
-                    playerTitle = appSettings!!.playerTitle,
-                    lastViewedRank = startRank,
-                    currentRank = manager.currentRank,
-                    peakRating = manager.highestRating,
-                    lastViewedRating = startRating,
-                    rating = manager.riposteRating,
-                    matchHistory = manager.matchHistoryList,
+                    appSettings = appSettings!!,
                     isFirstLaunch = false,
                     soundManager = soundManager,
                     onSaveProfile = { newName, newTitle ->
@@ -302,8 +292,6 @@ fun TournamentScreen(
                         }
                     },
                     onDismiss = {
-                        gameViewModel.lastViewedRating = manager.riposteRating
-                        gameViewModel.lastViewedRank = manager.currentRank
                         showPlayerStats = false
                     }
                 )

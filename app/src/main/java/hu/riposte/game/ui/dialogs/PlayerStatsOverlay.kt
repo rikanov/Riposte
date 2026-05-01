@@ -5,7 +5,6 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -17,7 +16,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
@@ -26,9 +24,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import hu.riposte.game.R
+import hu.riposte.game.engine.logic.AppSettings
 import hu.riposte.game.engine.logic.SoundManager
 import hu.riposte.game.ui.theme.LocalGameTheme
-import kotlinx.coroutines.delay
+
+// --- HELPER COMPOSABLES (Visszatettem őket!) ---
 
 @Composable
 fun AnimatedOdometer(
@@ -104,59 +104,11 @@ fun DigitDrum(digit: Char, color: Color, fontSize: androidx.compose.ui.unit.Text
     }
 }
 
-@Composable
-fun CylindricalBar(score: Float, maxScore: Float, accentColor: Color) {
-    val animatedHeight by animateFloatAsState(
-        targetValue = if (score == 0f) 0.05f else (score / maxScore).coerceIn(0.1f, 1.0f),
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
-        label = "BarHeightAnimation"
-    )
+// --- MAIN COMPOSABLE ---
 
-    val barBaseColor = if (score == 0f) Color.Transparent else if (score < 100f) Color(0xFFFF5555) else accentColor
-
-    val cylinderBrush = Brush.horizontalGradient(
-        0.0f to barBaseColor.copy(alpha = 0.3f),
-        0.5f to barBaseColor,
-        1.0f to barBaseColor.copy(alpha = 0.3f)
-    )
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxHeight()
-    ) {
-        Box(
-            modifier = Modifier.weight(1f),
-            contentAlignment = Alignment.BottomCenter
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(animatedHeight)
-                    .clip(RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp))
-                    .background(cylinderBrush)
-                    .border(0.5.dp, Color.White.copy(alpha = if (score > 0f) 0.1f else 0f), RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp))
-            )
-        }
-
-        Spacer(modifier = Modifier.height(2.dp))
-        Box(
-            modifier = Modifier
-                .fillMaxWidth(0.8f)
-                .height(3.dp)
-                .background(Brush.radialGradient(listOf(Color.Black.copy(alpha = 0.8f), Color.Transparent)))
-        )
-    }
-}
 @Composable
 fun PlayerStatsOverlay(
-    playerName: String,
-    playerTitle: String,
-    peakRating: Int,
-    lastViewedRank: Int,
-    currentRank: Int,
-    lastViewedRating: Int,
-    rating: Int,
-    matchHistory: List<Int>,
+    appSettings: AppSettings,
     isFirstLaunch: Boolean,
     soundManager: SoundManager,
     onSaveProfile: (String, String) -> Unit,
@@ -164,28 +116,53 @@ fun PlayerStatsOverlay(
 ) {
     val accentColor = LocalGameTheme.current.uiAccentColor
 
-    var editName by remember(playerName) { mutableStateOf(playerName) }
-    var editTitle by remember(playerTitle) { mutableStateOf(playerTitle) }
+    var editName by remember(appSettings.playerName) { mutableStateOf(appSettings.playerName) }
+    var editTitle by remember(appSettings.playerTitle) { mutableStateOf(appSettings.playerTitle) }
     var isEditing by remember { mutableStateOf(isFirstLaunch) }
 
-    var displayRating by remember { mutableIntStateOf(lastViewedRating) }
-    var displayRank by remember { mutableIntStateOf(lastViewedRank) }
-    var chartReady by remember { mutableStateOf(false) }
+    // Gördülő ablak adatok feldolgozása (Utolsó 20 meccs)
+    val matches = appSettings.recentThreats.split(",").filter { it.isNotEmpty() }
+    var totalHs1 = 0 // Ellenfél (Defense need)
+    var totalHs2 = 0 // Játékos (Offense)
 
-    var activeTooltip by remember { mutableStateOf<String?>(null) }
-
-    LaunchedEffect(Unit) {
-        delay(300)
-        displayRating = rating
-        displayRank = currentRank
-        chartReady = true
+    matches.forEach { pair ->
+        val parts = pair.split(":")
+        if (parts.size == 2) {
+            totalHs1 += parts[0].toIntOrNull() ?: 0
+            totalHs2 += parts[1].toIntOrNull() ?: 0
+        }
     }
+
+    val totalThreats = totalHs1 + totalHs2
+    val playerOffenseRatio = if (totalThreats == 0) 0.5f else totalHs2.toFloat() / totalThreats.toFloat()
+
+    val personaTitle = when {
+        totalThreats == 0 -> "UNKNOWN COMBATANT"
+        playerOffenseRatio >= 0.55f -> "THE AGGRESSOR"
+        playerOffenseRatio <= 0.45f -> "THE TACTICIAN"
+        else -> "THE MAESTRO"
+    }
+
+    val personaColor = when {
+        totalThreats == 0 -> Color.Gray
+        playerOffenseRatio >= 0.55f -> Color(0xFFFF4444) // Agresszív Vörös
+        playerOffenseRatio <= 0.45f -> Color(0xFF44AAFF) // Taktikus Kék
+        else -> accentColor // Maestro Arany/Téma szín
+    }
+
+    // Animált százalék sávhoz
+    val animatedRatio by animateFloatAsState(
+        targetValue = playerOffenseRatio,
+        animationSpec = tween(durationMillis = 1500, easing = FastOutSlowInEasing),
+        label = "RatioAnim"
+    )
 
     GlassDialog(onDismissRequest = { if (!isFirstLaunch) onDismiss() }) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // --- NÉV ÉS TITULUS ---
             if (isEditing) {
                 BasicTextField(
                     value = editName,
@@ -219,113 +196,95 @@ fun PlayerStatsOverlay(
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            Box(modifier = Modifier.height(30.dp).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                androidx.compose.animation.AnimatedVisibility(
-                    visible = activeTooltip != null,
-                    enter = fadeIn(),
-                    exit = fadeOut()
-                ) {
-                    Text(
-                        text = activeTooltip ?: "",
-                        color = accentColor,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.sp,
-                        modifier = Modifier
-                            .background(Color.Black.copy(alpha = 0.7f), RoundedCornerShape(8.dp))
-                            .padding(horizontal = 10.dp, vertical = 4.dp)
-                    )
-                }
-            }
+            // --- COMBAT PERSONA SZEKCIÓ ---
+            Text(
+                text = "COMBAT PERSONA",
+                color = Color.White.copy(alpha = 0.4f),
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 2.sp
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = personaTitle,
+                color = personaColor,
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 1.sp
+            )
 
-            val peakStr = stringResource(id = R.string.stat_peak_rating)
-            val currentStr = stringResource(id = R.string.stat_current_rank)
-            val ratingStr = stringResource(id = R.string.stat_rating)
+            Spacer(modifier = Modifier.height(16.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth().height(48.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                // JAVÍTÁS: A sorrend most már 2 (Rank) -> 4 (Peak) -> 4 (Rating)
-                listOf(
-                    currentStr to (displayRank to 2),
-                    peakStr to (peakRating to 4),
-                    ratingStr to (displayRating to 4)
-                ).forEach { (label, data) ->
-                    val (valNum, digits) = data
+            // --- TUG OF WAR SÁV ---
+            if (totalThreats == 0) {
+                Text("PLAY TOURNAMENT MATCHES TO REVEAL", color = Color.White.copy(alpha = 0.3f), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            } else {
+                Column(modifier = Modifier.fillMaxWidth(0.9f)) {
+                    // Címkék
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("DEFENSE", color = Color(0xFF44AAFF), fontSize = 10.sp, fontWeight = FontWeight.Black)
+                        Text("OFFENSE", color = Color(0xFFFF4444), fontSize = 10.sp, fontWeight = FontWeight.Black)
+                    }
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    // Sáv maga
                     Box(
                         modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                            .pointerInput(Unit) {
-                                detectTapGestures(
-                                    onPress = {
-                                        activeTooltip = label
-                                        soundManager.playClick()
-                                        try { awaitRelease() } finally { activeTooltip = null }
-                                    }
-                                )
-                            },
-                        contentAlignment = Alignment.Center
+                            .fillMaxWidth()
+                            .height(16.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color(0xFF44AAFF).copy(alpha = 0.8f)) // Alapból Kék (Defense)
                     ) {
-                        AnimatedOdometer(
-                            value = valNum,
-                            digitCount = digits,
-                            color = if (label == ratingStr) accentColor else Color(0xFF1E272E),
-                            fontSize = 20.sp
+                        // Vörös (Offense) ráhúzva
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(animatedRatio)
+                                .fillMaxHeight()
+                                .align(Alignment.CenterEnd)
+                                .clip(RoundedCornerShape(topEnd = 8.dp, bottomEnd = 8.dp))
+                                .background(Color(0xFFFF4444).copy(alpha = 0.8f))
                         )
+                        // Fehér középvonal (Maestro zóna)
+                        Box(
+                            modifier = Modifier
+                                .width(2.dp)
+                                .fillMaxHeight()
+                                .align(Alignment.Center)
+                                .background(Color.White)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(6.dp))
+                    // Százalékok
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("${( (1f - animatedRatio) * 100).toInt()}%", color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text("${(animatedRatio * 100).toInt()}%", color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
-            val formStr = stringResource(id = R.string.stat_recent_form)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(64.dp)
-                    .background(Color(0xFF05070A), RoundedCornerShape(8.dp))
-                    .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(8.dp))
-                    .pointerInput(Unit) {
-                        detectTapGestures(
-                            onPress = {
-                                activeTooltip = formStr
-                                soundManager.playClick()
-                                try { awaitRelease() } finally { activeTooltip = null }
-                            }
-                        )
-                    }
-                    .padding(horizontal = 16.dp, vertical = 6.dp),
-                contentAlignment = Alignment.BottomCenter
+            // --- RANK ODOMETER (Egyszerűsítve) ---
+            Row(
+                modifier = Modifier.fillMaxWidth().wrapContentHeight(),
+                horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                if (matchHistory.isEmpty()) {
-                    Text("NO MATCHES YET", color = Color.White.copy(alpha = 0.2f), fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Center))
-                } else {
-                    Row(
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
-                        verticalAlignment = Alignment.Bottom
-                    ) {
-                        val maxScore = maxOf(matchHistory.maxOrNull() ?: 100, 100).toFloat()
-                        val displayList = List(10) { index ->
-                            val offset = 10 - matchHistory.size
-                            if (index >= offset) matchHistory[index - offset] else 0
-                        }
-
-                        displayList.forEach { score ->
-                            Box(modifier = Modifier.weight(1f)) {
-                                CylindricalBar(score = if (chartReady) score.toFloat() else 0f, maxScore = maxScore, accentColor = accentColor)
-                            }
-                        }
-                    }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("CURRENT RANK", color = Color.White.copy(alpha = 0.5f), fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 6.dp))
+                    AnimatedOdometer(value = appSettings.tournamentRank, digitCount = 2, color = Color(0xFF1E272E), fontSize = 20.sp)
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("PEAK RANK", color = Color.White.copy(alpha = 0.5f), fontSize = 9.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 6.dp))
+                    AnimatedOdometer(value = appSettings.tournamentHighest, digitCount = 2, color = Color(0xFF1E272E), fontSize = 20.sp)
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // --- GOMBOK ---
             if (isEditing) {
                 Box(
                     modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(accentColor).clickable {

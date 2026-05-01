@@ -421,7 +421,7 @@ MoveData Riposte_TT_Engine::searchIDA(const uint64_t set1, const uint64_t set2, 
     return bestMove;
 }
 
-MoveData Riposte_TT_Engine::getBestStep(const int * board, const int playerID, const uint depth, const bool riposte, const int sepLeft, const int offW, const int defW)
+MoveData Riposte_TT_Engine::getBestStep(const uint64_t p1_in, const uint64_t p2_in, const int playerID, const uint depth, const bool riposte, const int sepLeft, const int offW, const int defW)
 {
     init();
     maxDepth = depth;
@@ -429,13 +429,12 @@ MoveData Riposte_TT_Engine::getBestStep(const int * board, const int playerID, c
     currentOffWeight = offW;
     currentDefWeight = defW;
 
-    uint64_t set1 = 0; uint64_t set2 = 0; uint64_t hotSpot = 0;
-    for( uint64_t bitMask = (1ULL << 56), fieldID = 0; fieldID < 35; ++fieldID, bitMask >>=1) {
-        if( fieldID % 5 == 0 ) { bitMask >>= 2; }
-        switch(board[fieldID]) {
-            case 1: case 2: if( playerID == board[fieldID]) set1 |= bitMask; else set2 |= bitMask; break;
-            case 4: hotSpot = bitMask; break;
-        }
+    uint64_t hotSpot = p1_in & p2_in;
+    uint64_t set1 = p1_in ^ hotSpot;
+    uint64_t set2 = p2_in ^ hotSpot;
+
+    if (playerID == 2) {
+        std::swap(set1, set2);
     }
     bool isP1 = (playerID == 1);
 

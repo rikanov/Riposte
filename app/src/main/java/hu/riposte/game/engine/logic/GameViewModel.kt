@@ -29,6 +29,8 @@ import kotlin.math.sqrt
  * Handles game state, AI steps, and Tournament logic.
  * Follows AI_AGENT.md guidelines for state management.
  */
+data class ThreatRecord(val hs1: Int, val hs2: Int)
+
 class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     // --- INFRASTRUCTURE ---
@@ -37,6 +39,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     val soundManager = SoundManager(application)
     private var timerJob: Job? = null
     private val undoStack = mutableListOf<GameStateSnapshot>()
+    private val matchThreatLog = mutableListOf<ThreatRecord>()
 
     // --- HISTORY & DEADLOCK DETECTION ---
     private val historyStack = mutableListOf<BoardHash>()
@@ -92,6 +95,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun resetBoard() {
+        matchThreatLog.clear()
         board.clear()
         pieces.clear()
         repeat(35) { board.add(0) }
@@ -184,11 +188,33 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     private fun calculateBoardHash(): BoardHash {
         var p1 = 0L
         var p2 = 0L
+        var bitMask = 1L shl 56
         for (i in 0..34) {
-            if (board[i] == 1) p1 = p1 or (1L shl i)
-            if (board[i] == 2) p2 = p2 or (1L shl i)
+            if (i % 5 == 0) bitMask = bitMask ushr 2
+            when (board[i]) {
+                1 -> p1 = p1 or bitMask
+                2 -> p2 = p2 or bitMask
+                4 -> { p1 = p1 or bitMask; p2 = p2 or bitMask }
+            }
+            bitMask = bitMask ushr 1
         }
         return BoardHash(p1, p2)
+    }
+
+    private fun restoreBoardFromHash(hash: BoardHash) {
+        var bitMask = 1L shl 56
+        for (i in 0..34) {
+            if (i % 5 == 0) bitMask = bitMask ushr 2
+            val isP1 = (hash.p1 and bitMask) != 0L
+            val isP2 = (hash.p2 and bitMask) != 0L
+            board[i] = when {
+                isP1 && isP2 -> 4
+                isP1 -> 1
+                isP2 -> 2
+                else -> 0
+            }
+            bitMask = bitMask ushr 1
+        }
     }
 
     private fun recordStateAndCheckDeadlock() {
@@ -266,6 +292,10 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             triggerSound(SoundType.MOVE, owner)
             delay(400L)
+
+            if (isTournamentMode) {
+                matchThreatLog.add(evaluateThreatLevels(board.toIntArray()))
+            }
 
             if (hitTouche) {
                 gamePhase = GameWaitingFor.TAKE_PIECE
@@ -359,15 +389,17 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     fun requestHint() {
         if (gamePhase != GameWaitingFor.MOVE_PIECE) return
         viewModelScope.launch {
+            val hash = calculateBoardHash()
             val move = withContext(Dispatchers.Default) {
-                getBestStepNative(board.toIntArray(), currentPlayerId, 7, settings.riposteAllowed, separationStepsLeft, 10, 10)
+                getBestStepNative(hash.p1, hash.p2, currentPlayerId, 7, settings.riposteAllowed, separationStepsLeft, 10, 10)
             }
             if (move.from != -1) activeHint = move
         }
     }
 
-    private fun getRandomOpeningMove(currentBoard: List<Int>, offW: Int, defW: Int): MoveData {
+    private fun getRandomOpeningMove(currentP1: Long, currentP2: Long, offW: Int, defW: Int): MoveData {
         val validMoves = mutableListOf<MoveData>()
+        val currentBoard = board.toList()
         val offsets = intArrayOf(1, 4, 5, 6, -1, -4, -5, -6)
         val hotSpot = currentBoard.indexOf(4)
 
@@ -384,7 +416,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         return if (validMoves.isNotEmpty()) {
             validMoves.random()
         } else {
-            getBestStepNative(currentBoard.toIntArray(), 1, settings.difficulty, settings.riposteAllowed, separationStepsLeft, offW, defW)
+            getBestStepNative(currentP1, currentP2, 1, settings.difficulty, settings.riposteAllowed, separationStepsLeft, offW, defW)
         }
     }
 
@@ -394,6 +426,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
         viewModelScope.launch {
             val startTime = System.currentTimeMillis()
+            val hash = calculateBoardHash()
             val move = withContext(Dispatchers.Default) {
                 val isFirstMove = (0..4).all { board[it] == 1 }
 
@@ -408,12 +441,12 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 }
 
                 if(isFirstMove) {
-                    getRandomOpeningMove(board.toList(), currentOffW, currentDefW)
+                    getRandomOpeningMove(hash.p1, hash.p2, currentOffW, currentDefW)
                 }
                 else if (settings.difficulty >= 10) {
-                    getBestStepNativeTT(board.toIntArray(), 1, settings.difficulty, settings.riposteAllowed, separationStepsLeft, currentOffW, currentDefW)
+                    getBestStepNativeTT(hash.p1, hash.p2, 1, settings.difficulty, settings.riposteAllowed, separationStepsLeft, currentOffW, currentDefW)
                 } else {
-                    getBestStepNative(board.toIntArray(), 1, settings.difficulty, settings.riposteAllowed, separationStepsLeft, currentOffW, currentDefW)
+                    getBestStepNative(hash.p1, hash.p2, 1, settings.difficulty, settings.riposteAllowed, separationStepsLeft, currentOffW, currentDefW)
                 }
             }
             val thinkTime = System.currentTimeMillis() - startTime
@@ -526,6 +559,21 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     // --- PERSISTENCE & TOURNAMENT FLOW ---
 
     fun processTournamentMatchEnd(isWin: Boolean): String {
+        if (matchThreatLog.isNotEmpty()) {
+            val totalHs1 = matchThreatLog.sumOf { it.hs1 }.toFloat()
+            val totalHs2 = matchThreatLog.sumOf { it.hs2 }.toFloat()
+            val tacticalDifference = totalHs1 - totalHs2
+
+            // ZERO-DIVISION PROTECTION
+            if (tacticalDifference != 0f) {
+                val offensiveLevel = totalHs1 / tacticalDifference
+                val defensiveLevel = -totalHs2 / tacticalDifference
+                println("⚔️ PLAYER PROFILE: Offensive = $offensiveLevel, Defensive = $defensiveLevel ⚔️")
+            } else {
+                println("⚔️ PLAYER PROFILE: Balanced (totalHs1 == totalHs2) ⚔️")
+            }
+        }
+
         val rank = tournamentTargetRank ?: 20
         val baseScore = ((20 - rank) * (20 - rank)).toFloat()
 
@@ -535,6 +583,19 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             val timeDiffSec = (playerTimeMs - opponentTimeMs) / 1000f
             val timeBonus = if (timeDiffSec > 0) (timeDiffSec / 60f).coerceAtMost(1.0f) * 0.2f else 0.0f
             (baseScore * (1.0f + timeBonus)).toInt()
+        }
+
+        // --- NEW: Save Rolling Threats (Last 20 Matches) ---
+        if (matchThreatLog.isNotEmpty()) {
+            val tHs1 = matchThreatLog.sumOf { it.hs1 }
+            val tHs2 = matchThreatLog.sumOf { it.hs2 }
+            viewModelScope.launch {
+                val currentSettings = settingsManager.settingsFlow.first()
+                val currentList = currentSettings.recentThreats.split(",").filter { it.isNotEmpty() }.toMutableList()
+                currentList.add("$tHs1:$tHs2")
+                val updatedThreats = currentList.takeLast(3).joinToString(",")
+                settingsManager.updateSettings(currentSettings.copy(recentThreats = updatedThreats))
+            }
         }
 
         return tournamentManager.onMatchFinished(isWin, finalScore)
@@ -627,8 +688,40 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         soundManager.release()
     }
 
-    private external fun getBestStepNative(b: IntArray, p: Int, d: Int, r: Boolean, sep: Int, offW: Int, defW: Int): MoveData
-    private external fun getBestStepNativeTT(b: IntArray, p: Int, d: Int, r: Boolean, sep: Int, offW: Int, defW: Int): MoveData
+    private external fun getBestStepNative(p1: Long, p2: Long, p: Int, d: Int, r: Boolean, sep: Int, offW: Int, defW: Int): MoveData
+    private external fun getBestStepNativeTT(p1: Long, p2: Long, p: Int, d: Int, r: Boolean, sep: Int, offW: Int, defW: Int): MoveData
+
+    private fun evaluateThreatLevels(currentBoard: IntArray): ThreatRecord {
+        val touchePoint = 4
+        val hotSpotIndex = currentBoard.indexOf(touchePoint)
+        if (hotSpotIndex == -1) return ThreatRecord(0, 0)
+
+        val hotX = hotSpotIndex % 5
+        val hotY = hotSpotIndex / 5
+
+        var hs1 = 0
+        var hs2 = 0
+
+        val directions = arrayOf(
+            Pair(0, -1), Pair(0, 1), Pair(-1, 0), Pair(1, 0),
+            Pair(-1, -1), Pair(-1, 1), Pair(1, -1), Pair(1, 1)
+        )
+
+        for (dir in directions) {
+            var cx = hotX + dir.first
+            var cy = hotY + dir.second
+
+            while (cx in 0..4 && cy in 0..6) {
+                val piece = currentBoard[cy * 5 + cx]
+                if (piece == 1) { hs1++; break }
+                else if (piece == 2) { hs2++; break }
+
+                cx += dir.first
+                cy += dir.second
+            }
+        }
+        return ThreatRecord(hs1, hs2)
+    }
 
     companion object {
         init {
