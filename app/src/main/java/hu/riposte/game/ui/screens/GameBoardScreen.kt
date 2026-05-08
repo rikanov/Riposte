@@ -47,11 +47,11 @@ import hu.riposte.game.ui.theme.ThemeRegistry
 import hu.riposte.game.ui.dialogs.OpponentCardOverlay
 import hu.riposte.game.ui.components.RiposteDialogButton
 import hu.riposte.game.ui.components.RiposteBottomDock
-import hu.riposte.game.ui.dialogs.DailyTipDialog
 import hu.riposte.game.ui.dialogs.ThemeSelectorDialog
 import hu.riposte.game.ui.dialogs.TutorialCompleteDialog
 import hu.riposte.game.ui.dialogs.TutorialWelcomeDialog
 import hu.riposte.game.ui.dialogs.GameOverOverlay
+import hu.riposte.game.ui.dialogs.InfoSheetsDialog
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.max
@@ -146,6 +146,7 @@ fun RiposteGameBoard(
 
     var showTutorialComplete by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
+    var showInfoSheetsDialog by remember { mutableStateOf(false) }
     var showOpponentCard by remember { mutableStateOf(false) }
     var previewThemeId by remember { mutableStateOf<String?>(null) }
     var localSavedThemeId by remember(appSettings.themeId) { mutableStateOf(appSettings.themeId) }
@@ -164,20 +165,6 @@ fun RiposteGameBoard(
     val activeTheme = remember(activeThemeId) { ThemeRegistry.getThemeById(activeThemeId) }
     val deviceTilt by rememberDeviceTilt()
     val shakeOffset = remember { Animatable(0f) }
-
-    var showDailyTip by remember { mutableStateOf(false) }
-
-    LaunchedEffect(appSettings.lastTipTime, gameViewModel.isTutorialMode, appSettings.showDailyTips) {
-        if (!gameViewModel.isTutorialMode && appSettings.showDailyTips) {
-            val now = System.currentTimeMillis()
-            val twentyFourHoursInMillis = 60 * 1000L // 1 perc a teszteléshez
-
-            if (now - appSettings.lastTipTime > twentyFourHoursInMillis) {
-                showDailyTip = true
-                gameViewModel.isGamePaused = true
-            }
-        }
-    }
 
     LaunchedEffect(appSettings.musicEnabled, activeTheme.id) {
         soundManager.loadThemeSFX(activeTheme)
@@ -523,6 +510,11 @@ fun RiposteGameBoard(
                                             gameViewModel.requestHint()
                                         }
                                     },
+                                    onInfoClick = {
+                                        soundManager.playClick()
+                                        showInfoSheetsDialog = true
+                                        gameViewModel.isGamePaused = true
+                                        },
                                     isTournamentMode = gameViewModel.isTournamentMode
                                 )
                             }
@@ -588,11 +580,11 @@ fun RiposteGameBoard(
 
             if (showThemeDialog) {
                 ThemeSelectorDialog(
-                    currentThemeId = activeThemeId,
+                    currentThemeId = localSavedThemeId,
                     onThemeSelected = { finalId ->
                         localSavedThemeId = finalId
-                        previewThemeId = null
                         coroutineScope.launch { settingsManager.updateSettings(appSettings.copy(themeId = finalId)) }
+                        previewThemeId = null
                         showThemeDialog = false
                         gameViewModel.isGamePaused = false
                     },
@@ -605,26 +597,20 @@ fun RiposteGameBoard(
                     soundManager = soundManager
                 )
             }
-
-            // --- 8. DAILY TIP DIALOG ---
-            if (showDailyTip) {
-                DailyTipDialog(
+            if (showInfoSheetsDialog) {
+                InfoSheetsDialog(
                     appSettings = appSettings,
                     soundManager = soundManager,
                     onDismiss = {
-                        showDailyTip = false
+                        showInfoSheetsDialog = false
                         gameViewModel.isGamePaused = false
-                        coroutineScope.launch {
-                            settingsManager.updateSettings(appSettings.copy(lastTipTime = System.currentTimeMillis()))
-                        }
                     },
                     onSettingsUpdate = { newSettings ->
-                        coroutineScope.launch {
-                            settingsManager.updateSettings(newSettings)
-                        }
+                        coroutineScope.launch { settingsManager.updateSettings(newSettings) }
                     }
                 )
             }
+
         } // CompositionLocalProvider (Dialogs) vége
     } // Root Container vége
 }

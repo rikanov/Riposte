@@ -34,7 +34,7 @@ namespace Heuristic {
         return result;
     }
 
-    constexpr int heuristic(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, int offW = 10, int defW = 10) {
+    constexpr int heuristic(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, const int offW = 10, const int defW = 10) {
         constexpr uint64_t chessMask1 = 0x5555555555555555;
         constexpr uint64_t chessMask2 = 0xAAAAAAAAAAAAAAAA;
 

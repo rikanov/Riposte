@@ -38,10 +38,13 @@ data class AppSettings(
     val savedTourneyCurrentPlayer: Int = 2,
     val savedTourneyAfterTouche: Boolean = false,
 
-    // Napi tippek perzisztencia
-    val usefulTipIndex: Int = 0,
-    val loreTipIndex: Int = 0,
-    val lastTipWasUseful: Boolean = false,
+    val lastInfoTab: Int = 0,
+    val infoUsefulIndex: Int = 0,
+    val infoStrategyIndex: Int = 0,
+    val infoLoreIndex: Int = 0,
+    val infoLegendIndex: Int = 0,
+    val infoHistoryIndex: Int = 0,
+
     val recentThreats: String = ""
 )
 
@@ -80,10 +83,12 @@ class SettingsManager(private val context: Context) {
         val SAVED_TOURNEY_PLAYER = intPreferencesKey("saved_tourney_player")
         val SAVED_TOURNEY_AFTER_TOUCHE = booleanPreferencesKey("saved_tourney_after_touche")
 
-        // Új kulcsok a tippekhez
-        val USEFUL_TIP_INDEX_KEY = intPreferencesKey("useful_tip_index")
-        val LORE_TIP_INDEX_KEY = intPreferencesKey("lore_tip_index")
-        val LAST_TIP_WAS_USEFUL_KEY = booleanPreferencesKey("last_tip_was_useful")
+        val LAST_INFO_TAB_KEY = intPreferencesKey("last_info_tab")
+        val INFO_USEFUL_IDX_KEY = intPreferencesKey("info_useful_idx")
+        val INFO_STRATEGY_IDX_KEY = intPreferencesKey("info_strategy_idx")
+        val INFO_LORE_IDX_KEY = intPreferencesKey("info_lore_idx")
+        val INFO_LEGEND_IDX_KEY = intPreferencesKey("info_legend_idx")
+        val INFO_HISTORY_IDX_KEY = intPreferencesKey("info_history_idx")
         val RECENT_THREATS_KEY = stringPreferencesKey("recent_threats")
     }
 
@@ -118,9 +123,13 @@ class SettingsManager(private val context: Context) {
             savedTourneyCurrentPlayer = preferences[SAVED_TOURNEY_PLAYER] ?: 2,
             savedTourneyAfterTouche = preferences[SAVED_TOURNEY_AFTER_TOUCHE] ?: false,
 
-            usefulTipIndex = preferences[USEFUL_TIP_INDEX_KEY] ?: 0,
-            loreTipIndex = preferences[LORE_TIP_INDEX_KEY] ?: 0,
-            lastTipWasUseful = preferences[LAST_TIP_WAS_USEFUL_KEY] ?: false,
+            lastInfoTab = preferences[LAST_INFO_TAB_KEY] ?: 0,
+            infoUsefulIndex = preferences[INFO_USEFUL_IDX_KEY] ?: 0,
+            infoStrategyIndex = preferences[INFO_STRATEGY_IDX_KEY] ?: 0,
+            infoLoreIndex = preferences[INFO_LORE_IDX_KEY] ?: 0,
+            infoLegendIndex = preferences[INFO_LEGEND_IDX_KEY] ?: 0,
+            infoHistoryIndex = preferences[INFO_HISTORY_IDX_KEY] ?: 0,
+
             recentThreats = preferences[RECENT_THREATS_KEY] ?: ""
         )
     }
@@ -156,9 +165,13 @@ class SettingsManager(private val context: Context) {
             preferences[SAVED_TOURNEY_PLAYER] = settings.savedTourneyCurrentPlayer
             preferences[SAVED_TOURNEY_AFTER_TOUCHE] = settings.savedTourneyAfterTouche
 
-            preferences[USEFUL_TIP_INDEX_KEY] = settings.usefulTipIndex
-            preferences[LORE_TIP_INDEX_KEY] = settings.loreTipIndex
-            preferences[LAST_TIP_WAS_USEFUL_KEY] = settings.lastTipWasUseful
+            preferences[LAST_INFO_TAB_KEY] = settings.lastInfoTab
+            preferences[INFO_USEFUL_IDX_KEY] = settings.infoUsefulIndex
+            preferences[INFO_STRATEGY_IDX_KEY] = settings.infoStrategyIndex
+            preferences[INFO_LORE_IDX_KEY] = settings.infoLoreIndex
+            preferences[INFO_LEGEND_IDX_KEY] = settings.infoLegendIndex
+            preferences[INFO_HISTORY_IDX_KEY] = settings.infoHistoryIndex
+
             preferences[RECENT_THREATS_KEY] = settings.recentThreats
         }
     }

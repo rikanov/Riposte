@@ -55,6 +55,7 @@ fun RiposteBottomDock(
     onSkipTutorial: () -> Unit,
     onUndoClick: () -> Unit,
     onHintClick: () -> Unit,
+    onInfoClick: () -> Unit,
     isTournamentMode: Boolean
 ) {
     val currentTheme = LocalGameTheme.current
@@ -84,8 +85,9 @@ fun RiposteBottomDock(
             add(BarItem(R.drawable.ic_dock_hint, "Hint", true, false, onHintClick))
         } else {
             // Bajnokság mód: Info gomb az ellenfél kártyájához
-            add(BarItem(R.drawable.ic_dock_hint, "Info", true, false, onHintClick))
+            add(BarItem(R.drawable.ic_dock_hint, "Opponent", true, false, onHintClick))
         }
+        add(BarItem(R.drawable.ic_dock_info, "Info", true, false, onInfoClick))
 
         add(BarItem(null, "Spacer", false, isSpacer = true))
 

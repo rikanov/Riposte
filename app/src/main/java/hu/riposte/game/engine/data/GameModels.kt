@@ -49,13 +49,12 @@ data class Piece(
 data class BoardHash(val p1: Long, val p2: Long)
 
 data class GameStateSnapshot(
-    val board: IntArray,
-    val pieces: List<Piece>, // A Piece data class, így a copy() miatt biztonságos
+    val hash: BoardHash,
+    val pieces: List<Piece>,
     val playerCaptured: IntArray,
     val currentPlayerId: Int,
     val afterTouche: Boolean,
     val gamePhase: GameWaitingFor,
-    // History & Separation state
     val historyBaseIndex: Int,
     val historyStackSize: Int,
     val separationStepsLeft: Int

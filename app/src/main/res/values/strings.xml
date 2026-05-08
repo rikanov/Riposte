@@ -28,7 +28,6 @@
     <string name="btn_ok">OK</string>
     <string name="btn_close">CLOSE</string>
 
-    <string name="daily_tip_fallback">DAILY TIP</string>
     <string name="tap_to_continue">- TAP TO CONTINUE -</string>
     <string name="turn_off_notifications">Turn off notifications</string>
     <string name="next_tip">Next tip →</string>
@@ -204,53 +203,72 @@
     <string name="opp_19_quote">\"En garde! I am ready for my first bout.\"</string>
 
     <!-- ========================================== -->
-    <!-- DAILY TIPS: USEFUL & STRATEGY (Game Rules) -->
+    <!-- DAILY TIPS: USEFUL GAME INFO               -->
     <!-- ========================================== -->
     <string-array name="daily_tips_useful">
-        <item>DID YOU KNOW?\nThe bottom dock icons allow you to easily change settings or switch visual themes.</item>
+        <item>DID YOU KNOW?\nThe bottom dock icons allow you to easily change settings or switch visual themes. Remember, choosing night mode always improves visibility, even in day time!</item>
         <item>WARNING\nIn Tournament mode, there is no Undo and no Hint option. Plan your moves carefully!</item>
-        <item>STRATEGY\nRiposte requires two touches to win. Beware of counter-attacks, and play cautiously after your first hit!</item>
         <item>PRO TIP\nIn the Hall of Legends, the Challenger (the one with the lower rank) always gets the first move.</item>
         <item>PRO TIP\nTouché! If you score a hit, you immediately gain +1 Minute on your Chess Clock in Tournament mode.</item>
         <item>PRO TIP\nThe grid is more vital than it seems. Masterful defense lies in aligning your pieces on the same color; and masterful offense is born from that defense.</item>
-        <item>STRATEGY\n\"Defense is nothing but a shield against the blow, but the attack is the sword that strikes.\" - Ridolfo Capo Ferro (1610). A reminder that while parrying keeps you alive, only the Riposte wins the bout.</item>
-        <item>STRATEGY\n\"In combat, your state of mind should not be different from your normal state of mind.\" - Miyamoto Musashi. Stay calm, even when the Chess Clock is ticking down in a Tournament!</item>
-        <item>STRATEGY\n\"Fencing is a game of living chess, a match where exact, logical thought is translated into action.\" - Aldo Nadi, one of the most undefeated fencers of the 20th century.</item>
-        <item>STRATEGY\n\"He who attacks first has the advantage of the initiative, but he who attacks second has the advantage of knowing the enemy\'s intention.\" - Classic fencing proverb. Choose your timing wisely.</item>
         <item>PRO TIP\nDon\'t just react; anticipate. If your opponent consistently attacks the same line, bait them into doing it again, then execute a perfect Parry-Riposte.</item>
-        <item>STRATEGY\n\"Let your sword be like a snake: coiled and ready to strike, but never revealing its full length until the venom is delivered.\" - Classical fencing adage.</item>
         <item>PRO TIP\nA heavy cut may look impressive, but a quick thrust travels a shorter distance. In Riposte, as in reality, speed and precision often defeat brute force.</item>
     </string-array>
 
     <!-- ========================================== -->
-    <!-- DAILY TIPS: LORE & FUN FACTS (History)     -->
+    <!-- DAILY TIPS: STRATEGY                       -->
+    <!-- ========================================== -->
+    <string-array name="daily_tips_strategy">
+        <item>STRATEGY\nThe Riposte game requires two touches to win. Beware of counter-attacks, and play cautiously before your first hit!</item>
+        <item>STRATEGY\n\"In combat, your state of mind should not be different from your normal state of mind.\" - Miyamoto Musashi. Stay calm, even when the Chess Clock is ticking down in a Tournament!</item>
+        <item>STRATEGY\n\"Defense is nothing but a shield against the blow, but the attack is the sword that strikes.\" - Ridolfo Capo Ferro (1610). A reminder that while parrying keeps you alive, only the Riposte wins the bout.</item>
+        <item>STRATEGY\n\"Fencing is a game of living chess, a match where exact, logical thought is translated into action.\" - Aldo Nadi, one of the most undefeated fencers of the 20th century.</item>
+        <item>STRATEGY\n\"Let your sword be like a snake: coiled and ready to strike, but never revealing its full length until the venom is delivered.\" - Classical fencing adage.</item>
+        <item>STRATEGY\n\"He who attacks first has the advantage of the initiative, but he who attacks second has the advantage of knowing the enemy\'s intention.\" - Classic fencing proverb. Choose your timing wisely.</item>
+        <item>STRATEGY\nIn modern foil and sabre fencing, there is a rule called \'Right of Way\'. It prevents double-kills by dictating that the fencer who initiates the attack first must be defended against before the defender can counter-attack.</item>
+    </string-array>
+    <!-- ========================================== -->
+    <!-- DAILY TIPS: LORE & FUN FACTS               -->
     <!-- ========================================== -->
     <string-array name="daily_tips_lore">
         <item>FUN FACT\n\'Flèche\' is a French fencing term meaning \'arrow\'. In Riposte, diagonal strikes are called Flèche.</item>
+        <item>FUN FACT\nFrench cavalry officers Dupont and Fournier fought over 30 sword and pistol duels against each other over a span of 19 years, inspiring Joseph Conrad\'s story \'The Duel\'.</item>
+        <item>DID YOU KNOW?\nWhy do traditional fencers wear white? Before electronic scoring, points were recorded by attaching an ink-soaked pad to the sword tip to leave a visible mark on the opponent\'s white jacket.</item>
+        <item>FUN FACT\nFencing is one of only five sports that have been featured in every single modern Olympic Games since 1896.</item>
+        <item>FUN FACT\nThe \'En Garde\' stance is designed to minimize the target area you present to your opponent while keeping you balanced to launch a sudden attack (Lunge or Flèche).</item>
+        <item>FUN FACT\nThe iconic mesh fencing mask was not invented until the late 18th century by the French fencing master La Boëssière. Before that, fencers simply risked losing an eye during practice!</item>
+        <item>DID YOU KNOW?\nBruce Lee was heavily influenced by fencing. He incorporated the fencing \'Lunge\' and its footwork into his martial art, Jeet Kune Do, believing it to be the fastest way to close the distance.</item>
+        <item>DID YOU KNOW?\nWheelchair fencing was introduced in 1954 at Stoke Mandeville Hospital by Sir Ludwig Guttmann. He originally used the sport as physical therapy to assist the recovery of WWII veterans with spinal cord injuries.</item>
+        <item>FUN FACT\nToday, Paralympic fencers compete in wheelchairs that are securely fastened to a heavy metal frame on the floor at a 110-degree angle. Since they cannot retreat, bouts are incredibly fast, relying entirely on upper-body evasion and lightning-fast parries.</item>
+        <item>DID YOU KNOW?\nIn wheelchair fencing, hits to the legs are completely invalid. In Épée bouts, competitors even wear a special conductive metal apron over their legs to ensure touches strictly below the waist do not register on the electronic scoring system.</item>
+    </string-array>
+    <!-- ========================================== -->
+    <!-- DAILY TIPS: LEGENDARY                      -->
+    <!-- ========================================== -->
+    <string-array name="daily_tips_legendary">
+        <item>LEGEND\nLegendary Japanese swordsman Miyamoto Musashi fought 61 duels and remained undefeated, famously winning many of them using only a wooden sword (bokken) against live steel.</item>
+        <item>LEGEND\nIn 1695, French opera singer Julie d\'Aubigny (La Maupin) was insulted by three noblemen at a royal ball. She challenged all three to a sword duel outside and defeated them one by one.</item>
         <item>LEGEND\nJános Bolyai, the brilliant Hungarian mathematician, was also a feared swordsman. Legend has it that he once fought 13 Austrian cavalry officers in a row, defeating them all, only pausing between duels to play his violin.</item>
         <item>LITERATURE\n"A hit, a very palpable hit!" - William Shakespeare (Hamlet, Act V, Scene 2). A classic line spoken during the final tragic fencing match.</item>
         <item>LITERATURE\n"I toss my chapeau high... And, as I end the refrain, thrust home!" - Edmond Rostand (Cyrano de Bergerac). The ultimate demonstration of tactical brilliance.</item>
         <item>LITERATURE\n"Alla stoccata carries it away!" - Shakespeare (Romeo and Juliet). \'Stoccata\' is an Italian fencing term for a thrust with the rapier.</item>
         <item>LITERATURE\n"Never fear quarrels, but seek hazardous adventures." - Alexandre Dumas (The Three Musketeers). Good advice for climbing the Hall of Legends!</item>
-        <item>FUN FACT\nIn 1695, French opera singer Julie d\'Aubigny (La Maupin) was insulted by three noblemen at a royal ball. She challenged all three to a sword duel outside and defeated them one by one.</item>
-        <item>FUN FACT\nLegendary Japanese swordsman Miyamoto Musashi fought 61 duels and remained undefeated, famously winning many of them using only a wooden sword (bokken) against live steel.</item>
-        <item>FUN FACT\nFrench cavalry officers Dupont and Fournier fought over 30 sword and pistol duels against each other over a span of 19 years, inspiring Joseph Conrad\'s story \'The Duel\'.</item>
-        <item>DID YOU KNOW?\nWhy do traditional fencers wear white? Before electronic scoring, points were recorded by attaching an ink-soaked pad to the sword tip to leave a visible mark on the opponent\'s white jacket.</item>
-        <item>FUN FACT\nFencing is one of only five sports that have been featured in every single modern Olympic Games since 1896.</item>
-        <item>FUN FACT\nThe \'En Garde\' stance is designed to minimize the target area you present to your opponent while keeping you balanced to launch a sudden attack (Lunge or Flèche).</item>
         <item>LEGEND\nThe real-life Cyrano de Bergerac was a fearsome duelist. History records that at the Porte de Nesle in Paris, he single-handedly fought off an ambush of 100 men, defeating several before the rest fled in terror.</item>
-        <item>HISTORY\nThe 1578 \'Duel of the Mignons\' was a brutal 3-on-3 rapier fight between the favorites of King Henry III and a rival faction. It lasted only minutes but left four men dead or dying, cementing the deadly reputation of the rapier.</item>
         <item>LEGEND\nJoseph Bologne, Chevalier de Saint-Georges, often called the \'Black Mozart\', was not only a genius composer but also the greatest fencer of 18th-century Europe. His blinding speed with the foil was considered supernatural.</item>
+        <item>LITERATURE\n"I am not left-handed either." - The Princess Bride. A legendary cinematic duel that references real historical fencing styles like \'Agrippa\' and \'Capo Ferro\'.</item>
+        <item>LEGEND\nFiore dei Liberi, a 14th-century Italian master, wrote one of the oldest surviving martial arts manuals, \'The Flower of Battle\'. He stated that a swordsman must possess four qualities: Caution, Speed, Strength, and Audacity.</item>
+</string-array>
+
+    <!-- ========================================== -->
+    <!-- DAILY TIPS: HISTORY AND SCHOOLS            -->
+    <!-- ========================================== -->
+    <string-array name="daily_tips_history">
+        <item>HISTORY\nThe 1578 \'Duel of the Mignons\' was a brutal 3-on-3 rapier fight between the favorites of King Henry III and a rival faction. It lasted only minutes but left four men dead or dying, cementing the deadly reputation of the rapier.</item>
         <item>HISTORY\nDuring the Renaissance, duels of honor were so common in France that King Louis XIII had to issue strict edicts banning them. Naturally, fencers simply started dueling in secret, usually at dawn.</item>
         <item>SCHOOLS\nThe Italian School (16th-17th century) revolutionized swordplay by inventing the \'Lunge\'. Masters like Capo Ferro emphasized aggressive, linear strikes and mastering the lethal thrust of the rapier.</item>
         <item>SCHOOLS\nThe French School emerged with the invention of the lighter \'smallsword\'. It favored extreme finesse, economy of movement, and complex parry-riposte sequences over brute physical force.</item>
         <item>SCHOOLS\n\'La Verdadera Destreza\' (The True Skill) was the historical Spanish system of fencing. It was deeply philosophical, based on complex mathematics and geometry, utilizing circular footwork to dominate the opponent.</item>
         <item>SCHOOLS\nThe German tradition of the longsword taught the concept of \'Vor\' (Before) and \'Nach\' (After). The ultimate goal was to always stay in the \'Vor\', forcing the opponent into a desperate defense.</item>
         <item>HISTORY\n\'La Verdadera Destreza\', the Spanish school of fencing, visualized combat as a \'Magic Circle\' drawn on the floor. Fencers would step along its chords and tangents to outmaneuver the opponent using pure geometry.</item>
-        <item>FUN FACT\nThe iconic mesh fencing mask was not invented until the late 18th century by the French fencing master La Boëssière. Before that, fencers simply risked losing an eye during practice!</item>
-        <item>DID YOU KNOW?\nBruce Lee was heavily influenced by fencing. He incorporated the fencing \'Lunge\' and its footwork into his martial art, Jeet Kune Do, believing it to be the fastest way to close the distance.</item>
-        <item>STRATEGY\nIn modern foil and sabre fencing, there is a rule called \'Right of Way\'. It prevents double-kills by dictating that the fencer who initiates the attack first must be defended against before the defender can counter-attack.</item>
-        <item>LITERATURE\n"I am not left-handed either." - The Princess Bride. A legendary cinematic duel that references real historical fencing styles like \'Agrippa\' and \'Capo Ferro\'.</item>
-        <item>LEGEND\nFiore dei Liberi, a 14th-century Italian master, wrote one of the oldest surviving martial arts manuals, \'The Flower of Battle\'. He stated that a swordsman must possess four qualities: Caution, Speed, Strength, and Audacity.</item>
     </string-array>
 </resources>

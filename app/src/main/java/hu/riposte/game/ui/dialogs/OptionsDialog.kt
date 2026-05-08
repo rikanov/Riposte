@@ -93,22 +93,12 @@ fun OptionsDialog(
             // --- JÁTÉKMENET ---
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 RiposteSystemToggleButton(
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.fillMaxWidth(),
                     text = stringResource(id = R.string.options_grid),
                     isActive = appSettings.visualAssistsEnabled,
                     onClick = {
                         soundManager.playClick()
                         onSettingsChanged(appSettings.copy(visualAssistsEnabled = !appSettings.visualAssistsEnabled))
-                    }
-                )
-
-                RiposteSystemToggleButton(
-                    modifier = Modifier.weight(1f),
-                    text = stringResource(id = R.string.options_notify),
-                    isActive = appSettings.showDailyTips,
-                    onClick = {
-                        soundManager.playClick()
-                        onSettingsChanged(appSettings.copy(showDailyTips = !appSettings.showDailyTips))
                     }
                 )
             }

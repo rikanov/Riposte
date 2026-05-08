@@ -520,8 +520,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     private fun saveState() {
         undoStack.add(
             GameStateSnapshot(
-                board = board.toIntArray(),
-                pieces = pieces.toList(),
+                hash = calculateBoardHash(),
+                pieces = pieces.map { it.copy() }, // Deep copy
                 playerCaptured = playerCaptured.copyOf(),
                 currentPlayerId = currentPlayerId,
                 afterTouche = afterTouche,
@@ -536,16 +536,21 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     fun undo() {
         if (undoStack.isNotEmpty()) {
             val lastState = undoStack.removeAt(undoStack.size - 1)
-            board.clear()
-            board.addAll(lastState.board.toTypedArray())
+
+            // 1. Logikai tábla visszaállítása a hash-ből
+            restoreBoardFromHash(lastState.hash)
+
+            // 2. Vizuális bábuk visszaállítása a memóriából (nincs identitászavar!)
             pieces.clear()
             pieces.addAll(lastState.pieces)
+
+            // 3. Többi állapot visszaállítása
             playerCaptured = lastState.playerCaptured
             currentPlayerId = lastState.currentPlayerId
             afterTouche = lastState.afterTouche
             gamePhase = lastState.gamePhase
-            
-            // Restore History & Separation state
+
+            // 4. History & Separation állapot
             historyBaseIndex = lastState.historyBaseIndex
             while (historyStack.size > lastState.historyStackSize) {
                 historyStack.removeAt(historyStack.size - 1)
@@ -557,7 +562,6 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // --- PERSISTENCE & TOURNAMENT FLOW ---
-
     fun processTournamentMatchEnd(isWin: Boolean): String {
         if (matchThreatLog.isNotEmpty()) {
             val totalHs1 = matchThreatLog.sumOf { it.hs1 }.toFloat()
@@ -585,7 +589,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             (baseScore * (1.0f + timeBonus)).toInt()
         }
 
-        // --- NEW: Save Rolling Threats (Last 20 Matches) ---
+        // --- NEW: Save Rolling Threats (Last 3 Matches) ---
         if (matchThreatLog.isNotEmpty()) {
             val tHs1 = matchThreatLog.sumOf { it.hs1 }
             val tHs2 = matchThreatLog.sumOf { it.hs2 }

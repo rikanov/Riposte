@@ -7,7 +7,7 @@ object ThemeRegistry {
 
     val Destreza = GameTheme(
         id = "destreza",
-        displayName = "Manuscript",
+        displayName = "Destreza Manuscript",
         backgroundRes = R.drawable.bg_board_destreza,
         boardBackgroundRes = R.drawable.bg_destreza,
         pieceP1Res = R.drawable.ic_destreza_p1,
@@ -47,6 +47,52 @@ object ThemeRegistry {
         textColor = Color(0xFFFFF0F5), // "Lavender Blush" - lágy, meleg gyöngyfehér
         uiAccentColor = Color(0xFFE58D9A) // Ragyogó Rozéarany (Rose Gold)
     )
+    val Highwayman = GameTheme(
+        id = "highwayman",
+        displayName = "The Highwayman",
+        backgroundRes = R.drawable.bg_highwayman, // Az éjszakai erdei út a hintóval
+        boardBackgroundRes = R.drawable.bg_board_highwayman,
+        pieceP1Res = R.drawable.ic_highwayman_p1, // A királyi kitüntetés (Katona)
+        pieceP2Res = R.drawable.ic_highwayman_p2, // A telihold (Bandita)
+        toucheStarRes = R.drawable.ic_touche_star,
+        previewImageRes = R.drawable.bg_highwayman,
+        bgMusicRes = R.raw.bg_music_highwayman, // A Lyria-val generált kocsmai/barokk zene
+        moveSoundP1Res = R.raw.p1_move_destreza, // Használhatjuk a Destreza fémes hangjait
+        moveSoundP2Res = R.raw.p2_move_destreza,
+        toucheSoundRes = R.raw.touche_hit_destreza,
+
+        // --- SZÍNEK ---
+        boardCellDark = Color(0xFF141B12).copy(alpha = 0.6f), // Mély, "mocsári" erdőzöld/fekete
+        boardCellLight = Color(0xFFB0BEC5).copy(alpha = 0.15f), // Ködös szürke (Moonlight Mist)
+        auraP1Color = Color(0xFFD32F2F), // Királyi vörös (Scarlet Red - a zubbony színe)
+        auraP2Color = Color(0xFF90A4AE), // Hideg ezüst (Moonlight Silver)
+        containerColor = Color(0xFF2D241E), // Sötét, lakkozott tölgyfa vagy öreg bőr
+        textColor = Color(0xFFE0E0E0), // Patinás ezüst/pergamen fehér
+        uiAccentColor = Color(0xFFCD7F32) // Antik bronz/réz (a kitüntetés színe)
+    )
+    val VenetianMasquerade = GameTheme(
+        id = "venetian_masquerade",
+        displayName = "Venetian Masquerade",
+        backgroundRes = R.drawable.bg_venice,
+        boardBackgroundRes = R.drawable.bg_board_venice, // A freskós borítókép
+        pieceP1Res = R.drawable.ic_venice_p1, // Az arany maszk korong
+        pieceP2Res = R.drawable.ic_venice_p2, // A pestisdoktor korong
+        toucheStarRes = R.drawable.ic_touche_star,
+        previewImageRes = R.drawable.bg_venice,
+        bgMusicRes = R.raw.bg_music_venice,
+        moveSoundP1Res = R.raw.p1_move_destreza,
+        moveSoundP2Res = R.raw.p2_move_destreza,
+        toucheSoundRes = R.raw.touche_hit_destreza,
+
+        // --- SZÍNEK (Velencei Pompához) ---
+        boardCellDark = Color(0xFF4B0082).copy(alpha = 0.3f), // Mély királyi lila (Indigo)
+        boardCellLight = Color(0xFFFFD700).copy(alpha = 0.1f), // Arany csillogású mezők
+        auraP1Color = Color(0xFFFFD700), // Ragyogó Arany (Gold)
+        auraP2Color = Color(0xFF00C853), // Smaragdzöld (Emerald - az intrika színe)
+        containerColor = Color(0xFF310A31), // Mély bordó/lila bársony panelek
+        textColor = Color(0xFFFFF8E1), // Porcelán fehér/krém
+        uiAccentColor = Color(0xFFFFAB40) // Meleg borostyán/arany akcentus
+    )
     // 2.A. OLYMPIC CARBON
     val OlympicCarbon = GameTheme(
         id = "olympic_carbon",
@@ -78,7 +124,7 @@ object ThemeRegistry {
         pieceP1Res = R.drawable.ic_inner_p1,
         pieceP2Res = R.drawable.ic_inner_p2,
         toucheStarRes = R.drawable.ic_touche_star,
-        previewImageRes = R.drawable.bg_board_inner,
+        previewImageRes = R.drawable.bg_inner,
         bgMusicRes = R.raw.bg_music_inner,
         moveSoundP1Res = R.raw.p1_move,
         moveSoundP2Res = R.raw.p2_move,
@@ -90,6 +136,50 @@ object ThemeRegistry {
         containerColor = Color(0xFF1A237E), // Éjkék panelek
         textColor = Color(0xFFE0F7FA),
         uiAccentColor = Color(0xFF82B1FF) // Világos kék akcentus
+    )
+    val Vive2024Paris = GameTheme(
+        id = "vive_2024_paris",
+        displayName = "Vive 2024 Paris",
+        backgroundRes = R.drawable.bg_vive2024,
+        boardBackgroundRes = R.drawable.bg_board_vive2024,
+        pieceP1Res = R.drawable.ic_vive2024_p1,
+        pieceP2Res = R.drawable.ic_vive2024_p2,
+        toucheStarRes = R.drawable.ic_touche_star,
+        previewImageRes = R.drawable.bg_vive2024,
+        bgMusicRes = R.raw.bg_music_vive2024,
+        moveSoundP1Res = R.raw.p1_move,
+        moveSoundP2Res = R.raw.p2_move,
+        toucheSoundRes = R.raw.touche_hit,
+        boardCellDark = Color(0xFF0D1B3E).copy(alpha = 0.45f),
+        boardCellLight = Color(0xFFE0F7FA).copy(alpha = 0.12f),
+        auraP1Color = Color(0xFF9D50BB),
+        auraP2Color = Color(0xFF00E5FF),
+        containerColor = Color(0xFF0A122A),
+        textColor = Color(0xFFF0F4F8),
+        uiAccentColor = Color(0xFFD4AF37)
+    )
+    val eSportVision = GameTheme(
+        id = "esport_vision",
+        displayName = "eSport Vision",
+        backgroundRes = R.drawable.bg_esport,
+        boardBackgroundRes = R.drawable.bg_board_esport,
+        pieceP1Res = R.drawable.ic_esport_p1,
+        pieceP2Res = R.drawable.ic_esport_p2,
+        toucheStarRes = R.drawable.ic_touche_star,
+        previewImageRes = R.drawable.bg_esport,
+        bgMusicRes = R.raw.bg_music_esport,
+        moveSoundP1Res = R.raw.p1_move,
+        moveSoundP2Res = R.raw.p2_move,
+        toucheSoundRes = R.raw.touche_hit,
+
+        // --- COLORS (Dark Mode & Neon) ---
+        boardCellDark = Color(0xFF0A0A0C).copy(alpha = 0.85f),
+        boardCellLight = Color(0xFF1A1A20).copy(alpha = 0.65f),
+        auraP1Color = Color(0xFF00E5FF),
+        auraP2Color = Color(0xFFFF0055),
+        containerColor = Color(0xFF111114),
+        textColor = Color(0xFFF0F4F8),
+        uiAccentColor = Color(0xFF00FFAA)
     )
     // 3. WINTER PAGODA
     val WinterPagoda = GameTheme(
@@ -204,10 +294,11 @@ object ThemeRegistry {
     )
 
     // CATEGORIZED COLLECTIONS
-    val duelistThemes = listOf(Destreza, LaMaupin, OlympicCarbon, InnerSpirit)
+    val classicThemes = listOf(Destreza, LaMaupin, Highwayman, VenetianMasquerade )
+    val modernThemes = listOf(OlympicCarbon, InnerSpirit, Vive2024Paris, eSportVision)
     val zenThemes = listOf(DaturaBlossom, WinterPagoda, MayanFresco, AfricanSiesta)
 
-    val allThemes = duelistThemes + zenThemes
+    val allThemes = classicThemes + modernThemes + zenThemes
 
     fun getThemeById(id: String): GameTheme {
         return allThemes.find { it.id == id } ?: Destreza

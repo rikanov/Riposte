@@ -51,10 +51,20 @@ fun ThemeSelectorDialog(
     )
 
     var selectedTabIndex by remember {
-        mutableStateOf(if (ThemeRegistry.zenThemes.any { it.id == currentThemeId }) 1 else 0)
+        mutableIntStateOf(
+            when {
+                ThemeRegistry.classicThemes.any { it.id == currentThemeId } -> 0
+                ThemeRegistry.modernThemes.any { it.id == currentThemeId } -> 1
+                else -> 2
+            }
+        )
     }
 
-    val currentThemeList = if (selectedTabIndex == 0) ThemeRegistry.duelistThemes else ThemeRegistry.zenThemes
+    val currentThemeList = when (selectedTabIndex) {
+        0 -> ThemeRegistry.classicThemes
+        1 -> ThemeRegistry.modernThemes
+        else -> ThemeRegistry.zenThemes
+    }
 
     val initialPage = currentThemeList.indexOfFirst { it.id == currentThemeId }.coerceAtLeast(0)
     val pagerState = rememberPagerState(initialPage = initialPage, pageCount = { currentThemeList.size })
@@ -99,9 +109,8 @@ fun ThemeSelectorDialog(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                // ÚJ: Név egyszerűsítve
                 ThemeCategoryTab(
-                    text = "DUELIST",
+                    text = "CLASSIC",
                     isSelected = selectedTabIndex == 0,
                     accentColor = accentColor,
                     onClick = {
@@ -113,13 +122,25 @@ fun ThemeSelectorDialog(
                     }
                 )
                 ThemeCategoryTab(
-                    text = "ZEN",
+                    text = "MODERN",
                     isSelected = selectedTabIndex == 1,
                     accentColor = accentColor,
                     onClick = {
                         if (selectedTabIndex != 1) {
                             soundManager.playClick()
                             selectedTabIndex = 1
+                            coroutineScope.launch { pagerState.scrollToPage(0) }
+                        }
+                    }
+                )
+                ThemeCategoryTab(
+                    text = "ZEN",
+                    isSelected = selectedTabIndex == 2,
+                    accentColor = accentColor,
+                    onClick = {
+                        if (selectedTabIndex != 2) {
+                            soundManager.playClick()
+                            selectedTabIndex = 2
                             coroutineScope.launch { pagerState.scrollToPage(0) }
                         }
                     }

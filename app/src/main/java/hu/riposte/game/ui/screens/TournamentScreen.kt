@@ -176,7 +176,11 @@ fun TournamentScreen(
                         items(20) { index ->
                             val rank = index + 1
                             val isUser = rank == manager.currentRank
-                            val isTarget = (manager.isDefending && rank == manager.currentRank + 1) || (!manager.isDefending && rank == manager.currentRank - 1)
+                            val isTarget = if (manager.currentRank == 1) {
+                                rank == 2
+                            } else {
+                                (manager.isDefending && rank == manager.currentRank + 1) || (!manager.isDefending && rank == manager.currentRank - 1)
+                            }
 
                             val isRevealed = rank >= manager.highestRank || (rank == 14 && manager.highestRank == 15) || isTarget
                             val isHighest = rank == manager.highestRank
@@ -237,7 +241,7 @@ fun TournamentScreen(
 
                     val buttonText = if (hasOngoingMatch) {
                         stringResource(id = R.string.btn_resume_match)
-                    } else if (manager.isDefending) {
+                    } else if (manager.isDefending || manager.currentRank == 1) {
                         stringResource(id = R.string.btn_accept_challenge)
                     } else {
                         stringResource(id = R.string.btn_en_garde)

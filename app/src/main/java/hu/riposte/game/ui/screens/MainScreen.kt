@@ -105,12 +105,12 @@ fun MainScreen(
     }
 
     val aiDifficultyItems = listOf(
-        MainMenuItem(stringResource(R.string.ai_apprentice).uppercase()) { handleAiClick(3, false) },
-        MainMenuItem(stringResource(R.string.ai_swordsman).uppercase()) { handleAiClick(5, false) },
-        MainMenuItem(stringResource(R.string.ai_duelist).uppercase(), isPremiumOnly = true) { handleAiClick(7, true) },
-        MainMenuItem(stringResource(R.string.ai_master).uppercase(), isPremiumOnly = true) { handleAiClick(9, true) },
-        MainMenuItem(stringResource(R.string.ai_grandmaster).uppercase(), isPremiumOnly = true) { handleAiClick(10, true) },
-        MainMenuItem(stringResource(R.string.ai_stygian).uppercase(), isPremiumOnly = true) { handleAiClick(11, true) }
+        MainMenuItem(stringResource(R.string.ai_apprentice)) { handleAiClick(3, false) },
+        MainMenuItem(stringResource(R.string.ai_swordsman)) { handleAiClick(4, false) },
+        MainMenuItem(stringResource(R.string.ai_duelist), isPremiumOnly = true) { handleAiClick(5, true) },
+        MainMenuItem(stringResource(R.string.ai_master), isPremiumOnly = true) { handleAiClick(6, true) },
+        MainMenuItem(stringResource(R.string.ai_grandmaster), isPremiumOnly = true) { handleAiClick(7, true) },
+        MainMenuItem(stringResource(R.string.ai_stygian), isPremiumOnly = true) { handleAiClick(9, true) }
     )
 
     val activeThemeId = appSettings?.themeId ?: "abstract_sunrise"

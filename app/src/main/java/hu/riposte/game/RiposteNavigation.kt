@@ -17,11 +17,13 @@ import hu.riposte.game.engine.data.GameWaitingFor
 import hu.riposte.game.engine.logic.SoundManager
 import hu.riposte.game.ui.screens.RiposteGameBoard
 import hu.riposte.game.engine.data.StartingPlayer
+import hu.riposte.game.ui.screens.IntroScreen
 import hu.riposte.game.ui.screens.MainScreen
 import hu.riposte.game.ui.screens.SplashScreen
 import hu.riposte.game.ui.screens.TournamentScreen
 
 sealed class Screen(val route: String) {
+    object Intro : Screen("intro")
     object Splash : Screen("splash")
     object Main : Screen("main")
     object Game : Screen("game")
@@ -34,7 +36,17 @@ fun RiposteApp(soundManager: SoundManager) {
     val gameViewModel: GameViewModel = viewModel()
     val activity = (LocalContext.current as? Activity)
 
-    NavHost(navController = navController, startDestination = Screen.Splash.route) {
+    NavHost(navController = navController, startDestination = Screen.Intro.route) {
+
+        composable(Screen.Intro.route) {
+            IntroScreen(
+                onIntroFinished = {
+                    navController.navigate(Screen.Main.route) {
+                        popUpTo(Screen.Intro.route) { inclusive = true }
+                    }
+                }
+            )
+        }
 
         composable(Screen.Splash.route) {
             SplashScreen(
