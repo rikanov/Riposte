@@ -11,7 +11,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import hu.riposte.game.engine.data.*
-import hu.riposte.game.engine.logic.AppSettings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -46,8 +45,12 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     private var historyBaseIndex = 0
     var separationStepsLeft by mutableIntStateOf(0)
 
+    // --- REVIEW MODE STATE (ÚJ) ---
+    private var reviewCursorIndex by mutableIntStateOf(-1)
+    private var finalGameStateSnapshot: GameStateSnapshot? = null
+
     // --- GLOBAL STATE ---
-    var isPremiumVersion: Boolean by mutableStateOf(false)
+    var isPremiumVersion: Boolean by mutableStateOf(true)
     var isGamePaused by mutableStateOf(false)
     var isInterruptedGame by mutableStateOf(false)
     var settings by mutableStateOf(GameSettings())
@@ -124,6 +127,10 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         historyBaseIndex = 0
         separationStepsLeft = 0
         historyStack.add(calculateBoardHash())
+
+        // Review state reset
+        reviewCursorIndex = -1
+        finalGameStateSnapshot = null
     }
 
     fun restartGame() {
@@ -322,7 +329,6 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         val targetIndex = MoveLogic.calculateTargetIndex(board, index, offset)
 
         if (targetIndex != index) {
-            // Separation Rule Block: Can't move to Touché point during Halte!
             if (separationStepsLeft > 0 && board[targetIndex] == 4) return
 
             if (settings.riposteAllowed || !afterTouche || board[targetIndex] != 4) {
@@ -347,7 +353,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                     pieces[pIdx] = pieces[pIdx].copy(state = PieceState.BEING_CAPTURED)
                     board[index] = 4
                     afterTouche = true
-                    historyBaseIndex = historyStack.size // Reset repetition possibility after capture
+                    historyBaseIndex = historyStack.size
 
                     playerCaptured[currentPlayerId]++
                     gamePhase = GameWaitingFor.ANIMATION
@@ -438,6 +444,9 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                         currentOffW = opponent.offensiveWeight
                         currentDefW = opponent.defensiveWeight
                     }
+                } else {
+                    currentOffW = settings.offensiveWeight
+                    currentDefW = settings.defensiveWeight
                 }
 
                 if(isFirstMove) {
@@ -517,48 +526,94 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private fun saveState() {
-        undoStack.add(
-            GameStateSnapshot(
-                hash = calculateBoardHash(),
-                pieces = pieces.map { it.copy() }, // Deep copy
-                playerCaptured = playerCaptured.copyOf(),
-                currentPlayerId = currentPlayerId,
-                afterTouche = afterTouche,
-                gamePhase = gamePhase,
-                historyBaseIndex = historyBaseIndex,
-                historyStackSize = historyStack.size,
-                separationStepsLeft = separationStepsLeft
-            )
+    private fun createCurrentSnapshot(): GameStateSnapshot {
+        return GameStateSnapshot(
+            hash = calculateBoardHash(),
+            pieces = pieces.map { it.copy() },
+            playerCaptured = playerCaptured.copyOf(),
+            currentPlayerId = currentPlayerId,
+            afterTouche = afterTouche,
+            gamePhase = gamePhase,
+            historyBaseIndex = historyBaseIndex,
+            historyStackSize = historyStack.size,
+            separationStepsLeft = separationStepsLeft
         )
+    }
+
+    private fun applySnapshot(snapshot: GameStateSnapshot, isReview: Boolean) {
+        restoreBoardFromHash(snapshot.hash)
+        pieces.clear()
+        pieces.addAll(snapshot.pieces.map { it.copy() })
+        playerCaptured = snapshot.playerCaptured
+        currentPlayerId = snapshot.currentPlayerId
+        afterTouche = snapshot.afterTouche
+
+        if (!isReview) {
+            gamePhase = snapshot.gamePhase
+            historyBaseIndex = snapshot.historyBaseIndex
+            while (historyStack.size > snapshot.historyStackSize) {
+                historyStack.removeAt(historyStack.size - 1)
+            }
+            separationStepsLeft = snapshot.separationStepsLeft
+            activeHint = null
+        }
+    }
+
+    private fun saveState() {
+        undoStack.add(createCurrentSnapshot())
     }
 
     fun undo() {
         if (undoStack.isNotEmpty()) {
             val lastState = undoStack.removeAt(undoStack.size - 1)
-
-            // 1. Logikai tábla visszaállítása a hash-ből
-            restoreBoardFromHash(lastState.hash)
-
-            // 2. Vizuális bábuk visszaállítása a memóriából (nincs identitászavar!)
-            pieces.clear()
-            pieces.addAll(lastState.pieces)
-
-            // 3. Többi állapot visszaállítása
-            playerCaptured = lastState.playerCaptured
-            currentPlayerId = lastState.currentPlayerId
-            afterTouche = lastState.afterTouche
-            gamePhase = lastState.gamePhase
-
-            // 4. History & Separation állapot
-            historyBaseIndex = lastState.historyBaseIndex
-            while (historyStack.size > lastState.historyStackSize) {
-                historyStack.removeAt(historyStack.size - 1)
-            }
-            separationStepsLeft = lastState.separationStepsLeft
-
-            activeHint = null
+            applySnapshot(lastState, isReview = false)
         }
+    }
+
+    // --- ÚJ: REVIEW MODE LOGIC ---
+
+    fun canReviewPrevious(): Boolean {
+        if (reviewCursorIndex == -1) return undoStack.isNotEmpty()
+        return reviewCursorIndex > 0
+    }
+
+    fun canReviewNext(): Boolean {
+        // Bármikor mehetünk előre, kivéve ha már eleve a legfrissebb (jelenlegi) állapotban vagyunk (-1)
+        return reviewCursorIndex != -1
+    }
+
+    fun reviewPreviousMove() {
+        if (!canReviewPrevious()) return
+
+        if (reviewCursorIndex == -1) {
+            // Legelső visszalépésnél elmentjük a játék végi állapotot
+            finalGameStateSnapshot = createCurrentSnapshot()
+            reviewCursorIndex = undoStack.size - 1
+        } else {
+            reviewCursorIndex--
+        }
+        applySnapshot(undoStack[reviewCursorIndex], isReview = true)
+    }
+
+    fun reviewNextMove() {
+        if (!canReviewNext()) return
+
+        reviewCursorIndex++
+        if (reviewCursorIndex >= undoStack.size) {
+            // Elértük az idősík végét, visszatöltjük a végső állapotot
+            finalGameStateSnapshot?.let { applySnapshot(it, isReview = true) }
+            reviewCursorIndex = -1 // JAVÍTÁS: Reseteljük a kurzort a jelenbe!
+        } else {
+            applySnapshot(undoStack[reviewCursorIndex], isReview = true)
+        }
+    }
+
+    fun endReviewMode() {
+        if (reviewCursorIndex != -1 && finalGameStateSnapshot != null) {
+            applySnapshot(finalGameStateSnapshot!!, isReview = true)
+        }
+        reviewCursorIndex = -1
+        finalGameStateSnapshot = null
     }
 
     // --- PERSISTENCE & TOURNAMENT FLOW ---
@@ -568,7 +623,6 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             val totalHs2 = matchThreatLog.sumOf { it.hs2 }.toFloat()
             val tacticalDifference = totalHs1 - totalHs2
 
-            // ZERO-DIVISION PROTECTION
             if (tacticalDifference != 0f) {
                 val offensiveLevel = totalHs1 / tacticalDifference
                 val defensiveLevel = -totalHs2 / tacticalDifference
@@ -589,7 +643,6 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             (baseScore * (1.0f + timeBonus)).toInt()
         }
 
-        // --- NEW: Save Rolling Threats (Last 3 Matches) ---
         if (matchThreatLog.isNotEmpty()) {
             val tHs1 = matchThreatLog.sumOf { it.hs1 }
             val tHs2 = matchThreatLog.sumOf { it.hs2 }

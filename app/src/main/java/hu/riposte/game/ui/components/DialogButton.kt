@@ -26,6 +26,7 @@ fun RiposteDialogButton(
     isHanging: Boolean = false // Ha a gomb a dialógus alján "lóg"
 ) {
     val theme = LocalGameTheme.current
+    val themeFont = theme.fontFamily
 
     Box(
         modifier = modifier
@@ -47,7 +48,8 @@ fun RiposteDialogButton(
             fontWeight = FontWeight.Black,
             letterSpacing = 1.5.sp,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
+            fontFamily = themeFont
         )
     }
 }

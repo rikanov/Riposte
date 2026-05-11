@@ -1,7 +1,17 @@
 package hu.riposte.game.ui.theme
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 import hu.riposte.game.R
+
+private val classicWins = listOf(R.string.quote_classic_win_1, R.string.quote_classic_win_2, R.string.quote_classic_win_3, R.string.quote_classic_win_4)
+private val classicLoses = listOf(R.string.quote_classic_lose_1, R.string.quote_classic_lose_2, R.string.quote_classic_lose_3)
+
+private val zenWins = listOf(R.string.quote_zen_win_1, R.string.quote_zen_win_2, R.string.quote_zen_win_3)
+private val zenLoses = listOf(R.string.quote_zen_lose_1, R.string.quote_zen_lose_2, R.string.quote_zen_lose_3)
+
+private val modernWins = listOf(R.string.quote_modern_win_1, R.string.quote_modern_win_2, R.string.quote_modern_win_3)
+private val modernLoses = listOf(R.string.quote_modern_lose_1, R.string.quote_modern_lose_2, R.string.quote_modern_lose_3)
 
 object ThemeRegistry {
 
@@ -18,13 +28,16 @@ object ThemeRegistry {
         moveSoundP1Res = R.raw.p1_move_destreza,
         moveSoundP2Res = R.raw.p2_move_destreza,
         toucheSoundRes = R.raw.touche_hit_destreza,
-        boardCellDark = Color(0x26000000), // Nagyon halvány, áttetsző fekete tinta a sötét mezőkhöz
-        boardCellLight = Color(0x1AFFFFFF), // Halvány pergamen-fehér a világos mezőkhöz
-        auraP1Color = Color(0xFFB71C1C), // Mély vörös (Sangre)
-        auraP2Color = Color(0xFF455A64), // Hideg acélkék (Acero)
-        containerColor = Color(0xFF3E2723), // Sötét fa/bőr a UI paneleknek
-        textColor = Color(0xFFFFE082), // Meleg, aranyozott pergamen szín a szövegeknek
-        uiAccentColor = Color(0xFFD4AF37) // Arany (Brass) a gomboknak
+        boardCellDark = Color(0x26000000),
+        boardCellLight = Color(0x1AFFFFFF),
+        auraP1Color = Color(0xFFB71C1C),
+        auraP2Color = Color(0xFF455A64),
+        containerColor = Color(0xFF3E2723),
+        textColor = Color(0xFFFFE082),
+        uiAccentColor = Color(0xFFD4AF37),
+        victoryQuotes = classicWins,
+        defeatQuotes = classicLoses,
+        fontFamily = FontFamily.Serif
     )
     val LaMaupin = GameTheme(
         id = "la_maupin",
@@ -35,65 +48,69 @@ object ThemeRegistry {
         pieceP2Res = R.drawable.ic_la_maupin_p2,
         toucheStarRes = R.drawable.ic_touche_star,
         previewImageRes = R.drawable.bg_la_maupin,
-        bgMusicRes = R.raw.bg_music_la_maupin, // Or a dramatic classical track if you add one
+        bgMusicRes = R.raw.bg_music_la_maupin,
         moveSoundP1Res = R.raw.p1_move_la_maupin,
         moveSoundP2Res = R.raw.p2_move_la_maupin,
         toucheSoundRes = R.raw.touche_hit_la_maupin,
-        boardCellDark = Color(0x668B2245), // Élénk kárminvörös / Bársonyos meggy
-        boardCellLight = Color(0x33FFD1DC), // Lágy púderrózsaszín (Face powder pink)
-        auraP1Color = Color(0xFFE91E63), // Ragyogó rubin/rózsa a P1 bábunak
-        auraP2Color = Color(0xFF90A4AE), // Hideg, polírozott acél a P2 tőrnek (Tökéletes kontraszt!)
-        containerColor = Color(0xFF2A1318), // Sötét szilva/mahagóni (Melegebb, mint a fekete)
-        textColor = Color(0xFFFFF0F5), // "Lavender Blush" - lágy, meleg gyöngyfehér
-        uiAccentColor = Color(0xFFE58D9A) // Ragyogó Rozéarany (Rose Gold)
+        boardCellDark = Color(0x668B2245),
+        boardCellLight = Color(0x33FFD1DC),
+        auraP1Color = Color(0xFFE91E63),
+        auraP2Color = Color(0xFF90A4AE),
+        containerColor = Color(0xFF2A1318),
+        textColor = Color(0xFFFFF0F5),
+        uiAccentColor = Color(0xFFFFB6C1),
+        victoryQuotes = classicWins,
+        defeatQuotes = classicLoses,
+        fontFamily = FontFamily.Serif
     )
     val Highwayman = GameTheme(
         id = "highwayman",
         displayName = "The Highwayman",
-        backgroundRes = R.drawable.bg_highwayman, // Az éjszakai erdei út a hintóval
+        backgroundRes = R.drawable.bg_highwayman,
         boardBackgroundRes = R.drawable.bg_board_highwayman,
-        pieceP1Res = R.drawable.ic_highwayman_p1, // A királyi kitüntetés (Katona)
-        pieceP2Res = R.drawable.ic_highwayman_p2, // A telihold (Bandita)
+        pieceP1Res = R.drawable.ic_highwayman_p1,
+        pieceP2Res = R.drawable.ic_highwayman_p2,
         toucheStarRes = R.drawable.ic_touche_star,
         previewImageRes = R.drawable.bg_highwayman,
-        bgMusicRes = R.raw.bg_music_highwayman, // A Lyria-val generált kocsmai/barokk zene
-        moveSoundP1Res = R.raw.p1_move_destreza, // Használhatjuk a Destreza fémes hangjait
+        bgMusicRes = R.raw.bg_music_highwayman,
+        moveSoundP1Res = R.raw.p1_move_destreza,
         moveSoundP2Res = R.raw.p2_move_destreza,
         toucheSoundRes = R.raw.touche_hit_destreza,
-
-        // --- SZÍNEK ---
-        boardCellDark = Color(0xFF141B12).copy(alpha = 0.6f), // Mély, "mocsári" erdőzöld/fekete
-        boardCellLight = Color(0xFFB0BEC5).copy(alpha = 0.15f), // Ködös szürke (Moonlight Mist)
-        auraP1Color = Color(0xFFD32F2F), // Királyi vörös (Scarlet Red - a zubbony színe)
-        auraP2Color = Color(0xFF90A4AE), // Hideg ezüst (Moonlight Silver)
-        containerColor = Color(0xFF2D241E), // Sötét, lakkozott tölgyfa vagy öreg bőr
-        textColor = Color(0xFFE0E0E0), // Patinás ezüst/pergamen fehér
-        uiAccentColor = Color(0xFFCD7F32) // Antik bronz/réz (a kitüntetés színe)
+        boardCellDark = Color(0xFF141B12).copy(alpha = 0.6f),
+        boardCellLight = Color(0xFFB0BEC5).copy(alpha = 0.15f),
+        auraP1Color = Color(0xFFD32F2F),
+        auraP2Color = Color(0xFF90A4AE),
+        containerColor = Color(0xFF2D241E),
+        textColor = Color(0xFFF5F5F5),
+        uiAccentColor = Color(0xFFE6A86A),
+        victoryQuotes = classicWins,
+        defeatQuotes = classicLoses,
+        fontFamily = FontFamily.Serif
     )
     val VenetianMasquerade = GameTheme(
         id = "venetian_masquerade",
         displayName = "Venetian Masquerade",
         backgroundRes = R.drawable.bg_venice,
-        boardBackgroundRes = R.drawable.bg_board_venice, // A freskós borítókép
-        pieceP1Res = R.drawable.ic_venice_p1, // Az arany maszk korong
-        pieceP2Res = R.drawable.ic_venice_p2, // A pestisdoktor korong
+        boardBackgroundRes = R.drawable.bg_board_venice,
+        pieceP1Res = R.drawable.ic_venice_p1,
+        pieceP2Res = R.drawable.ic_venice_p2,
         toucheStarRes = R.drawable.ic_touche_star,
         previewImageRes = R.drawable.bg_venice,
         bgMusicRes = R.raw.bg_music_venice,
         moveSoundP1Res = R.raw.p1_move_destreza,
         moveSoundP2Res = R.raw.p2_move_destreza,
         toucheSoundRes = R.raw.touche_hit_destreza,
-
-        // --- SZÍNEK (Velencei Pompához) ---
-        boardCellDark = Color(0xFF4B0082).copy(alpha = 0.3f), // Mély királyi lila (Indigo)
-        boardCellLight = Color(0xFFFFD700).copy(alpha = 0.1f), // Arany csillogású mezők
-        auraP1Color = Color(0xFFFFD700), // Ragyogó Arany (Gold)
-        auraP2Color = Color(0xFF00C853), // Smaragdzöld (Emerald - az intrika színe)
-        containerColor = Color(0xFF310A31), // Mély bordó/lila bársony panelek
-        textColor = Color(0xFFFFF8E1), // Porcelán fehér/krém
-        uiAccentColor = Color(0xFFFFAB40) // Meleg borostyán/arany akcentus
+        boardCellDark = Color(0xFF4B0082).copy(alpha = 0.3f),
+        boardCellLight = Color(0xFFFFD700).copy(alpha = 0.1f),
+        auraP1Color = Color(0xFFFFD700),
+        auraP2Color = Color(0xFF00C853),
+        containerColor = Color(0xFF310A31),
+        textColor = Color(0xFFFFF8E1),
+        uiAccentColor = Color(0xFFFFD180),
+        victoryQuotes = classicWins,
+        defeatQuotes = classicLoses,
+        fontFamily = FontFamily.Serif
     )
-    // 2.A. OLYMPIC CARBON
     val OlympicCarbon = GameTheme(
         id = "olympic_carbon",
         displayName = "Olympic Carbon",
@@ -109,13 +126,15 @@ object ThemeRegistry {
         toucheSoundRes = R.raw.touche_hit,
         boardCellDark = Color(0xFFB0BEC5).copy(alpha = 0.2f),
         boardCellLight = Color.White.copy(alpha = 0.15f),
-        auraP1Color = Color(0xFF80DEEA), // Jégkék
-        auraP2Color = Color(0xFFD32F2F), // Pagoda piros
+        auraP1Color = Color(0xFF80DEEA),
+        auraP2Color = Color(0xFFD32F2F),
         containerColor = Color(0xFFECEFF1),
-        textColor = Color(0xFF455A64),
-        uiAccentColor = Color(0xFF00BCD4) // Élénk jég-cián
+        textColor = Color(0xFFE0F7FA),
+        uiAccentColor = Color(0xFF18FFFF),
+        victoryQuotes = modernWins,
+        defeatQuotes = modernLoses,
+        fontFamily = FontFamily.Monospace
     )
-    // 2.B. INNER SPIRIT
     val InnerSpirit = GameTheme(
         id = "inner_spirit",
         displayName = "Inner Spirit",
@@ -129,13 +148,16 @@ object ThemeRegistry {
         moveSoundP1Res = R.raw.p1_move,
         moveSoundP2Res = R.raw.p2_move,
         toucheSoundRes = R.raw.touche_hit,
-        boardCellDark = Color(0xFF311B92).copy(alpha = 0.3f), // Mély lila
-        boardCellLight = Color(0xFFB2EBF2).copy(alpha = 0.15f), // Halvány jégkék
-        auraP1Color = Color(0xFFE1BEE7), // Spirituális lila
-        auraP2Color = Color(0xFF80CBC4), // Mentás zöld
-        containerColor = Color(0xFF1A237E), // Éjkék panelek
+        boardCellDark = Color(0xFF311B92).copy(alpha = 0.3f),
+        boardCellLight = Color(0xFFB2EBF2).copy(alpha = 0.15f),
+        auraP1Color = Color(0xFFE1BEE7),
+        auraP2Color = Color(0xFF80CBC4),
+        containerColor = Color(0xFF1A237E),
         textColor = Color(0xFFE0F7FA),
-        uiAccentColor = Color(0xFF82B1FF) // Világos kék akcentus
+        uiAccentColor = Color(0xFF82B1FF),
+        victoryQuotes = modernWins,
+        defeatQuotes = modernLoses,
+        fontFamily = FontFamily.Monospace
     )
     val Vive2024Paris = GameTheme(
         id = "vive_2024_paris",
@@ -156,7 +178,10 @@ object ThemeRegistry {
         auraP2Color = Color(0xFF00E5FF),
         containerColor = Color(0xFF0A122A),
         textColor = Color(0xFFF0F4F8),
-        uiAccentColor = Color(0xFFD4AF37)
+        uiAccentColor = Color(0xFFFFD700),
+        victoryQuotes = modernWins,
+        defeatQuotes = modernLoses,
+        fontFamily = FontFamily.Monospace
     )
     val eSportVision = GameTheme(
         id = "esport_vision",
@@ -171,17 +196,19 @@ object ThemeRegistry {
         moveSoundP1Res = R.raw.p1_move,
         moveSoundP2Res = R.raw.p2_move,
         toucheSoundRes = R.raw.touche_hit,
-
-        // --- COLORS (Dark Mode & Neon) ---
         boardCellDark = Color(0xFF0A0A0C).copy(alpha = 0.85f),
         boardCellLight = Color(0xFF1A1A20).copy(alpha = 0.65f),
         auraP1Color = Color(0xFF00E5FF),
         auraP2Color = Color(0xFFFF0055),
         containerColor = Color(0xFF111114),
         textColor = Color(0xFFF0F4F8),
-        uiAccentColor = Color(0xFF00FFAA)
+        uiAccentColor = Color(0xFF00FFAA),
+        victoryQuotes = modernWins,
+        defeatQuotes = modernLoses,
+        fontFamily = FontFamily.Monospace
     )
-    // 3. WINTER PAGODA
+
+    // --- ZEN TÉMÁK: Cursive lecserélve SansSerif-re a maximális olvashatóságért ---
     val WinterPagoda = GameTheme(
         id = "winter_pagoda",
         displayName = "Winter Pagoda",
@@ -200,11 +227,12 @@ object ThemeRegistry {
         auraP1Color = Color(0x3080DEEA),
         auraP2Color = Color(0x1AD32F2F),
         containerColor = Color(0xFFECEFF1),
-        textColor = Color(0xFF455A64),
-        uiAccentColor = Color(0xFF00BCD4) // Élénk jég-cián
+        textColor = Color(0xFFE1F5FE),
+        uiAccentColor = Color(0xFF18FFFF),
+        victoryQuotes = zenWins,
+        defeatQuotes = zenLoses,
+        fontFamily = FontFamily.SansSerif // JAVÍTVA
     )
-
-    // 4. DATURA BLOSSOM
     val DaturaBlossom = GameTheme(
         id = "datura_blossom",
         displayName = "Datura Blossom",
@@ -220,13 +248,15 @@ object ThemeRegistry {
         toucheSoundRes = R.raw.touche_hit,
         boardCellDark = Color(0xFF4A148C).copy(alpha = 0.2f),
         boardCellLight = Color(0xFFCE93D8).copy(alpha = 0.15f),
-        auraP1Color = Color(0xFFEA80FC), // Misztikus lila
-        auraP2Color = Color(0xFF00E5FF), // Kontrasztos cián
+        auraP1Color = Color(0xFFEA80FC),
+        auraP2Color = Color(0xFF00E5FF),
         containerColor = Color(0xFFF3E5F5),
-        textColor = Color(0xFF4A148C),
-        uiAccentColor = Color(0xFFAB47BC) // Mély lila accent
+        textColor = Color(0xFFF3E5F5),
+        uiAccentColor = Color(0xFFE040FB),
+        victoryQuotes = zenWins,
+        defeatQuotes = zenLoses,
+        fontFamily = FontFamily.SansSerif // JAVÍTVA
     )
-    // 5. MAYAN FRESCO
     val MayanFresco = GameTheme(
         id = "mayan_fresco",
         displayName = "Mayan Fresco",
@@ -240,13 +270,16 @@ object ThemeRegistry {
         moveSoundP1Res = R.raw.p1_move_jungle,
         moveSoundP2Res = R.raw.p2_move_jungle,
         toucheSoundRes = R.raw.touche_hit_jungle,
-        boardCellDark = Color(0x36000000), // Nagyon halvány, áttetsző fekete tinta a sötét mezőkhöz
+        boardCellDark = Color(0x36000000),
         boardCellLight = Color(0x24FFFFFF),
         auraP1Color = Color(0xFFFFB300),
         auraP2Color = Color(0xFF8D6E63),
         containerColor = Color(0xFFF1F8E9),
-        textColor = Color(0xFF2E7D32),
-        uiAccentColor = Color(0xFFF4511E)
+        textColor = Color(0xFFE8F5E9),
+        uiAccentColor = Color(0xFFFF7043),
+        victoryQuotes = zenWins,
+        defeatQuotes = zenLoses,
+        fontFamily = FontFamily.SansSerif // JAVÍTVA
     )
     val AfricanSiesta = GameTheme(
         id = "african_siesta",
@@ -261,39 +294,42 @@ object ThemeRegistry {
         moveSoundP1Res = R.raw.p1_move_jungle,
         moveSoundP2Res = R.raw.p2_move_jungle,
         toucheSoundRes = R.raw.touche_hit_jungle,
-        boardCellDark = Color(0x36000000), // Nagyon halvány, áttetsző fekete tinta a sötét mezőkhöz
+        boardCellDark = Color(0x36000000),
         boardCellLight = Color(0x24FFFFFF),
         auraP1Color = Color(0xFFFFB300),
         auraP2Color = Color(0xFF8D6E63),
         containerColor = Color(0xFFF1F8E9),
-        textColor = Color(0xFF2E7D32),
-        uiAccentColor = Color(0xFFF4511E)
+        textColor = Color(0xFFFFF3E0),
+        uiAccentColor = Color(0xFFFF7043),
+        victoryQuotes = zenWins,
+        defeatQuotes = zenLoses,
+        fontFamily = FontFamily.SansSerif // JAVÍTVA
     )
-
-    // 6. TOURNAMENT THEME (Hall of Legends)
     val Tournament = GameTheme(
         id = "tournament",
         displayName = "Hall of Legends",
-        backgroundRes = R.drawable.bg_board_destreza, // Placeholder or specific background
+        backgroundRes = R.drawable.bg_board_destreza,
         boardBackgroundRes = R.drawable.bg_board_destreza,
         pieceP1Res = R.drawable.ic_destreza_p1,
         pieceP2Res = R.drawable.ic_destreza_p2,
         toucheStarRes = R.drawable.ic_touche_star,
         previewImageRes = R.drawable.bg_board_destreza,
-        bgMusicRes = R.raw.main_menu_music, // Match Main Menu music as requested
+        bgMusicRes = R.raw.main_menu_music,
         moveSoundP1Res = R.raw.p1_move_destreza,
         moveSoundP2Res = R.raw.p2_move_destreza,
         toucheSoundRes = R.raw.touche_hit_destreza,
         boardCellDark = Color(0xFF0F141E).copy(alpha = 0.6f),
         boardCellLight = Color.White.copy(alpha = 0.05f),
-        auraP1Color = Color(0xFFD4AF37), // Gold
-        auraP2Color = Color(0xFF4A5570), // Steel
+        auraP1Color = Color(0xFFD4AF37),
+        auraP2Color = Color(0xFF4A5570),
         containerColor = Color(0xFF0A0C10),
         textColor = Color.White,
-        uiAccentColor = Color(0xFFD4AF37)
+        uiAccentColor = Color(0xFFD4AF37),
+        victoryQuotes = classicWins,
+        defeatQuotes = classicLoses,
+        fontFamily = FontFamily.Serif
     )
 
-    // CATEGORIZED COLLECTIONS
     val classicThemes = listOf(Destreza, LaMaupin, Highwayman, VenetianMasquerade )
     val modernThemes = listOf(OlympicCarbon, InnerSpirit, Vive2024Paris, eSportVision)
     val zenThemes = listOf(DaturaBlossom, WinterPagoda, MayanFresco, AfricanSiesta)

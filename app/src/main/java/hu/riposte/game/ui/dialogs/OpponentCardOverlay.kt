@@ -135,20 +135,23 @@ fun OpponentCardOverlay(
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Black,
                             letterSpacing = 2.sp,
-                            textAlign = TextAlign.Center
+                            textAlign = TextAlign.Center,
+                            fontFamily = currentTheme.fontFamily
                         )
                         Text(
                             text = stringResource(id = opponent.titleRes),
                             color = Color.White.copy(alpha = 0.8f),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center
+                            textAlign = TextAlign.Center,
+                            fontFamily = currentTheme.fontFamily
                         )
                         Text(
                             text = stringResource(id = opponent.eraRes),
                             color = Color.White.copy(alpha = 0.4f),
                             fontSize = 12.sp,
-                            modifier = Modifier.padding(top = 4.dp)
+                            modifier = Modifier.padding(top = 4.dp),
+                            fontFamily = currentTheme.fontFamily
                         )
 
                         // Díszes elválasztó
@@ -167,7 +170,8 @@ fun OpponentCardOverlay(
                             fontSize = 14.sp,
                             lineHeight = 20.sp,
                             textAlign = TextAlign.Center,
-                            modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())
+                            modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                            fontFamily = currentTheme.fontFamily
                         )
 
                         // Idézet
@@ -178,13 +182,22 @@ fun OpponentCardOverlay(
                             fontStyle = FontStyle.Italic,
                             fontWeight = FontWeight.Medium,
                             textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(top = 16.dp)
+                            modifier = Modifier.padding(top = 16.dp),
+                            fontFamily = currentTheme.fontFamily
                         )
                     }
                 } else {
                     // Kártya hátlapja (amíg átfordul)
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("R I P O S T E", color = Color(0xFFD4AF37).copy(alpha = 0.3f), fontSize = 24.sp, fontWeight = FontWeight.Black, letterSpacing = 8.sp, modifier = Modifier.graphicsLayer { rotationZ = -90f })
+                        Text(
+                            text = "R I P O S T E",
+                            color = Color(0xFFD4AF37).copy(alpha = 0.3f),
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 8.sp,
+                            modifier = Modifier.graphicsLayer { rotationZ = -90f },
+                            fontFamily = currentTheme.fontFamily
+                        )
                     }
                 }
             }

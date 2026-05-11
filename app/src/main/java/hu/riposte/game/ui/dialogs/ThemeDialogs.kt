@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,6 +45,7 @@ fun ThemeSelectorDialog(
 ) {
     val coroutineScope = rememberCoroutineScope()
     val targetAccentColor = LocalGameTheme.current.uiAccentColor
+    val currentThemeFont = LocalGameTheme.current.fontFamily // Jelenlegi alap betűtípus
     val accentColor by animateColorAsState(
         targetValue = targetAccentColor,
         animationSpec = tween(durationMillis = 800),
@@ -84,23 +86,26 @@ fun ThemeSelectorDialog(
             modifier = Modifier.width(320.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Cím
             Text(
                 text = stringResource(R.string.theme_title),
                 color = accentColor,
                 fontWeight = FontWeight.Black,
                 letterSpacing = 3.sp,
-                fontSize = 22.sp
+                fontSize = 22.sp,
+                fontFamily = currentThemeFont
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // --- ÚJ: COLLECTION CÍM ---
+            // Kategória alcím
             Text(
                 text = "SELECT COLLECTION",
                 color = Color.White.copy(alpha = 0.5f),
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp
+                letterSpacing = 1.sp,
+                fontFamily = currentThemeFont
             )
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -113,6 +118,7 @@ fun ThemeSelectorDialog(
                     text = "CLASSIC",
                     isSelected = selectedTabIndex == 0,
                     accentColor = accentColor,
+                    fontFamily = currentThemeFont,
                     onClick = {
                         if (selectedTabIndex != 0) {
                             soundManager.playClick()
@@ -125,6 +131,7 @@ fun ThemeSelectorDialog(
                     text = "MODERN",
                     isSelected = selectedTabIndex == 1,
                     accentColor = accentColor,
+                    fontFamily = currentThemeFont,
                     onClick = {
                         if (selectedTabIndex != 1) {
                             soundManager.playClick()
@@ -137,6 +144,7 @@ fun ThemeSelectorDialog(
                     text = "ZEN",
                     isSelected = selectedTabIndex == 2,
                     accentColor = accentColor,
+                    fontFamily = currentThemeFont,
                     onClick = {
                         if (selectedTabIndex != 2) {
                             soundManager.playClick()
@@ -149,18 +157,18 @@ fun ThemeSelectorDialog(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // --- ÚJ: NYILAK ÉS PAGER ROW ---
+            // --- NYILAK ÉS PAGER ROW ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Bal nyíl
                 val canScrollBackward = pagerState.currentPage > 0
                 Text(
                     text = "◀",
                     color = if (canScrollBackward) accentColor else Color.Transparent,
                     fontSize = 24.sp,
+                    fontFamily = currentThemeFont,
                     modifier = Modifier
                         .padding(start = 8.dp)
                         .clickable(enabled = canScrollBackward) {
@@ -169,29 +177,23 @@ fun ThemeSelectorDialog(
                         }
                 )
 
-                // Pager
                 HorizontalPager(
                     state = pagerState,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(280.dp),
+                    modifier = Modifier.weight(1f).height(280.dp),
                     pageSpacing = 32.dp
                 ) { page ->
                     val theme = currentThemeList[page]
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         ThemeCard(theme = theme, isSelected = pagerState.currentPage == page)
                     }
                 }
 
-                // Jobb nyíl
                 val canScrollForward = pagerState.currentPage < currentThemeList.size - 1
                 Text(
                     text = "▶",
                     color = if (canScrollForward) accentColor else Color.Transparent,
                     fontSize = 24.sp,
+                    fontFamily = currentThemeFont,
                     modifier = Modifier
                         .padding(end = 8.dp)
                         .clickable(enabled = canScrollForward) {
@@ -203,30 +205,28 @@ fun ThemeSelectorDialog(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Display Name
+            // --- DINAMIKUS ELŐNÉZETI NÉV (Saját betűtípussal!) ---
             if (pagerState.settledPage in currentThemeList.indices) {
+                val previewedTheme = currentThemeList[pagerState.settledPage]
                 Text(
-                    text = currentThemeList[pagerState.settledPage].displayName.uppercase(),
+                    text = previewedTheme.displayName.uppercase(),
                     color = DialogContentColor,
                     letterSpacing = 2.sp,
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    // ITT TÖRTÉNIK A VARÁZSLAT: Az épp nézegetett téma fontját mutatja!
+                    fontFamily = previewedTheme.fontFamily
                 )
             }
 
             Spacer(modifier = Modifier.height(32.dp))
 
             // --- ACTIONS ---
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+            Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth(0.85f)
-                        .height(48.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(accentColor)
+                        .fillMaxWidth(0.85f).height(48.dp)
+                        .clip(RoundedCornerShape(16.dp)).background(accentColor)
                         .clickable {
                             soundManager.playClick()
                             if (pagerState.settledPage in currentThemeList.indices) {
@@ -235,17 +235,20 @@ fun ThemeSelectorDialog(
                         },
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(stringResource(R.string.theme_apply), fontWeight = FontWeight.Bold, color = DialogDarkTextColor)
+                    Text(
+                        text = stringResource(R.string.theme_apply),
+                        fontWeight = FontWeight.Bold,
+                        color = DialogDarkTextColor,
+                        fontFamily = currentThemeFont
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth(0.85f)
-                        .height(48.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(Color.Black.copy(alpha = 0.3f))
+                        .fillMaxWidth(0.85f).height(48.dp)
+                        .clip(RoundedCornerShape(16.dp)).background(Color.Black.copy(alpha = 0.3f))
                         .clickable {
                             soundManager.playClick()
                             onThemePreview(currentThemeId)
@@ -253,17 +256,24 @@ fun ThemeSelectorDialog(
                         },
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(stringResource(R.string.theme_cancel), fontWeight = FontWeight.Bold, color = DialogContentColor)
+                    Text(
+                        text = stringResource(R.string.theme_cancel),
+                        fontWeight = FontWeight.Bold,
+                        color = DialogContentColor,
+                        fontFamily = currentThemeFont
+                    )
                 }
             }
         }
     }
 }
+
 @Composable
 fun ThemeCategoryTab(
     text: String,
     isSelected: Boolean,
     accentColor: Color,
+    fontFamily: FontFamily,
     onClick: () -> Unit
 ) {
     val alpha by animateFloatAsState(if (isSelected) 1f else 0.4f, label = "tab_alpha")
@@ -281,14 +291,13 @@ fun ThemeCategoryTab(
             color = accentColor.copy(alpha = alpha),
             fontSize = 12.sp,
             fontWeight = FontWeight.Black,
-            letterSpacing = 1.sp
+            letterSpacing = 1.sp,
+            fontFamily = fontFamily
         )
         Spacer(modifier = Modifier.height(4.dp))
-        // Indicator
         Box(
             modifier = Modifier
-                .width(40.dp)
-                .height(2.dp)
+                .width(40.dp).height(2.dp)
                 .background(if (isSelected) accentColor else Color.Transparent, RoundedCornerShape(1.dp))
         )
     }
@@ -303,27 +312,19 @@ fun ThemeCard(theme: GameTheme, isSelected: Boolean) {
         modifier = Modifier
             .fillMaxHeight()
             .aspectRatio(5f / 7f)
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-                this.alpha = alpha
-            },
+            .graphicsLayer { scaleX = scale; scaleY = scale; this.alpha = alpha },
         shape = RoundedCornerShape(16.dp),
         border = if (isSelected) BorderStroke(3.dp, if (theme.id == "random") Color.Yellow else theme.auraP1Color) else null,
         elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 8.dp else 0.dp)
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(if (theme.id == "random") Color(0xFF1E272E) else Color.Transparent)
+            modifier = Modifier.fillMaxSize().background(if (theme.id == "random") Color(0xFF1E272E) else Color.Transparent)
         ) {
             Image(
                 painter = painterResource(id = theme.previewImageRes),
                 contentDescription = theme.displayName,
                 contentScale = if (theme.id == "random") ContentScale.Fit else ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(if (theme.id == "random") 32.dp else 0.dp)
+                modifier = Modifier.fillMaxSize().padding(if (theme.id == "random") 32.dp else 0.dp)
             )
         }
     }

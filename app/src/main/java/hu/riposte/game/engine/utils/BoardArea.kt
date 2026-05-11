@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -56,7 +57,6 @@ import kotlin.math.roundToInt
 import kotlin.math.sqrt
 import kotlin.math.PI
 import kotlin.math.atan2
-import kotlin.math.sin
 
 @Composable
 fun RiposteBoardArea(
@@ -65,12 +65,13 @@ fun RiposteBoardArea(
     isAnimationEnabled: Boolean,
     isVisualAssistEnabled: Boolean,
     isNightModeEnabled: Boolean,
-    isHapticEnabled: Boolean, // A mágneses célzáshoz
-    deviceTilt: Offset        // A giroszkópos árnyékhoz
+    isHapticEnabled: Boolean,
+    deviceTilt: Offset,
+    isReviewMode: Boolean = false // <-- ÚJ PARAMÉTER: Review mód állapota
 ) {
     val currentTheme = LocalGameTheme.current
     val coroutineScope = rememberCoroutineScope()
-    val haptic = LocalHapticFeedback.current // A rezgésekhez
+    val haptic = LocalHapticFeedback.current
 
     var dragSourceIdx by remember { mutableIntStateOf(-1) }
     var ghostTargetIdx by remember { mutableIntStateOf(-1) }
@@ -97,7 +98,6 @@ fun RiposteBoardArea(
     } else {
         Color.White.copy(alpha = 0.2f)
     }
-    // -----------------------------------
 
     BoxWithConstraints(
         modifier = Modifier
@@ -107,7 +107,7 @@ fun RiposteBoardArea(
             .clip(RoundedCornerShape(16.dp))
             .border(if (isAiThinking) 2.dp else 1.5.dp, currentBorderColor, RoundedCornerShape(16.dp))
     ){
-        // 1. BACKGROUND (A tábla saját háttere, pl. a kiterített pergamen)
+        // 1. BACKGROUND
         Image(
             painter = painterResource(id = currentTheme.boardBackgroundRes),
             contentDescription = null,
@@ -115,11 +115,9 @@ fun RiposteBoardArea(
             modifier = Modifier.fillMaxSize()
         )
 
-        // ÉJSZAKAI SÖTÉTÍTÉS
         val dimAlpha by animateFloatAsState(targetValue = if (isNightModeEnabled) 0.5f else 0.0f, animationSpec = tween(800), label = "DimAlpha")
         Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = dimAlpha)))
 
-        // ÜVEGES RÉTEG
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -156,7 +154,7 @@ fun RiposteBoardArea(
             }
         }
 
-        // 3. VIZUÁLIS SEGÉDLET ÉS HINT (A vonal és a szellembábu)
+        // 3. VIZUÁLIS SEGÉDLET
         val activeHint = gameViewModel.activeHint
         val isDragging = (dragSourceIdx != -1 || isFadingOut) && ghostTargetIdx != -1 && ghostTargetIdx != dragSourceIdx
         val showHint = activeHint != null && !isDragging
@@ -183,7 +181,6 @@ fun RiposteBoardArea(
                     .offset { IntOffset(targetPos.x * cellWidth.roundToInt(), targetPos.y * cellHeight.roundToInt()) }
                     .graphicsLayer { alpha = currentAlpha }
             ) {
-                // SZELLEMBÁBU
                 PieceDesign(
                     owner = gameViewModel.currentPlayerId,
                     pieceId = -1,
@@ -248,11 +245,10 @@ fun RiposteBoardArea(
                 val targetX = piece.pos.x * cellWidth
                 val targetY = piece.pos.y * cellHeight
 
-                // RUGÓS (SPRING) ANIMÁCIÓ
                 val animOffset by animateIntOffsetAsState(
                     targetValue = IntOffset(targetX.roundToInt(), targetY.roundToInt()),
                     animationSpec = spring(
-                        dampingRatio = 0.65f, // Fa/kő kopogás érzet
+                        dampingRatio = 0.65f,
                         stiffness = Spring.StiffnessMediumLow
                     ),
                     label = "PieceSlide"
@@ -273,7 +269,6 @@ fun RiposteBoardArea(
                     contentAlignment = Alignment.Center
                 ) {
 
-                    // HALÁLHULLÁM (RIPPLE)
                     if (isDying) {
                         val rippleScale by animateFloatAsState(
                             targetValue = 2.5f,
@@ -299,7 +294,6 @@ fun RiposteBoardArea(
                         }
                     }
 
-                    // ÉLŐ BÁBU
                     PieceDesign(
                         owner = piece.owner,
                         pieceId = piece.id,
@@ -312,82 +306,140 @@ fun RiposteBoardArea(
             }
         }
 
-        // 6. INPUT OVERLAY (A tökéletes mágneses érzékelés)
-        Column(modifier = Modifier.fillMaxSize()) {
-            for (y in 0 until 7) {
-                Row(modifier = Modifier.weight(1f)) {
-                    for (x in 0 until 5) {
-                        val idx = y * 5 + x
-
-                        // JAVÍTÁS 1: A változót kitesszük ide, és az 'idx'-hez kötjük a memóriát!
-                        val interactionSource = remember(idx) { MutableInteractionSource() }
-
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight()
-                                .pointerInput(Unit) {
-                                    var dragAccumulator = Offset.Zero
-
-                                    detectDragGestures(
-                                        onDragStart = {
-                                            if (gameViewModel.gamePhase == GameWaitingFor.MOVE_PIECE && gameViewModel.board[idx] == gameViewModel.currentPlayerId) {
-                                                dragSourceIdx = idx
-                                                isFadingOut = false
-                                                dragAccumulator = Offset.Zero
-                                            }
-                                        },
-                                        onDrag = { change, dragAmount ->
-                                            if (dragSourceIdx == -1) return@detectDragGestures
-                                            change.consume()
-                                            dragAccumulator += dragAmount
-
-                                            val angle = atan2(dragAccumulator.y, dragAccumulator.x) * 180 / PI
-                                            val offset = gameViewModel.getOffsetFromAngle(angle)
-                                            if (offset != null) {
-                                                val newTarget = MoveLogic.calculateTargetIndex(gameViewModel.board, dragSourceIdx, offset)
-                                                // MÁGNESES CÉLZÁS
-                                                if (newTarget != ghostTargetIdx) {
-                                                    ghostTargetIdx = newTarget
-                                                    if (ghostTargetIdx != -1 && ghostTargetIdx != dragSourceIdx && isHapticEnabled) {
-                                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                                    }
-                                                }
-                                            } else {
-                                                ghostTargetIdx = -1
-                                            }
-                                        },
-                                        onDragEnd = {
-                                            if (dragSourceIdx == -1) return@detectDragGestures
-                                            val distance = sqrt(dragAccumulator.x.pow(2) + dragAccumulator.y.pow(2))
-
-                                            if (distance >= 60f) {
-                                                val simulatedDrag = dragAccumulator * 10f
-                                                gameViewModel.handleSwipe(dragSourceIdx, simulatedDrag)
-                                            }
-                                            isFadingOut = true
-                                            coroutineScope.launch { delay(500); dragSourceIdx = -1; ghostTargetIdx = -1; isFadingOut = false }
-                                        },
-                                        onDragCancel = {
-                                            isFadingOut = true
-                                            coroutineScope.launch { delay(300); dragSourceIdx = -1; ghostTargetIdx = -1; isFadingOut = false }
-                                        }
-                                    )
+// --- 6. INPUT OVERLAY VAGY REVIEW SWIPE ---
+        if (isReviewMode) {
+            // REVIEW MÓD: Bábuk mozgatása helyett történet lapozás
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pointerInput(Unit) {
+                        var dragAccumulator = 0f
+                        detectHorizontalDragGestures(
+                            onDragStart = { dragAccumulator = 0f },
+                            onDragEnd = {
+                                // JAVÍTÁS: Élőben (dinamikusan) kérdezzük le az engedélyeket a ViewModeltől!
+                                // A specifikáció szerint: Balra húzás (< 0) = Visszalépés a múltba
+                                if (dragAccumulator < -40f && gameViewModel.canReviewPrevious()) {
+                                    gameViewModel.reviewPreviousMove()
+                                    if (isHapticEnabled) haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 }
-                                // JAVÍTÁS 2: Beépített kattintás-effekt (ripple) kinyírása
-                                .clickable(
-                                    interactionSource = interactionSource,
-                                    indication = null
-                                ) {
-                                    if (gameViewModel.gamePhase == GameWaitingFor.MOVE_PIECE || gameViewModel.gamePhase == GameWaitingFor.TAKE_PIECE) {
-                                        gameViewModel.onCellClick(idx)
-                                    }
+                                // Jobbra húzás (> 0) = Előrelépés a jövőbe
+                                else if (dragAccumulator > 40f && gameViewModel.canReviewNext()) {
+                                    gameViewModel.reviewNextMove()
+                                    if (isHapticEnabled) haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 }
+                                dragAccumulator = 0f
+                            },
+                            onDragCancel = { dragAccumulator = 0f },
+                            onHorizontalDrag = { change, dragAmount ->
+                                change.consume()
+                                dragAccumulator += dragAmount
+                            }
                         )
+                    }
+            ) {
+                // Áttetsző, pulzáló Swipe indikátor a tábla alján
+                val infinitePulse = rememberInfiniteTransition(label="swipePulse")
+                val alphaPulse by infinitePulse.animateFloat(
+                    initialValue = 0.3f, targetValue = 0.9f,
+                    animationSpec = infiniteRepeatable(tween(1000), RepeatMode.Reverse), label = ""
+                )
+
+                // A vizuális nyilakhoz továbbra is lekérdezzük az állapotot, mert a Compose ide mindig visszatér rajzolni
+                val showLeftArrow = gameViewModel.canReviewPrevious()
+                val showRightArrow = gameViewModel.canReviewNext()
+                val leftArrow = if (showLeftArrow) "◀◀" else "  "
+                val rightArrow = if (showRightArrow) "▶▶" else "  "
+
+                Text(
+                    text = "$leftArrow  SWIPE  $rightArrow",
+                    color = currentTheme.uiAccentColor.copy(alpha = alphaPulse),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 2.sp,
+                    fontFamily = currentTheme.fontFamily,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 16.dp)
+                        .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(16.dp))
+                        .padding(horizontal = 16.dp, vertical = 6.dp)
+                )
+            }
+        } else {
+            // EREDETI INPUT OVERLAY (A játék normál menetéhez)
+            Column(modifier = Modifier.fillMaxSize()) {
+                for (y in 0 until 7) {
+                    Row(modifier = Modifier.weight(1f)) {
+                        for (x in 0 until 5) {
+                            val idx = y * 5 + x
+                            val interactionSource = remember(idx) { MutableInteractionSource() }
+
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight()
+                                    .pointerInput(Unit) {
+                                        var dragAccumulator = Offset.Zero
+
+                                        detectDragGestures(
+                                            onDragStart = {
+                                                if (gameViewModel.gamePhase == GameWaitingFor.MOVE_PIECE && gameViewModel.board[idx] == gameViewModel.currentPlayerId) {
+                                                    dragSourceIdx = idx
+                                                    isFadingOut = false
+                                                    dragAccumulator = Offset.Zero
+                                                }
+                                            },
+                                            onDrag = { change, dragAmount ->
+                                                if (dragSourceIdx == -1) return@detectDragGestures
+                                                change.consume()
+                                                dragAccumulator += dragAmount
+
+                                                val angle = atan2(dragAccumulator.y, dragAccumulator.x) * 180 / PI
+                                                val offset = gameViewModel.getOffsetFromAngle(angle)
+                                                if (offset != null) {
+                                                    val newTarget = MoveLogic.calculateTargetIndex(gameViewModel.board, dragSourceIdx, offset)
+                                                    if (newTarget != ghostTargetIdx) {
+                                                        ghostTargetIdx = newTarget
+                                                        if (ghostTargetIdx != -1 && ghostTargetIdx != dragSourceIdx && isHapticEnabled) {
+                                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                                        }
+                                                    }
+                                                } else {
+                                                    ghostTargetIdx = -1
+                                                }
+                                            },
+                                            onDragEnd = {
+                                                if (dragSourceIdx == -1) return@detectDragGestures
+                                                val distance = sqrt(dragAccumulator.x.pow(2) + dragAccumulator.y.pow(2))
+
+                                                if (distance >= 60f) {
+                                                    val simulatedDrag = dragAccumulator * 10f
+                                                    gameViewModel.handleSwipe(dragSourceIdx, simulatedDrag)
+                                                }
+                                                isFadingOut = true
+                                                coroutineScope.launch { delay(500); dragSourceIdx = -1; ghostTargetIdx = -1; isFadingOut = false }
+                                            },
+                                            onDragCancel = {
+                                                isFadingOut = true
+                                                coroutineScope.launch { delay(300); dragSourceIdx = -1; ghostTargetIdx = -1; isFadingOut = false }
+                                            }
+                                        )
+                                    }
+                                    .clickable(
+                                        interactionSource = interactionSource,
+                                        indication = null
+                                    ) {
+                                        if (gameViewModel.gamePhase == GameWaitingFor.MOVE_PIECE || gameViewModel.gamePhase == GameWaitingFor.TAKE_PIECE) {
+                                            gameViewModel.onCellClick(idx)
+                                        }
+                                    }
+                            )
+                        }
                     }
                 }
             }
         }
+
         // 7. TUTORIAL OVERLAY
         val showTutorialOverlay = gameViewModel.isTutorialMode && (gameViewModel.tutorialPhase == TutorialPhase.SHOW_TOUCHE || gameViewModel.tutorialPhase == TutorialPhase.SHOW_CAPTURE || gameViewModel.tutorialPhase == TutorialPhase.SHOW_WIN_COND)
 
@@ -436,64 +488,6 @@ fun RiposteBoardArea(
                     Text(text = "- TAP ANYWHERE TO CONTINUE -", color = currentTheme.uiAccentColor.copy(alpha = alphaPulse), fontWeight = FontWeight.Bold, fontSize = 12.sp, letterSpacing = 1.sp)
                 }
             }
-        }
-
-    }
-}
-
-@Composable
-fun AmbientVfxOverlay(themeId: String) {
-    // Csak a megfelelő témáknál jelenjen meg
-    val particleColor = when (themeId) {
-        "destreza" -> Color(0xFFFFD54F) // Arany/narancs gyertya-szikrák
-        "winter_pagoda" -> Color.White // Hóesés
-        "mayan_fresco" -> Color(0xFFAED581) // Dzsungel spórák / zöldes por
-        "jungle_morning" -> Color(0xFFFFF59D) // Napsütötte por
-        else -> return // Ha nem adunk meg színt, ne rajzoljon semmit!
-    }
-
-    // Egyetlen végtelenített idő-változó, ami hajtja az egész rendszert
-    val infiniteTransition = rememberInfiniteTransition(label = "VfxTimer")
-    val time by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1000f,
-        animationSpec = infiniteRepeatable(tween(100000, easing = LinearEasing)),
-        label = "Time"
-    )
-
-    // Generálunk 40 fix "alap" részecskét, amiknek a mozgását a szinusz hullámok adják
-    val particles = remember {
-        List(40) {
-            object {
-                val startX = Math.random().toFloat()
-                val startY = Math.random().toFloat()
-                val speedX = (Math.random() - 0.5f).toFloat() * 1.5f
-                val speedY = if (themeId == "winter_pagoda") (Math.random().toFloat() * 2f + 1f) // A hó csak lefelé esik
-                else (Math.random() - 0.5f).toFloat() * 1f // A por lebeg
-                val size = (Math.random() * 4f + 2f).toFloat()
-                val phaseOffset = (Math.random() * PI * 2).toFloat()
-            }
-        }
-    }
-
-    Canvas(modifier = Modifier.fillMaxSize().graphicsLayer { alpha = 0.6f }) {
-        particles.forEach { p ->
-            // A porszemek lassan úsznak, és az X tengelyen finoman imbolyognak
-            val x = (p.startX * size.width + p.speedX * time * 10f + sin(time + p.phaseOffset) * 20f) % size.width
-            val y = (p.startY * size.height + p.speedY * time * 10f) % size.height
-
-            // Ha kimegy a képernyőről, térjen vissza a másik oldalon (végtelenítve)
-            val finalX = if (x < 0) x + size.width else x
-            val finalY = if (y < 0) y + size.height else y
-
-            // Lágyan pulzáló átlátszóság
-            val alpha = (0.2f + 0.3f * sin(time * 2f + p.phaseOffset)).coerceIn(0f, 1f)
-
-            drawCircle(
-                color = particleColor.copy(alpha = alpha),
-                radius = p.size,
-                center = Offset(finalX, finalY)
-            )
         }
     }
 }

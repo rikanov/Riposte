@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringArrayResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -39,6 +40,7 @@ fun InfoSheetsDialog(
     val coroutineScope = rememberCoroutineScope()
     val currentTheme = LocalGameTheme.current
     val accentColor = currentTheme.uiAccentColor
+    val fontFamily = currentTheme.fontFamily
 
     // Kategóriák betöltése
     val categories = listOf(
@@ -87,7 +89,8 @@ fun InfoSheetsDialog(
                 color = accentColor,
                 fontWeight = FontWeight.Black,
                 letterSpacing = 3.sp,
-                fontSize = 22.sp
+                fontSize = 22.sp,
+                fontFamily = fontFamily
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -107,6 +110,7 @@ fun InfoSheetsDialog(
                         text = name,
                         isSelected = selectedTabIndex == index,
                         accentColor = accentColor,
+                        fontFamily = fontFamily,
                         onClick = {
                             if (selectedTabIndex != index) {
                                 soundManager.playClick()
@@ -152,7 +156,12 @@ fun InfoSheetsDialog(
                         },
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("◀", color = if (canScrollBackward) accentColor else Color.Transparent, fontSize = 20.sp)
+                        Text(
+                            text = "◀",
+                            color = if (canScrollBackward) accentColor else Color.Transparent,
+                            fontSize = 20.sp,
+                            fontFamily = fontFamily
+                        )
                     }
 
                     // Tartalom kártya
@@ -173,7 +182,7 @@ fun InfoSheetsDialog(
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .clip(RoundedCornerShape(16.dp))
-                                    .background(currentTheme.containerColor.copy(alpha = 0.85f)) // Markánsabb sötétített háttér
+                                    .background(Color(0xFF151921).copy(alpha = 0.9f)) // Markánsabb sötétített háttér (Fix a láthatóságért)
                                     .border(1.dp, accentColor.copy(alpha = 0.3f), RoundedCornerShape(16.dp)) // Téma-specifikus keret
                                     .padding(16.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
@@ -183,7 +192,8 @@ fun InfoSheetsDialog(
                                     color = accentColor,
                                     fontWeight = FontWeight.Black,
                                     fontSize = 15.sp,
-                                    textAlign = TextAlign.Center
+                                    textAlign = TextAlign.Center,
+                                    fontFamily = fontFamily
                                 )
                                 Spacer(Modifier.height(12.dp))
                                 Box(modifier = Modifier.weight(1f).verticalScroll(scrollState)) {
@@ -193,7 +203,8 @@ fun InfoSheetsDialog(
                                         textAlign = TextAlign.Center,
                                         fontSize = 14.sp,
                                         lineHeight = 20.sp,
-                                        fontStyle = FontStyle.Italic
+                                        fontStyle = FontStyle.Italic,
+                                        fontFamily = fontFamily
                                     )
                                 }
                             }
@@ -225,6 +236,7 @@ fun InfoSheetsDialog(
                                     // Összeszorozzuk a láthatóságot a pulzálással
                                     color = accentColor.copy(alpha = arrowPulseAlpha * visibilityAlpha),
                                     fontSize = 14.sp,
+                                    fontFamily = fontFamily,
                                     modifier = Modifier
                                         .align(Alignment.BottomCenter)
                                         .padding(bottom = 8.dp)
@@ -247,7 +259,12 @@ fun InfoSheetsDialog(
                         },
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("▶", color = if (canScrollForward) accentColor else Color.Transparent, fontSize = 20.sp)
+                        Text(
+                            text = "▶",
+                            color = if (canScrollForward) accentColor else Color.Transparent,
+                            fontSize = 20.sp,
+                            fontFamily = fontFamily
+                        )
                     }
                 }
 
@@ -256,7 +273,8 @@ fun InfoSheetsDialog(
                     text = "${pagerState.currentPage + 1} / ${currentTips.size}",
                     color = Color.White.copy(alpha = 0.4f),
                     fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = fontFamily
                 )
             }
 
@@ -272,7 +290,13 @@ fun InfoSheetsDialog(
                     .clickable { soundManager.playClick(); saveState(); onDismiss() },
                 contentAlignment = Alignment.Center
             ) {
-                Text("BACK", fontWeight = FontWeight.Bold, color = accentColor, letterSpacing = 2.sp)
+                Text(
+                    text = "BACK",
+                    fontWeight = FontWeight.Bold,
+                    color = accentColor,
+                    letterSpacing = 2.sp,
+                    fontFamily = fontFamily
+                )
             }
         }
     }
@@ -283,6 +307,7 @@ fun InfoCategoryTab(
     text: String,
     isSelected: Boolean,
     accentColor: Color,
+    fontFamily: FontFamily,
     onClick: () -> Unit
 ) {
     val alpha by animateFloatAsState(if (isSelected) 1f else 0.3f, label = "tab_alpha")
@@ -304,7 +329,8 @@ fun InfoCategoryTab(
             color = if (isSelected) accentColor else Color.White.copy(alpha = alpha),
             fontSize = 12.sp,
             fontWeight = if (isSelected) FontWeight.Black else FontWeight.Bold,
-            letterSpacing = 1.sp
+            letterSpacing = 1.sp,
+            fontFamily = fontFamily
         )
         Spacer(modifier = Modifier.height(6.dp))
         Box(

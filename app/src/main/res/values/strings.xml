@@ -88,6 +88,35 @@
     <string name="ai_master">Master</string>
     <string name="ai_grandmaster">Grandmaster</string>
     <string name="ai_stygian">Stygian</string>
+
+    <string name="quote_classic_win_1">"A masterstroke of absolute precision."</string>
+    <string name="quote_classic_win_2">"The arena bows to your blade."</string>
+    <string name="quote_classic_win_3">"A flawless riposte. The duel is yours."</string>
+    <string name="quote_classic_win_4">"Check and mate in the dance of steel."</string>
+
+    <string name="quote_classic_lose_1">"Your guard was broken. The duel ends here."</string>
+    <string name="quote_classic_lose_2">"A fatal miscalculation. The opponent strikes true."</string>
+    <string name="quote_classic_lose_3">"Outmaneuvered. The shadows claim this bout."</string>
+
+    <string name="quote_zen_win_1">"The falling leaf finds its peace on the ground."</string>
+    <string name="quote_zen_win_2">"Water cuts through rock not with strength, but persistence."</string>
+    <string name="quote_zen_win_3">"Stillness within, swiftness without."</string>
+
+    <string name="quote_zen_lose_1">"Even the strongest bamboo bends in the storm."</string>
+    <string name="quote_zen_lose_2">"A clouded mind leads to a shattered blade."</string>
+    <string name="quote_zen_lose_3">"Do not mourn the loss, learn from the strike."</string>
+
+    <string name="quote_modern_win_1">"Target acquired. Threat neutralized."</string>
+    <string name="quote_modern_win_2">"Flawless execution. Tactical dominance."</string>
+    <string name="quote_modern_win_3">"Speed. Precision. Victory."</string>
+
+    <string name="quote_modern_lose_1">"Tactical error detected. Defense compromised."</string>
+    <string name="quote_modern_lose_2">"Outplayed. Recalibrate and try again."</string>
+    <string name="quote_modern_lose_3">"Insufficient speed. The opponent anticipated your move."</string>
+
+    <string name="btn_review_board">REVIEW GAME</string>
+    <string name="btn_return_to_summary">RETURN TO SUMMARY</string>
+
     <string name="opp_1_name">The Grandmaster</string>
     <string name="opp_1_title">The Nameless Champion</string>
     <string name="opp_1_era">Unknown</string>

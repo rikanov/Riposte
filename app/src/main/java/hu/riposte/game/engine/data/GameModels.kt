@@ -20,6 +20,8 @@ data class GameSettings(
     val gameMode: GameMode = GameMode.VS_AI,
     val startingPlayer: StartingPlayer = StartingPlayer.PLAYER,
     val difficulty: Int = 5,
+    val offensiveWeight: Int = 0,
+    val defensiveWeight: Int = 0,
     val riposteAllowed: Boolean = true
 )
 

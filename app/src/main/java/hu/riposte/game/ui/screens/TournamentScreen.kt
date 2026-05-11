@@ -18,9 +18,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -30,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import hu.riposte.game.R
 import hu.riposte.game.engine.logic.GameViewModel
 import hu.riposte.game.engine.logic.SettingsManager
@@ -38,15 +39,16 @@ import hu.riposte.game.engine.data.TournamentOpponent
 import hu.riposte.game.engine.data.TournamentRoster
 import hu.riposte.game.engine.utils.rememberDeviceTilt
 import hu.riposte.game.ui.components.RiposteSystemButton
+import hu.riposte.game.ui.components.VolumetricLightOrgan // <-- ÚJ IMPORT
 import hu.riposte.game.ui.dialogs.OpponentCardOverlay
 import hu.riposte.game.ui.dialogs.PlayerStatsOverlay
 import hu.riposte.game.ui.dialogs.PremiumUnlockDialog
 import hu.riposte.game.ui.theme.LocalGameTheme
-import androidx.compose.ui.zIndex
 import hu.riposte.game.ui.theme.ThemeRegistry
 import kotlinx.coroutines.launch
 import kotlin.math.max
 
+// --- AMBIENT DUST VFX ---
 @Composable
 fun AmbientDustVFX(accentColor: Color = Color(0xFFD4AF37)) {
     val particles = remember {
@@ -82,10 +84,11 @@ fun AmbientDustVFX(accentColor: Color = Color(0xFFD4AF37)) {
     }
 }
 
+// --- MAIN SCREEN ---
 @Composable
 fun TournamentScreen(
     gameViewModel: GameViewModel,
-    soundManager: SoundManager, // Global sound manager
+    soundManager: SoundManager,
     onBackToMenu: () -> Unit,
     onStartMatch: () -> Unit,
     onResumeGame: () -> Unit
@@ -99,15 +102,21 @@ fun TournamentScreen(
     val density = LocalDensity.current.density
     val deviceTilt by rememberDeviceTilt()
     val listState = rememberLazyListState()
-    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
 
     var opponentToShow by remember { mutableStateOf<TournamentOpponent?>(null) }
     var showPremiumDialog by remember { mutableStateOf(false) }
     var showPlayerStats by remember { mutableStateOf(false) }
 
+    val infiniteTransition = rememberInfiniteTransition(label = "SyncedVFX")
+    val syncedPulse by infiniteTransition.animateFloat(
+        initialValue = 0.01f,
+        targetValue = 0.05f,
+        animationSpec = infiniteRepeatable(tween(4000, easing = EaseInOutSine), RepeatMode.Reverse),
+        label = "Pulse"
+    )
+
     LaunchedEffect(appSettings) {
         appSettings?.let { settings ->
-            // In Tournament mode, keep playing the Main Menu music
             soundManager.isMusicEnabled = settings.musicEnabled
             if (settings.musicEnabled) soundManager.playThemeMusic(R.raw.main_menu_music)
 
@@ -123,7 +132,6 @@ fun TournamentScreen(
         }
     }
 
-    // Force Tournament Theme for UI context
     val activeTheme = ThemeRegistry.Tournament
     val hasOngoingMatch = appSettings?.hasSavedTournamentMatch == true
 
@@ -131,39 +139,89 @@ fun TournamentScreen(
         val accentColor = LocalGameTheme.current.uiAccentColor
 
         Box(modifier = Modifier.fillMaxSize()) {
-            // 1. BACKGROUND (Fixed to R.drawable.bg_hall with Parallax)
             Image(
                 painter = painterResource(id = R.drawable.bg_hall),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize().graphicsLayer {
-                    scaleX = 1.1f; scaleY = 1.1f
-                    translationX = (deviceTilt.x * 5f * density).coerceIn(-30f, 30f)
-                    translationY = (-deviceTilt.y * 5f * density).coerceIn(-30f, 30f)
+                    scaleX = 1.15f; scaleY = 1.15f
+                    translationX = (deviceTilt.x * 6f * density).coerceIn(-40f, 40f)
+                    translationY = (-deviceTilt.y * 6f * density).coerceIn(-40f, 40f)
                 }
             )
 
             AmbientDustVFX(accentColor = accentColor)
 
             Column(
-                modifier = Modifier.fillMaxSize().padding(vertical = 32.dp),
+                modifier = Modifier.fillMaxSize().padding(top = 16.dp, bottom = 32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // 2. LOGO (Overlap adjustment)
-                Image(
-                    painter = painterResource(id = R.drawable.logo_hall),
-                    contentDescription = stringResource(id = R.string.tournament_title_main),
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier
-                        .fillMaxWidth(0.8f) // 80% of screen width
-                        .zIndex(1f) // Draw on top
-                        .offset(x = (-6).dp, y = 16.dp) // Push down to overlap
-                )
 
+                // --- 2. HALL OF LEGENDS LOGO KOMPOZÍCIÓ ---
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(1.0f)
+                        .height(180.dp)
+                        .offset(y = (-45).dp)
+                        .zIndex(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    // 1. Glow Layer
+                    Image(
+                        painter = painterResource(id = R.drawable.logo_hall),
+                        contentDescription = null,
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier
+                            .fillMaxSize(0.88f)
+                            .graphicsLayer {
+                                translationX = (-deviceTilt.x * 2.5f * density).coerceIn(-12f, 12f)
+                                translationY = (deviceTilt.y * 2.5f * density).coerceIn(-12f, 12f)
+                                alpha = 0.6f + (syncedPulse * 4f)
+                            },
+                        colorFilter = ColorFilter.tint(accentColor)
+                    )
+
+                    // 2. Shadow layer
+                    Image(
+                        painter = painterResource(id = R.drawable.logo_hall),
+                        contentDescription = null,
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier
+                            .fillMaxSize(1.0f)
+                            .graphicsLayer {
+                                translationX = (-deviceTilt.x * 3f * density).coerceIn(-15f, 15f) + 4f
+                                translationY = (deviceTilt.y * 3f * density).coerceIn(-15f, 15f) + 4f
+                                alpha = 0.5f
+                            },
+                        colorFilter = ColorFilter.tint(Color.Black.copy(alpha = 0.5f))
+                    )
+
+                    // 3. Fő Logó
+                    Image(
+                        painter = painterResource(id = R.drawable.logo_hall),
+                        contentDescription = stringResource(id = R.string.tournament_title_main),
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier
+                            .fillMaxSize(1.0f)
+                            .graphicsLayer {
+                                translationX = (-deviceTilt.x * 3f * density).coerceIn(-15f, 15f)
+                                translationY = (deviceTilt.y * 3f * density).coerceIn(-15f, 15f)
+                            },
+                    )
+
+                    // --- 4. A FÉNYORGONA MEGHÍVÁSA KISZERVEZVE ---
+                    VolumetricLightOrgan(
+                        accentColor = accentColor,
+                        centerYRatio = 0.6f // A logó esetében kicsit lentebbről indul
+                    )
+                }
+
+                // --- 3. TOURNAMENT LISTA ---
                 Box(
                     modifier = Modifier
                         .fillMaxWidth(0.66f)
-                        .fillMaxHeight(0.85f)
+                        .weight(1f)
+                        .offset(y = (-40).dp)
                         .clip(RoundedCornerShape(24.dp))
                         .background(Color(0xFF0F141E).copy(alpha = 0.65f))
                         .border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(24.dp))
@@ -176,11 +234,8 @@ fun TournamentScreen(
                         items(20) { index ->
                             val rank = index + 1
                             val isUser = rank == manager.currentRank
-                            val isTarget = if (manager.currentRank == 1) {
-                                rank == 2
-                            } else {
-                                (manager.isDefending && rank == manager.currentRank + 1) || (!manager.isDefending && rank == manager.currentRank - 1)
-                            }
+                            val isTarget = if (manager.currentRank == 1) rank == 2
+                            else (manager.isDefending && rank == manager.currentRank + 1) || (!manager.isDefending && rank == manager.currentRank - 1)
 
                             val isRevealed = rank >= manager.highestRank || (rank == 14 && manager.highestRank == 15) || isTarget
                             val isHighest = rank == manager.highestRank
@@ -198,8 +253,8 @@ fun TournamentScreen(
 
                             TournamentRowItem(
                                 rank = rank,
-                                name = if (isUser) "$playerName $youSuffix" else oppName,
-                                title = if (isUser) playerTitle else stringResource(id = opponent.titleRes),
+                                name = if (isRevealed) (if (isUser) "$playerName $youSuffix" else oppName) else stringResource(id = R.string.tournament_unknown_name),
+                                title = if (isRevealed) (if (isUser) playerTitle else stringResource(id = opponent.titleRes)) else stringResource(id = R.string.tournament_unknown_title),
                                 isUser = isUser,
                                 isTarget = isTarget,
                                 isHighest = isHighest,
@@ -209,25 +264,21 @@ fun TournamentScreen(
                                 accentColor = accentColor,
                                 onInfoClick = {
                                     soundManager.playClick()
-                                    if (isUser) {
-                                        showPlayerStats = true
-                                    } else {
-                                        opponentToShow = opponent
-                                    }
+                                    if (isUser) showPlayerStats = true else opponentToShow = opponent
                                 }
                             )
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
+                // --- 4. GOMBOK ---
                 Row(
                     modifier = Modifier.fillMaxWidth(0.66f),
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Unified System Button for Back
                     RiposteSystemButton(
                         text = stringResource(id = R.string.btn_back),
                         modifier = Modifier.size(height = 56.dp, width = 80.dp),
@@ -239,25 +290,18 @@ fun TournamentScreen(
                         animationSpec = infiniteRepeatable(tween(1000, easing = EaseInOutSine), RepeatMode.Reverse), label = "pulse"
                     )
 
-                    val buttonText = if (hasOngoingMatch) {
-                        stringResource(id = R.string.btn_resume_match)
-                    } else if (manager.isDefending || manager.currentRank == 1) {
-                        stringResource(id = R.string.btn_accept_challenge)
-                    } else {
-                        stringResource(id = R.string.btn_en_garde)
-                    }
+                    val buttonText = if (hasOngoingMatch) stringResource(id = R.string.btn_resume_match)
+                    else if (manager.isDefending || manager.currentRank == 1) stringResource(id = R.string.btn_accept_challenge)
+                    else stringResource(id = R.string.btn_en_garde)
 
-                    // Unified System Button for Main Action
                     RiposteSystemButton(
                         text = buttonText,
                         modifier = Modifier.weight(1f).height(56.dp).graphicsLayer { scaleX = pulse.value; scaleY = pulse.value },
-                        isHanging = true, // Use accent color for CTA
+                        isHanging = true,
                         onClick = {
                             soundManager.playClick()
                             if (hasOngoingMatch) {
-                                appSettings?.let { settings ->
-                                    gameViewModel.loadTournamentState(settings)
-                                }
+                                appSettings?.let { settings -> gameViewModel.loadTournamentState(settings) }
                                 onResumeGame()
                             } else if (!gameViewModel.isPremiumVersion && manager.currentRank == 15 && !manager.isDefending) {
                                 showPremiumDialog = true
@@ -269,16 +313,7 @@ fun TournamentScreen(
                 }
             }
 
-            // --- DIALÓGUSOK OVERLAY RÉTEGE ---
-
-            OpponentCardOverlay(
-                opponent = opponentToShow,
-                isVisible = opponentToShow != null,
-                onClose = {
-                    soundManager.playClick()
-                    opponentToShow = null
-                }
-            )
+            OpponentCardOverlay(opponent = opponentToShow, isVisible = opponentToShow != null, onClose = { soundManager.playClick(); opponentToShow = null })
 
             if (showPlayerStats && appSettings != null) {
                 PlayerStatsOverlay(
@@ -286,27 +321,12 @@ fun TournamentScreen(
                     isFirstLaunch = false,
                     soundManager = soundManager,
                     onSaveProfile = { newName, newTitle ->
-                        coroutineScope.launch {
-                            settingsManager.updateSettings(
-                                appSettings!!.copy(
-                                    playerName = newName,
-                                    playerTitle = newTitle
-                                )
-                            )
-                        }
+                        coroutineScope.launch { settingsManager.updateSettings(appSettings!!.copy(playerName = newName, playerTitle = newTitle)) }
                     },
-                    onDismiss = {
-                        showPlayerStats = false
-                    }
+                    onDismiss = { showPlayerStats = false }
                 )
             }
-
-            if (showPremiumDialog) {
-                PremiumUnlockDialog(
-                    soundManager = soundManager,
-                    onDismiss = { showPremiumDialog = false }
-                )
-            }
+            if (showPremiumDialog) { PremiumUnlockDialog(soundManager = soundManager, onDismiss = { showPremiumDialog = false }) }
         }
     }
 }
@@ -319,13 +339,9 @@ fun TournamentRowItem(
 ) {
     val alpha = if (isLocked && !isTarget) 0.3f else if (!isRevealed) 0.15f else if (isDefeated) 0.4f else 1f
 
-    val bgBrush = if (isUser) {
-        Brush.horizontalGradient(listOf(accentColor.copy(alpha = 0.3f), Color.Transparent))
-    } else if (isTarget) {
-        Brush.horizontalGradient(listOf(Color(0xFFFF5555).copy(alpha = 0.2f), Color.Transparent))
-    } else {
-        Brush.horizontalGradient(listOf(Color.White.copy(alpha = 0.05f), Color.Transparent))
-    }
+    val bgBrush = if (isUser) Brush.horizontalGradient(listOf(accentColor.copy(alpha = 0.3f), Color.Transparent))
+    else if (isTarget) Brush.horizontalGradient(listOf(Color(0xFFFF5555).copy(alpha = 0.2f), Color.Transparent))
+    else Brush.horizontalGradient(listOf(Color.White.copy(alpha = 0.05f), Color.Transparent))
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
@@ -348,7 +364,7 @@ fun TournamentRowItem(
                 verticalArrangement = Arrangement.spacedBy((-3).dp)
             ) {
                 Text(
-                    text = if (isRevealed) name else stringResource(id = R.string.tournament_unknown_name),
+                    text = name,
                     color = if (isUser || isRevealed) accentColor.copy(alpha = 0.8f) else Color.White.copy(alpha = 0.4f),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
@@ -356,7 +372,7 @@ fun TournamentRowItem(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = if (isRevealed) title else stringResource(id = R.string.tournament_unknown_title),
+                    text = title,
                     color = if (isUser || isRevealed) accentColor.copy(alpha = 0.8f) else Color.White.copy(alpha = 0.4f),
                     fontSize = 10.sp,
                     fontStyle = FontStyle.Italic,
@@ -369,20 +385,14 @@ fun TournamentRowItem(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                if (isLocked && !isUser) {
-                    Text("🔒", fontSize = 14.sp)
-                }
+                if (isLocked && !isUser) Text("🔒", fontSize = 14.sp)
 
                 if (isTarget) {
                     val blink = rememberInfiniteTransition(label = "").animateFloat(
                         initialValue = 0.2f, targetValue = 1f,
                         animationSpec = infiniteRepeatable(tween(600), RepeatMode.Reverse), label = ""
                     )
-                    Text(
-                        text = "⚔️",
-                        fontSize = 16.sp,
-                        modifier = Modifier.graphicsLayer { this.alpha = blink.value }
-                    )
+                    Text(text = "⚔️", fontSize = 16.sp, modifier = Modifier.graphicsLayer { this.alpha = blink.value })
                 }
             }
         }

@@ -19,6 +19,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+import hu.riposte.game.ui.theme.LocalGameTheme
+
 // RENDSZERSZÍNEK (Fix, a MainScreen hangulatához)
 val SystemAccent = Color(0xFFD4AF37) // Arany / Sárgaréz
 val SystemSurface = Color(0xFF4A5570).copy(alpha = 0.2f)
@@ -30,6 +32,8 @@ fun RiposteSystemButton(
     isHanging: Boolean = false,
     onClick: () -> Unit
 ) {
+    val themeFont = LocalGameTheme.current.fontFamily
+
     Box(
         modifier = modifier
             .height(48.dp)
@@ -49,7 +53,8 @@ fun RiposteSystemButton(
             maxLines = 2,
             lineHeight = 14.sp,
             textAlign = TextAlign.Center,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
+            fontFamily = themeFont
         )
     }
 }
@@ -61,6 +66,8 @@ fun RiposteSystemToggleButton(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
+    val themeFont = LocalGameTheme.current.fontFamily
+
     Box(
         modifier = modifier
             .height(50.dp)
@@ -82,7 +89,8 @@ fun RiposteSystemToggleButton(
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
+            fontFamily = themeFont
         )
     }
 }

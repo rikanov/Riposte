@@ -2,6 +2,7 @@ package hu.riposte.game.ui.theme
 
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 
 data class GameTheme(
     val id: String,
@@ -30,7 +31,12 @@ data class GameTheme(
     val textColor: Color,
     val uiAccentColor: Color,
 
-    // --- ÚJ ANIMÁCIÓS PARAMÉTEREK ---
+    // --- ÚJ: IDÉZETEK ÉS TIPOGRÁFIA ---
+    val victoryQuotes: List<Int>,
+    val defeatQuotes: List<Int>,
+    val fontFamily: FontFamily,
+
+    // --- ANIMÁCIÓS PARAMÉTEREK ---
     val touchePulseDuration: Int = 1200,
     val toucheRotationDuration: Int = 12000,
     val toucheScaleMin: Float = 0.8f,

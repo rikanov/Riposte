@@ -89,7 +89,7 @@ fun MainScreen(
         MainMenuItem(stringResource(R.string.menu_exit), action = onExitGame)
     )
 
-    val handleAiClick: (Int, Boolean) -> Unit = { difficulty, isPremium ->
+    val handleAiClick: (Int, Int, Int, Boolean) -> Unit = { difficulty, offW, defW, isPremium ->
         if (isPremium && !gameViewModel.isPremiumVersion) {
             showPremiumDialog = true
         } else if (hasSavedTourney) {
@@ -105,12 +105,12 @@ fun MainScreen(
     }
 
     val aiDifficultyItems = listOf(
-        MainMenuItem(stringResource(R.string.ai_apprentice)) { handleAiClick(3, false) },
-        MainMenuItem(stringResource(R.string.ai_swordsman)) { handleAiClick(4, false) },
-        MainMenuItem(stringResource(R.string.ai_duelist), isPremiumOnly = true) { handleAiClick(5, true) },
-        MainMenuItem(stringResource(R.string.ai_master), isPremiumOnly = true) { handleAiClick(6, true) },
-        MainMenuItem(stringResource(R.string.ai_grandmaster), isPremiumOnly = true) { handleAiClick(7, true) },
-        MainMenuItem(stringResource(R.string.ai_stygian), isPremiumOnly = true) { handleAiClick(9, true) }
+        MainMenuItem(stringResource(R.string.ai_apprentice)) { handleAiClick(3, 0, 0, false) },
+        MainMenuItem(stringResource(R.string.ai_swordsman)) { handleAiClick(5, 0, 0, false) },
+        MainMenuItem(stringResource(R.string.ai_duelist), isPremiumOnly = true) { handleAiClick(3, 10, 5, true) },
+        MainMenuItem(stringResource(R.string.ai_master), isPremiumOnly = true) { handleAiClick(5, 10, 10, true) },
+        MainMenuItem(stringResource(R.string.ai_grandmaster), isPremiumOnly = true) { handleAiClick(7, 10, 10, true) },
+        MainMenuItem(stringResource(R.string.ai_stygian), isPremiumOnly = true) { handleAiClick(8, 15, 5, true) }
     )
 
     val activeThemeId = appSettings?.themeId ?: "abstract_sunrise"
