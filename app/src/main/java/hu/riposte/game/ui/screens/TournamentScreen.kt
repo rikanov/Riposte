@@ -39,7 +39,7 @@ import hu.riposte.game.engine.data.TournamentOpponent
 import hu.riposte.game.engine.data.TournamentRoster
 import hu.riposte.game.engine.utils.rememberDeviceTilt
 import hu.riposte.game.ui.components.RiposteSystemButton
-import hu.riposte.game.ui.components.VolumetricLightOrgan // <-- ÚJ IMPORT
+import hu.riposte.game.ui.components.VolumetricLightOrgan
 import hu.riposte.game.ui.dialogs.OpponentCardOverlay
 import hu.riposte.game.ui.dialogs.PlayerStatsOverlay
 import hu.riposte.game.ui.dialogs.PremiumUnlockDialog
@@ -157,7 +157,7 @@ fun TournamentScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
-                // --- 2. HALL OF LEGENDS LOGO KOMPOZÍCIÓ ---
+                // --- 2. HALL OF LEGENDS LOGO COMPOSITION ---
                 Box(
                     modifier = Modifier
                         .fillMaxWidth(1.0f)
@@ -196,7 +196,7 @@ fun TournamentScreen(
                         colorFilter = ColorFilter.tint(Color.Black.copy(alpha = 0.5f))
                     )
 
-                    // 3. Fő Logó
+                    // 3. Main logo
                     Image(
                         painter = painterResource(id = R.drawable.logo_hall),
                         contentDescription = stringResource(id = R.string.tournament_title_main),
@@ -209,14 +209,13 @@ fun TournamentScreen(
                             },
                     )
 
-                    // --- 4. A FÉNYORGONA MEGHÍVÁSA KISZERVEZVE ---
                     VolumetricLightOrgan(
                         accentColor = accentColor,
-                        centerYRatio = 0.6f // A logó esetében kicsit lentebbről indul
+                        centerYRatio = 0.6f
                     )
                 }
 
-                // --- 3. TOURNAMENT LISTA ---
+                // --- 3. TOURNAMENT LIST ---
                 Box(
                     modifier = Modifier
                         .fillMaxWidth(0.66f)
@@ -273,7 +272,7 @@ fun TournamentScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // --- 4. GOMBOK ---
+                // --- 4. BUTTONS ---
                 Row(
                     modifier = Modifier.fillMaxWidth(0.66f),
                     horizontalArrangement = Arrangement.spacedBy(16.dp),

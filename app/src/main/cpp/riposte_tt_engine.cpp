@@ -31,7 +31,7 @@ void Riposte_TT_Engine::init()
 {
     if (isZobristInitialized) return;
 
-    std::mt19937_64 rng(12345ULL); // FIX SEED
+    std::mt19937_64 rng(12345ULL);
     for(int i = 0; i < 64; ++i) {
         zobristP1[i] = rng();
         zobristP2[i] = rng();
@@ -384,7 +384,7 @@ MoveData Riposte_TT_Engine::searchIDA(const uint64_t set1, const uint64_t set2, 
 
             if( nextSet1 & hotSpot ) [[unlikely]]
             {
-                if (sepLeft > 0) continue; // Illegal move during Halte
+                if (sepLeft > 0) continue;
 
                 uint64_t nextSpot = hotSpot;
                 score = captureRoot(nextSet1, set2, nextSpot, idaDepth, isP1, nextHash_base, sepLeft);

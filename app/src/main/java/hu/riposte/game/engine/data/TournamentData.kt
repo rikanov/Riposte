@@ -3,7 +3,6 @@ package hu.riposte.game.engine.data
 import androidx.annotation.StringRes
 import hu.riposte.game.R
 
-// Az AI ellenfél modellje, kizárólag Resource ID-kat használva!
 data class TournamentOpponent(
     val rank: Int,
     @StringRes val nameRes: Int,

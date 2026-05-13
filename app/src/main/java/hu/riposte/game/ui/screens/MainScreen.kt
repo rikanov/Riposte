@@ -40,7 +40,7 @@ import kotlinx.coroutines.launch
 fun MainScreen(
     isInterruptedGame: Boolean,
     gameViewModel: GameViewModel,
-    soundManager: SoundManager, // Global sound manager
+    soundManager: SoundManager,
     onResumeGame: () -> Unit,
     onNavigateToTournament: () -> Unit,
     onNavigateToTutorial: () -> Unit,
@@ -94,7 +94,7 @@ fun MainScreen(
             showPremiumDialog = true
         } else if (hasSavedTourney) {
             pendingAction = {
-                gameViewModel.startNewGame(GameSettings(difficulty = difficulty), isTournament = false)
+                gameViewModel.startNewGame(GameSettings(difficulty = difficulty, offensiveWeight = offW, defensiveWeight = defW), isTournament = false)
                 onNavigateToAiTraining()
             }
             showForfeitWarningDialog = true
@@ -120,7 +120,7 @@ fun MainScreen(
     CompositionLocalProvider(LocalGameTheme provides activeTheme) {
         Box(modifier = Modifier.fillMaxSize()) {
 
-            // 1. HÁTTÉR
+            // 1. BACKGROUND
             Image(
                 painter = painterResource(id = R.drawable.main_menu_diorama_bg),
                 contentDescription = "Background",
@@ -128,7 +128,7 @@ fun MainScreen(
                 modifier = Modifier.fillMaxSize()
             )
 
-            // 2. LOGÓ
+            // 2. LOGO
             Image(
                 painter = painterResource(id = R.drawable.main_typography),
                 contentDescription = "La Riposte Logo",
@@ -140,7 +140,7 @@ fun MainScreen(
                     .graphicsLayer { alpha = 0.99f }
             )
 
-            // 3. AZ KISZERVEZETT MENÜ KOMPONENS
+            // 3. MAIN MENU COMPONENT
             InteractiveMainMenu(
                 modifier = Modifier.align(Alignment.BottomEnd),
                 menuItems = menuItems,
@@ -150,7 +150,7 @@ fun MainScreen(
                 haptic = haptic
             )
 
-            // 4. DIALÓGUSOK
+            // 4. DIALOGS
             if (showPremiumDialog) {
                 PremiumUnlockDialog(
                     soundManager = soundManager,

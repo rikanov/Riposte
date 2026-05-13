@@ -23,7 +23,7 @@ fun RiposteDialogButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    isHanging: Boolean = false // Ha a gomb a dialógus alján "lóg"
+    isHanging: Boolean = false
 ) {
     val theme = LocalGameTheme.current
     val themeFont = theme.fontFamily

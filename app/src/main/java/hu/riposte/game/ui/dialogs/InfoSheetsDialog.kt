@@ -41,8 +41,6 @@ fun InfoSheetsDialog(
     val currentTheme = LocalGameTheme.current
     val accentColor = currentTheme.uiAccentColor
     val fontFamily = currentTheme.fontFamily
-
-    // Kategóriák betöltése
     val categories = listOf(
         stringArrayResource(R.array.daily_tips_useful),
         stringArrayResource(R.array.daily_tips_strategy),
@@ -53,8 +51,6 @@ fun InfoSheetsDialog(
     val tabNames = listOf("GAME INFO", "STRATEGY", "LORE", "LEGENDS", "HISTORY")
 
     var selectedTabIndex by remember { mutableIntStateOf(appSettings.lastInfoTab) }
-
-    // Golyóálló, lokális memóriatömb az aktuális oldal-indexekhez
     val pageIndexes = remember {
         mutableStateListOf(
             appSettings.infoUsefulIndex,
@@ -64,8 +60,6 @@ fun InfoSheetsDialog(
             appSettings.infoHistoryIndex
         )
     }
-
-    // Mentés funkció
     val saveState = {
         onSettingsUpdate(
             appSettings.copy(
@@ -94,15 +88,13 @@ fun InfoSheetsDialog(
             )
 
             Spacer(modifier = Modifier.height(24.dp))
-
-            // --- TABOK KÖZÉPRE IGAZÍTÁSSAL (ScrollableTabRow) ---
             ScrollableTabRow(
                 selectedTabIndex = selectedTabIndex,
                 containerColor = Color.Transparent,
                 contentColor = accentColor,
-                edgePadding = 16.dp, // Hogy a szélső tabok is bejöhessenek középre
-                indicator = {}, // Saját indikátort használunk a kártyákban
-                divider = {}, // Eltüntetjük az alapértelmezett alsó vonalat
+                edgePadding = 16.dp,
+                indicator = {},
+                divider = {},
                 modifier = Modifier.fillMaxWidth()
             ) {
                 tabNames.forEachIndexed { index, name ->
@@ -124,17 +116,11 @@ fun InfoSheetsDialog(
             Spacer(modifier = Modifier.height(24.dp))
 
             val currentTips = categories[selectedTabIndex]
-
-            // --- PAGER NYILAKKAL ---
-            // A key() blokk garantálja, hogy tabváltáskor a Pager teljesen újratöltődik a helyes indexszel,
-            // elkerülve a vad scrollozást és az állapotok véletlen felülírását.
             key(selectedTabIndex) {
                 val pagerState = rememberPagerState(
                     initialPage = pageIndexes[selectedTabIndex].coerceIn(0, currentTips.size - 1),
                     pageCount = { currentTips.size }
                 )
-
-                // Frissítjük a memóriát, ha a játékos lapoz
                 LaunchedEffect(pagerState.currentPage) {
                     pageIndexes[selectedTabIndex] = pagerState.currentPage
                 }
@@ -143,7 +129,6 @@ fun InfoSheetsDialog(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Bal nyíl
                     val canScrollBackward = pagerState.currentPage > 0
                     Box(
                         modifier = Modifier.size(40.dp).clickable(
@@ -163,8 +148,6 @@ fun InfoSheetsDialog(
                             fontFamily = fontFamily
                         )
                     }
-
-                    // Tartalom kártya
                     HorizontalPager(
                         state = pagerState,
                         modifier = Modifier.weight(1f).height(280.dp)
@@ -174,7 +157,6 @@ fun InfoSheetsDialog(
                         val body = tipParts.getOrNull(1) ?: currentTips[page]
 
                         val scrollState = rememberScrollState()
-                        // Optimalizált állapotfigyelés, hogy ne akadjon be a görgetés
                         val canScrollMore by remember { derivedStateOf { scrollState.value < scrollState.maxValue } }
 
                         Box(modifier = Modifier.fillMaxSize()) {
@@ -182,8 +164,8 @@ fun InfoSheetsDialog(
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .clip(RoundedCornerShape(16.dp))
-                                    .background(Color(0xFF151921).copy(alpha = 0.9f)) // Markánsabb sötétített háttér (Fix a láthatóságért)
-                                    .border(1.dp, accentColor.copy(alpha = 0.3f), RoundedCornerShape(16.dp)) // Téma-specifikus keret
+                                    .background(Color(0xFF151921).copy(alpha = 0.9f))
+                                    .border(1.dp, accentColor.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
                                     .padding(16.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
@@ -208,8 +190,6 @@ fun InfoSheetsDialog(
                                     )
                                 }
                             }
-
-                            // --- PULZÁLÓ ÉS LEBEGŐ NYÍL ---
                             val visibilityAlpha by animateFloatAsState(
                                 targetValue = if (canScrollMore) 1f else 0f,
                                 animationSpec = tween(300),
@@ -233,7 +213,6 @@ fun InfoSheetsDialog(
 
                                 Text(
                                     text = "▼",
-                                    // Összeszorozzuk a láthatóságot a pulzálással
                                     color = accentColor.copy(alpha = arrowPulseAlpha * visibilityAlpha),
                                     fontSize = 14.sp,
                                     fontFamily = fontFamily,
@@ -245,8 +224,6 @@ fun InfoSheetsDialog(
                             }
                         }
                     }
-
-                    // Jobb nyíl
                     val canScrollForward = pagerState.currentPage < currentTips.size - 1
                     Box(
                         modifier = Modifier.size(40.dp).clickable(
@@ -285,7 +262,7 @@ fun InfoSheetsDialog(
                 modifier = Modifier
                     .fillMaxWidth(0.8f).height(48.dp)
                     .clip(RoundedCornerShape(16.dp))
-                    .background(accentColor.copy(alpha = 0.15f)) // Ez is a témához igazodik
+                    .background(accentColor.copy(alpha = 0.15f))
                     .border(1.dp, accentColor.copy(alpha = 0.4f), RoundedCornerShape(16.dp))
                     .clickable { soundManager.playClick(); saveState(); onDismiss() },
                 contentAlignment = Alignment.Center

@@ -67,7 +67,7 @@ fun RiposteBoardArea(
     isNightModeEnabled: Boolean,
     isHapticEnabled: Boolean,
     deviceTilt: Offset,
-    isReviewMode: Boolean = false // <-- ÚJ PARAMÉTER: Review mód állapota
+    isReviewMode: Boolean = false
 ) {
     val currentTheme = LocalGameTheme.current
     val coroutineScope = rememberCoroutineScope()

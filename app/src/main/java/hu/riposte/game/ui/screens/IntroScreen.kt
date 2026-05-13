@@ -4,6 +4,7 @@ import android.net.Uri
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.annotation.OptIn
+import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -12,12 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.BlendMode
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
@@ -32,6 +28,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import hu.riposte.game.R
+import hu.riposte.game.ui.components.VolumetricLightOrgan
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -44,28 +41,16 @@ fun IntroScreen(
     val configuration = LocalConfiguration.current
 
     val screenWidth = configuration.screenWidthDp.dp
-    val screenHeight = configuration.screenHeightDp.toFloat()
-
-    val baseLogoWidth = screenWidth * 2f
-    val baseLogoHeight = baseLogoWidth * 0.251f
+    val logoWidth = screenWidth * 0.85f
 
     var isFinishing by remember { mutableStateOf(false) }
-
-    val swordsAlpha = remember { Animatable(0f) }
-    val swordOffset = remember { Animatable(1000f) }
-    val leftSwordRot = remember { Animatable(-120f) }
-    val rightSwordRot = remember { Animatable(120f) }
+    var showEffects by remember { mutableStateOf(false) }
 
     val logoAlpha = remember { Animatable(0f) }
-    val logoFlipY = remember { Animatable(0.01f) }
-    val logoOffsetY = remember { Animatable(screenHeight * 0.4f) }
-    val logoScale = remember { Animatable(1.0f) }
-
-    val shimmerProgress = remember { Animatable(0f) }
 
     val overlayFadeAlpha by animateFloatAsState(
         targetValue = if (isFinishing) 0f else 1f,
-        animationSpec = tween(500, easing = LinearEasing),
+        animationSpec = tween(600, easing = LinearEasing),
         label = "overlay_fade"
     )
 
@@ -80,7 +65,7 @@ fun IntroScreen(
             addListener(object : Player.Listener {
                 override fun onPlaybackStateChanged(state: Int) {
                     if (state == Player.STATE_ENDED) {
-                        isFinishing = true // Azonnali kilépés helyett elhalványulás indul
+                        isFinishing = true
                     }
                 }
             })
@@ -93,42 +78,33 @@ fun IntroScreen(
 
     LaunchedEffect(isFinishing) {
         if (isFinishing) {
-            delay(500) // Megvárjuk, amíg a fade-out lefut
+            delay(600)
             exoPlayer.stop()
             onIntroFinished()
         }
     }
 
-    // --- AZ EPIKUS KOREOGRÁFIA ---
+    // --- AZ ÚJ, LETISZTULT KOREOGRÁFIA ---
     LaunchedEffect(Unit) {
-        delay(9000)
+        // 1. Várjuk a videó 12. másodpercéig
+        delay(10000)
 
-        // --- 1. FÁZIS (2000 ms) ---
-        launch { swordsAlpha.animateTo(1f, tween(500)) }
-        launch { swordOffset.animateTo(0f, tween(2000, easing = EaseOutCubic)) }
-        launch { leftSwordRot.animateTo(0f, tween(2000, easing = EaseOutCubic)) }
-        launch { rightSwordRot.animateTo(0f, tween(2000, easing = EaseOutCubic)) }
+        // 2. Megjelenik a fényorgona (automatikusan elkezd forogni és lüktetni)
+        showEffects = true
 
-        launch { logoAlpha.animateTo(1f, tween(300)) }
-        launch { logoOffsetY.animateTo(0f, tween(2000, easing = EaseOutCubic)) }
-        launch { logoFlipY.animateTo(1f, tween(2000, easing = EaseOutCubic)) }
-        launch { logoScale.animateTo(0.375f, tween(2000, easing = EaseOutCubic)) }
-
-        delay(2000)
-
-        // --- 2. FÁZIS ---
-        launch { shimmerProgress.animateTo(1f, tween(800, easing = FastOutSlowInEasing)) }
-
-        delay(200)
-
-        logoScale.animateTo(0.5f, tween(2000, easing = EaseInOutQuart))
+        // 3. Megkezdjük a logó 1200 ms-os beúsztatását (fade-in)
+        logoAlpha.animateTo(
+            targetValue = 1f,
+            animationSpec = tween(12000, easing = LinearOutSlowInEasing)
+        )
     }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .clickable(enabled = !isFinishing) { isFinishing = true } // Kattintáskor is lágyan halványul el
+            .clickable(enabled = !isFinishing) { isFinishing = true }
     ) {
+        // VIDEO RÉTEG
         AndroidView(
             factory = {
                 PlayerView(context).apply {
@@ -141,72 +117,38 @@ fun IntroScreen(
             modifier = Modifier.fillMaxSize()
         )
 
+        // EFFEKT ÉS LOGÓ RÉTEG
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .graphicsLayer { alpha = overlayFadeAlpha }, // <-- ÚJ: Elhalványul a réteg
+                .graphicsLayer { alpha = overlayFadeAlpha },
             contentAlignment = Alignment.Center
         ) {
-            Box(contentAlignment = Alignment.Center) {
-                Image(
-                    painter = painterResource(id = R.drawable.intro_sword_left),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(300.dp)
-                        .graphicsLayer {
-                            translationX = -swordOffset.value
-                            rotationZ = leftSwordRot.value
-                            alpha = swordsAlpha.value
-                        }
+            if (showEffects) {
+                // 1. A Volumetric Light Organ (mögötte)
+                VolumetricLightOrgan(
+                    accentColor = Color(0xFFD4AF37),
+                    centerYRatio = 0.5f
                 )
+
+                // 2. A fő logó egyszerű fade animációval (előtte)
                 Image(
-                    painter = painterResource(id = R.drawable.intro_sword_right),
-                    contentDescription = null,
+                    painter = painterResource(id = R.drawable.intro_logo),
+                    contentDescription = "La Riposte Logo",
+                    contentScale = ContentScale.Fit,
                     modifier = Modifier
-                        .size(300.dp)
+                        .width(logoWidth)
                         .graphicsLayer {
-                            translationX = swordOffset.value
-                            rotationZ = rightSwordRot.value
-                            alpha = swordsAlpha.value
+                            alpha = logoAlpha.value
+                            // Egy hajszálnyi méretnövekedés a dráma kedvéért
+                            scaleX = 0.95f + (logoAlpha.value * 0.05f)
+                            scaleY = 0.95f + (logoAlpha.value * 0.05f)
                         }
                 )
             }
-
-            // INTRO LOGO
-            Image(
-                painter = painterResource(id = R.drawable.intro_logo),
-                contentDescription = "La Riposte Logo",
-                contentScale = ContentScale.FillBounds,
-                modifier = Modifier
-                    .requiredSize(width = baseLogoWidth, height = baseLogoHeight)
-                    .graphicsLayer {
-                        translationY = logoOffsetY.value.dp.toPx()
-                        scaleX = logoScale.value
-                        scaleY = logoScale.value * logoFlipY.value
-                        alpha = logoAlpha.value
-                        compositingStrategy = CompositingStrategy.Offscreen
-                    }
-                    .drawWithContent {
-                        drawContent()
-                        val prog = shimmerProgress.value
-                        if (prog > 0f && prog < 1f) {
-                            val w = size.width
-                            val h = size.height
-                            val startX = (w * 1.5f) * prog - (w * 0.25f)
-                            drawRect(
-                                brush = Brush.linearGradient(
-                                    colors = listOf(Color.Transparent, Color.White.copy(alpha = 0.9f), Color.Transparent),
-                                    start = Offset(startX, 0f),
-                                    end = Offset(startX + (w * 0.15f), h)
-                                ),
-                                blendMode = BlendMode.SrcAtop
-                            )
-                        }
-                    }
-            )
         }
 
-        // --- 3. SKIP PROMPT ---
+        // SKIP PROMPT
         Text(
             text = "SKIP",
             color = Color.White.copy(alpha = 0.3f),

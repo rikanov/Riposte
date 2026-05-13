@@ -45,7 +45,7 @@ fun ThemeSelectorDialog(
 ) {
     val coroutineScope = rememberCoroutineScope()
     val targetAccentColor = LocalGameTheme.current.uiAccentColor
-    val currentThemeFont = LocalGameTheme.current.fontFamily // Jelenlegi alap betűtípus
+    val currentThemeFont = LocalGameTheme.current.fontFamily
     val accentColor by animateColorAsState(
         targetValue = targetAccentColor,
         animationSpec = tween(durationMillis = 800),
@@ -86,7 +86,6 @@ fun ThemeSelectorDialog(
             modifier = Modifier.width(320.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Cím
             Text(
                 text = stringResource(R.string.theme_title),
                 color = accentColor,
@@ -98,7 +97,6 @@ fun ThemeSelectorDialog(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Kategória alcím
             Text(
                 text = "SELECT COLLECTION",
                 color = Color.White.copy(alpha = 0.5f),
@@ -108,8 +106,6 @@ fun ThemeSelectorDialog(
                 fontFamily = currentThemeFont
             )
             Spacer(modifier = Modifier.height(8.dp))
-
-            // --- CATEGORY TABS ---
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
@@ -157,7 +153,6 @@ fun ThemeSelectorDialog(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // --- NYILAK ÉS PAGER ROW ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -205,7 +200,6 @@ fun ThemeSelectorDialog(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // --- DINAMIKUS ELŐNÉZETI NÉV (Saját betűtípussal!) ---
             if (pagerState.settledPage in currentThemeList.indices) {
                 val previewedTheme = currentThemeList[pagerState.settledPage]
                 Text(
@@ -214,14 +208,12 @@ fun ThemeSelectorDialog(
                     letterSpacing = 2.sp,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    // ITT TÖRTÉNIK A VARÁZSLAT: Az épp nézegetett téma fontját mutatja!
                     fontFamily = previewedTheme.fontFamily
                 )
             }
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // --- ACTIONS ---
             Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                 Box(
                     modifier = Modifier

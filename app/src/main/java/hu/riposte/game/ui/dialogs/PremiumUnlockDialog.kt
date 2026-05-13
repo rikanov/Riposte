@@ -28,7 +28,7 @@ fun PremiumUnlockDialog(
     soundManager: SoundManager,
     onDismiss: () -> Unit
 ) {
-    val accentColor = Color(0xFFD4AF37) // Arany szín a prémium érzetért
+    val accentColor = Color(0xFFD4AF37)
 
     GlassDialog(onDismissRequest = onDismiss) {
         Column(
@@ -37,7 +37,6 @@ fun PremiumUnlockDialog(
                 .fillMaxWidth()
                 .padding(vertical = 24.dp, horizontal = 16.dp)
         ) {
-            // Fejléc
             Text(
                 text = "UNLOCK FULL EXPERIENCE",
                 color = accentColor,
@@ -57,7 +56,6 @@ fun PremiumUnlockDialog(
 
             Spacer(Modifier.height(24.dp))
 
-            // Előnyök listája
             val features = listOf(
                 "⚔️ Conquer the Top 14 Legends in Tournament",
                 "🤖 Challenge Master & Grandmaster AI",
@@ -83,7 +81,6 @@ fun PremiumUnlockDialog(
 
             Spacer(Modifier.height(32.dp))
 
-            // Gombok
             Box(
                 modifier = Modifier
                     .fillMaxWidth(0.9f)

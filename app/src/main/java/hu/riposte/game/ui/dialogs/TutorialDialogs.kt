@@ -55,12 +55,10 @@ fun TutorialWelcomeDialog(
 ) {
     val accentColor = LocalGameTheme.current.uiAccentColor
 
-    // --- ÚJ: Fázis kezelés ---
-    var currentPhase by remember { mutableIntStateOf(1) } // 1: Swipe, 2: Hold & Select
+    var currentPhase by remember { mutableIntStateOf(1) }
 
     val infiniteTransition = rememberInfiniteTransition(label = "TutAnim")
 
-    // Animációk az 1. Fázishoz (Gyors Swipe)
     val swipeX1 by infiniteTransition.animateFloat(
         initialValue = -60f, targetValue = 60f,
         animationSpec = infiniteRepeatable(tween(800, easing = FastOutSlowInEasing, delayMillis = 600), RepeatMode.Restart), label = "s1"
@@ -71,16 +69,12 @@ fun TutorialWelcomeDialog(
             keyframes { durationMillis = 1400; 1.3f at 0; 0.9f at 300; 0.9f at 1100; 1.3f at 1400 }, RepeatMode.Restart
         ), label = "ts1"
     )
-
-    // Animációk a 2. Fázishoz (Lassú Hold & Select)
     val swipeX2 by infiniteTransition.animateFloat(
         initialValue = -60f, targetValue = 60f,
-        // Sokkal lassabb, "húzós" mozdulat
         animationSpec = infiniteRepeatable(tween(2500, easing = LinearOutSlowInEasing, delayMillis = 600), RepeatMode.Restart), label = "s2"
     )
     val touchScale2 by infiniteTransition.animateFloat(
         initialValue = 1.3f, targetValue = 0.9f,
-        // Sokáig lent marad az ujj
         animationSpec = infiniteRepeatable(
             keyframes { durationMillis = 3100; 1.3f at 0; 0.9f at 300; 0.9f at 2800; 1.3f at 3100 }, RepeatMode.Restart
         ), label = "ts2"
@@ -93,9 +87,9 @@ fun TutorialWelcomeDialog(
                 .clickable {
                     soundManager.playClick()
                     if (currentPhase == 1) {
-                        currentPhase = 2 // Első kattintásra átvált a "lövész" módra
+                        currentPhase = 2
                     } else {
-                        onDismiss() // Második kattintásra bezár és indul a játék
+                        onDismiss()
                     }
                 }
                 .padding(vertical = 16.dp),
@@ -107,7 +101,6 @@ fun TutorialWelcomeDialog(
             )
             Spacer(modifier = Modifier.height(32.dp))
 
-            // --- AZ ANIMÁLT VIZUÁLIS BEMUTATÓ ---
             Box(modifier = Modifier.size(120.dp).clip(RoundedCornerShape(16.dp)).background(Color.Black.copy(alpha = 0.4f)), contentAlignment = Alignment.Center) {
 
                 // Aktuális fázis animációinak kiválasztása
@@ -116,31 +109,24 @@ fun TutorialWelcomeDialog(
                 val currentTouchAlpha = if (currentTouchScale <= 1.0f) 1f else 0f
 
                 if (currentPhase == 1) {
-                    // 1. Fázis: Elmosódó csík (Trail)
                     Box(modifier = Modifier.width(100.dp).height(40.dp).background(
                         Brush.horizontalGradient(colors = listOf(Color.Transparent, accentColor.copy(alpha = 0.3f), accentColor.copy(alpha = 0.8f))),
                         shape = RoundedCornerShape(20.dp)
                     ).graphicsLayer { alpha = currentTouchAlpha * 0.8f }
                     )
                 } else {
-                    // 2. Fázis: "Ghost Piece" és Vonal imitálása (Ahogy kérted!)
                     if (currentTouchAlpha > 0f) {
                         Canvas(modifier = Modifier.fillMaxSize()) {
                             drawLine(color = accentColor, start = Offset(0f, size.height/2), end = Offset(size.width, size.height/2), strokeWidth = 4.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(15f, 10f), 0f))
                         }
-                        // Szellembábu a falnál
                         Image(painter = painterResource(id = LocalGameTheme.current.pieceP1Res), contentDescription = null, modifier = Modifier.size(40.dp).offset(x = 40.dp).graphicsLayer { alpha = 0.4f })
                     }
                 }
-
-                // A toló Bábu
                 val pieceOffset = if (currentTouchScale <= 0.9f) currentSwipeX.coerceAtLeast(-40f) else -40f
                 Image(
                     painter = painterResource(id = LocalGameTheme.current.pieceP1Res), contentDescription = "Tutorial Piece",
                     modifier = Modifier.size(40.dp).offset(x = pieceOffset.dp)
                 )
-
-                // Az Ujj
                 Icon(
                     imageVector = Icons.Rounded.TouchApp, contentDescription = "Swipe", tint = Color.White,
                     modifier = Modifier.size(56.dp).offset(x = currentSwipeX.dp, y = 20.dp).graphicsLayer { scaleX = currentTouchScale; scaleY = currentTouchScale; alpha = currentTouchAlpha }
@@ -168,11 +154,10 @@ fun TutorialWelcomeDialog(
 @Composable
 fun TutorialCompleteDialog(
     soundManager: SoundManager,
-    onBackToMenu: () -> Unit // Most már a Menübe térünk vissza!
+    onBackToMenu: () -> Unit
 ) {
     val accentColor = LocalGameTheme.current.uiAccentColor
 
-    // Villogó szöveg animációja a "TAP TO CONTINUE"-hoz
     val infinitePulse = rememberInfiniteTransition()
     val textAlpha by infinitePulse.animateFloat(
         initialValue = 0.3f,
@@ -189,7 +174,7 @@ fun TutorialCompleteDialog(
                 .clickable {
                     soundManager.playClick()
                     onBackToMenu()
-                } // Bárhova kattintva kilép a menübe
+                }
                 .padding(vertical = 16.dp, horizontal = 8.dp)
         ) {
             Text("TUTORIAL COMPLETED", color = accentColor, fontWeight = FontWeight.Black, fontSize = 18.sp, letterSpacing = 1.sp)
@@ -202,7 +187,6 @@ fun TutorialCompleteDialog(
 
             Spacer(Modifier.height(32.dp))
 
-            // Villogó "TAP TO EXIT" instrukció
             Text(
                 text = "- TAP TO RETURN TO MENU -",
                 color = accentColor.copy(alpha = textAlpha),

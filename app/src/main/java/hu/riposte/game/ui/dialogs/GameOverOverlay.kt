@@ -35,9 +35,9 @@ fun GameOverOverlay(
     isWin: Boolean,
     isTimeOut: Boolean,
     isTournamentMode: Boolean,
-    isReviewingGame: Boolean, // <-- ÚJ: Kintről kapjuk az állapotot
-    onStartReview: () -> Unit, // <-- ÚJ: Callback a visszanézés indítására
-    onStopReview: () -> Unit,  // <-- ÚJ: Callback a visszanézés leállítására
+    isReviewingGame: Boolean,
+    onStartReview: () -> Unit,
+    onStopReview: () -> Unit,
     onRematch: () -> Unit,
     onMainMenu: () -> Unit,
     onContinueTournament: () -> Unit
@@ -61,8 +61,6 @@ fun GameOverOverlay(
     )
 
     Box(modifier = Modifier.fillMaxSize()) {
-
-        // Háttér elsötétítés és effektek
         AnimatedVisibility(
             visible = !isReviewingGame,
             enter = fadeIn(tween(800)),
@@ -84,16 +82,13 @@ fun GameOverOverlay(
                 )
             }
             if (isWin) {
-                // A csodálatos fényorgona bevetésen!
                 VolumetricLightOrgan(
                     accentColor = accentColor,
-                    centerYRatio = 0.5f // Itt tökéletesen középen lesz
+                    centerYRatio = 0.5f
                 )
                 FireworksOverlay()
             }
         }
-
-        // A Dialog "Üveg" ablaka
         AnimatedVisibility(
             visible = !isReviewingGame,
             enter = fadeIn(tween(800)),
@@ -135,7 +130,7 @@ fun GameOverOverlay(
 
                 RiposteSystemButton(
                     text = stringResource(id = R.string.btn_review_board),
-                    onClick = onStartReview, // <-- Módosítva a kinti függvény hívására
+                    onClick = onStartReview,
                     isHanging = true
                 )
                 Spacer(modifier = Modifier.height(12.dp))

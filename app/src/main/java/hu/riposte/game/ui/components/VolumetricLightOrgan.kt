@@ -20,9 +20,8 @@ import kotlin.math.sin
 fun VolumetricLightOrgan(
     accentColor: Color,
     modifier: Modifier = Modifier,
-    centerYRatio: Float = 0.5f // Alapból középen van
+    centerYRatio: Float = 0.5f
 ) {
-    // Réteg 1: Alap arany/témaszín (Leggyorsabb)
     GodRaysVFX(
         rayColor = accentColor,
         rotationDuration = 40000,
@@ -31,8 +30,6 @@ fun VolumetricLightOrgan(
         centerYRatio = centerYRatio,
         modifier = modifier
     )
-
-    // Réteg 2: Meleg borostyán (Lassabb, fázis eltolva)
     GodRaysVFX(
         rayColor = Color(0xFFFFD180),
         rotationDuration = 62000,
@@ -42,8 +39,6 @@ fun VolumetricLightOrgan(
         centerYRatio = centerYRatio,
         modifier = modifier
     )
-
-    // Réteg 3: Jeges kék/fehér (Visszafelé forog, lassú lüktetés)
     GodRaysVFX(
         rayColor = Color(0xFFE0F7FA),
         rotationDuration = 85000,
@@ -53,8 +48,6 @@ fun VolumetricLightOrgan(
         centerYRatio = centerYRatio,
         modifier = modifier
     )
-
-    // Réteg 4: Tiszta fehér (Nagyon lassú, vékonyabb sugarak az élénkségért)
     GodRaysVFX(
         rayColor = Color.White,
         rotationDuration = 120000,
@@ -80,15 +73,12 @@ private fun GodRaysVFX(
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "godrays_vfx_$rotationDuration")
 
-    // Forgás animáció
     val rotation by infiniteTransition.animateFloat(
         initialValue = if (reverse) 360f else 0f,
         targetValue = if (reverse) 0f else 360f,
         animationSpec = infiniteRepeatable(tween(rotationDuration, easing = LinearEasing), RepeatMode.Restart),
         label = "rotation"
     )
-
-    // Fáziseltolt Alpha lüktetés
     val alpha by infiniteTransition.animateFloat(
         initialValue = 0.01f,
         targetValue = 0.06f,

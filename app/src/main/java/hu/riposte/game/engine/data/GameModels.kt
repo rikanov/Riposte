@@ -42,7 +42,7 @@ data class Piece(
     val id: Int,
     val owner: Int,
     var pos: Coord,
-    val state: PieceState = PieceState.IN_PLAY // A két Boolean helyett!
+    val state: PieceState = PieceState.IN_PLAY
 )
 
 /**

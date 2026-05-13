@@ -68,7 +68,6 @@ fun InteractiveMainMenu(
     val configuration = LocalConfiguration.current
     val density = LocalDensity.current
 
-    // --- HARMONIKUS ARÁNYOK MATEMATIKÁJA ---
     val screenHeight = configuration.screenHeightDp.dp
     val screenWidth = configuration.screenWidthDp.dp
     val slopeRatio = 0.7349f
@@ -88,11 +87,9 @@ fun InteractiveMainMenu(
     val bottomWidth = screenWidth * 0.667f
     val topWidth = bottomWidth - (widthStep * (count - 1))
 
-    // --- PÁRHUZAMOSÍTÁS MATEMATIKÁJA ---
     val maxCombinedMenuWidth = screenWidth * 0.9f
     val menuGap = 2.dp
 
-    // --- ANIMÁCIÓK ÉS ÁLLAPOTOK ---
     val infiniteTransition = rememberInfiniteTransition(label = "MenuWobble")
     val phaseState = infiniteTransition.animateFloat(
         initialValue = 0f, targetValue = (2*PI).toFloat(),
@@ -107,7 +104,6 @@ fun InteractiveMainMenu(
     val itemTotalHeightPx = with(density) { (itemHeight + itemSpacing).toPx() }
     val subMenuYOffsetPx = 0f
 
-    // GESZTUS ÉRZÉKELŐ RÉTEG
     Box(
         modifier = modifier
             .fillMaxWidth(0.9f)
@@ -144,7 +140,6 @@ fun InteractiveMainMenu(
                         }
                     } while (event.changes.any { it.pressed })
 
-                    // KIÉRTÉKELÉS
                     val releaseY = touchY
                     if (releaseY != null) {
                         val finalMainIndex = (releaseY / itemTotalHeightPx).toInt().coerceIn(0, menuItems.size - 1)
@@ -173,7 +168,7 @@ fun InteractiveMainMenu(
         val hoveredMainIndex = touchY?.let { y -> (y / itemTotalHeightPx).toInt().coerceIn(0, menuItems.size - 1) } ?: -1
         val hoveredSubIndex = if (showAiSubMenu && touchY != null) { ((touchY!! - subMenuYOffsetPx) / itemTotalHeightPx).toInt().coerceIn(0, aiDifficultyItems.size - 1) } else -1
 
-        // --- ALMENÜ (Tükrözött, párhuzamosra vágva) ---
+        // --- SUBMENU (PARALEL AND MIRRORED) ---
         val subMenuAlpha by animateFloatAsState(targetValue = if (showAiSubMenu) 1f else 0f, animationSpec = tween(200), label = "")
         val subMenuOffsetX by animateFloatAsState(targetValue = if (showAiSubMenu) 0f else 50f, animationSpec = spring(), label = "")
 

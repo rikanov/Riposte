@@ -63,7 +63,7 @@ fun SplashScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0F141E)) // Deep Obsidian
+            .background(Color(0xFF0F141E))
             .graphicsLayer { alpha = globalAlpha.value },
         contentAlignment = Alignment.Center
     ) {
@@ -92,7 +92,7 @@ fun SplashScreen(
                             colors = listOf(
                                 Color.Transparent,
                                 Color.White.copy(alpha = 0.2f),
-                                Color.White.copy(alpha = 0.7f), // The intense beam center
+                                Color.White.copy(alpha = 0.7f),
                                 Color.White.copy(alpha = 0.2f),
                                 Color.Transparent
                             ),
@@ -122,7 +122,7 @@ fun SplashScreen(
                 contentDescription = "La Riposte",
                 modifier = Modifier
                     .width(200.dp)
-                    .offset(y = 120.dp) // Perfect spacing below the 160dp logo
+                    .offset(y = 120.dp)
                     .graphicsLayer { alpha = textAlpha.value }
             )
         }

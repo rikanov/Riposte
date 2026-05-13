@@ -26,7 +26,7 @@ fun PieceDesign(
     isPulsing: Boolean = false,
     isDragged: Boolean = false,
     isAnimationEnabled: Boolean = true,
-    deviceTilt: Offset = Offset.Zero // ÚJ: Giroszkóp adatok!
+    deviceTilt: Offset = Offset.Zero
 ) {
     val currentTheme = LocalGameTheme.current
 
@@ -35,8 +35,6 @@ fun PieceDesign(
 
     val infiniteTransition = rememberInfiniteTransition(label = "PieceAnim")
     val timeOffset = pieceId * 400
-
-    // 1. ALAP MÉRET ÉS PULZÁLÁS
     val baseScale by if (isPulsing && isAnimationEnabled) {
         infiniteTransition.animateFloat(
             initialValue = 0.75f, targetValue = 0.95f,
@@ -46,8 +44,6 @@ fun PieceDesign(
     } else {
         remember { mutableFloatStateOf(0.85f) }
     }
-
-    // 2. FELVEVÉS (DRAG) EFFEKT
     val dragScale by animateFloatAsState(
         targetValue = if (isDragged) 1.25f else 1f,
         animationSpec = spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMedium),
@@ -60,7 +56,6 @@ fun PieceDesign(
         label = "dragLift"
     )
 
-    // 3. AURA
     val auraPhase by if (isAnimationEnabled) {
         infiniteTransition.animateFloat(
             initialValue = 0f, targetValue = 1f,
@@ -70,9 +65,6 @@ fun PieceDesign(
     } else {
         remember { mutableFloatStateOf(0.5f) }
     }
-
-    // Kiszámoljuk az árnyék eltolódását a giroszkóp alapján
-    // Ha a tábla balra dől (X pozitív), az árnyéknak jobbra kell csúsznia, hogy a bábu kiemelkedőnek hasson
     val shadowOffsetX = -deviceTilt.x * 6f
     val shadowOffsetY = deviceTilt.y * 6f
 
@@ -88,20 +80,18 @@ fun PieceDesign(
         contentAlignment = Alignment.Center
     ) {
 
-        // --- 1. RÉTEG: A 2.5D GIROSZKÓPOS ÁRNYÉK ---
+        // --- 1. LAYER: A 2.5D GYROSCOPE SHADOW ---
         if (isAnimationEnabled) {
             Canvas(
                 modifier = Modifier
                     .fillMaxSize()
                     .graphicsLayer {
-                        // Az árnyék elcsúszik a dőlés hatására
                         translationX = shadowOffsetX
                         translationY = shadowOffsetY
                     }
             ) {
-                // Fekete, elhalványuló kör a bábu alatt
                 val shadowRadius = size.width * 0.35f
-                val shadowCenter = Offset(size.width / 2f, size.height / 2f + size.height * 0.05f) // Kicsit lejjebb van alapból
+                val shadowCenter = Offset(size.width / 2f, size.height / 2f + size.height * 0.05f)
 
                 drawCircle(
                     brush = Brush.radialGradient(
@@ -115,7 +105,7 @@ fun PieceDesign(
             }
         }
 
-        // --- 2. RÉTEG: AURA ---
+        // --- 2. LAYER: AURA ---
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -132,7 +122,7 @@ fun PieceDesign(
                 }
         )
 
-        // --- 3. RÉTEG: MAGA A BÁBU KÉPE ---
+        // --- 3. LAYER: PIECE PNG ---
         Image(
             painter = painterResource(id = imageRes),
             contentDescription = "Game Piece",

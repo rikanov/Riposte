@@ -18,8 +18,7 @@ import hu.riposte.game.engine.logic.SoundManager
 import hu.riposte.game.ui.components.RiposteSystemButton
 import hu.riposte.game.ui.components.RiposteSystemToggleButton
 
-// RENDSZERSZÍNEK (MainScreen-hez igazítva)
-private val SystemAccent = Color(0xFFD4AF37) // Arany / Sárgaréz
+private val SystemAccent = Color(0xFFD4AF37)
 
 @Composable
 fun OptionsDialog(
@@ -90,7 +89,6 @@ fun OptionsDialog(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // --- JÁTÉKMENET ---
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 RiposteSystemToggleButton(
                     modifier = Modifier.fillMaxWidth(),
@@ -105,7 +103,6 @@ fun OptionsDialog(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // --- ALSÓ SOR ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,

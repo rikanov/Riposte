@@ -49,4 +49,4 @@ namespace Heuristic {
         return (hs1 * offW) - (hs2 * defW);
     }
 }
-#endif //RIPOSTE_HEURISTIC_H
+#endif

@@ -13,6 +13,7 @@ import androidx.lifecycle.viewModelScope
 import hu.riposte.game.engine.data.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -26,13 +27,11 @@ import kotlin.math.sqrt
 /**
  * RIPOSTE - Core Game ViewModel
  * Handles game state, AI steps, and Tournament logic.
- * Follows AI_AGENT.md guidelines for state management.
  */
 data class ThreatRecord(val hs1: Int, val hs2: Int)
 
 class GameViewModel(application: Application) : AndroidViewModel(application) {
 
-    // --- INFRASTRUCTURE ---
     val settingsManager = SettingsManager(application)
     val tournamentManager = TournamentManager()
     val soundManager = SoundManager(application)
@@ -40,39 +39,32 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     private val undoStack = mutableListOf<GameStateSnapshot>()
     private val matchThreatLog = mutableListOf<ThreatRecord>()
 
-    // --- HISTORY & DEADLOCK DETECTION ---
     private val historyStack = mutableListOf<BoardHash>()
     private var historyBaseIndex = 0
     var separationStepsLeft by mutableIntStateOf(0)
 
-    // --- REVIEW MODE STATE (ÚJ) ---
     private var reviewCursorIndex by mutableIntStateOf(-1)
     private var finalGameStateSnapshot: GameStateSnapshot? = null
 
-    // --- GLOBAL STATE ---
     var isPremiumVersion: Boolean by mutableStateOf(true)
     var isGamePaused by mutableStateOf(false)
     var isInterruptedGame by mutableStateOf(false)
     var settings by mutableStateOf(GameSettings())
     var matchCount: Int = 0
 
-    // --- BOARD & PIECES STATE ---
     val board = mutableStateListOf<Int>()
     val pieces = mutableStateListOf<Piece>()
     var playerCaptured by mutableStateOf(intArrayOf(0, 0, 0))
     var activeHint by mutableStateOf<MoveData?>(null)
     private var afterTouche: Boolean = false
 
-    // --- GAME PHASE & WINNER ---
     var gamePhase by mutableStateOf(GameWaitingFor.SETUP)
     var winner by mutableStateOf<String?>(null)
-
-    // --- TUTORIAL STATE ---
+    var isMatchProcessed = false
     var isTutorialMode by mutableStateOf(false)
     var tutorialPhase by mutableStateOf(TutorialPhase.NOT_ACTIVE)
     var tutorialMoveCount by mutableIntStateOf(0)
 
-    // --- TOURNAMENT & CLOCK STATE ---
     var isTournamentMode by mutableStateOf(false)
     var tournamentOpponentNameRes: Int? by mutableStateOf(null)
     var tournamentTargetRank: Int? by mutableStateOf(null)
@@ -81,17 +73,12 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     var playerTimeMs by mutableLongStateOf(180_000L)
     var opponentTimeMs by mutableLongStateOf(180_000L)
 
-    // --- STATS & VFX EVENTS ---
-    var lastViewedRating: Int? = null
-    var lastViewedRank: Int? = null
     var soundEvent by mutableStateOf<SoundEvent?>(null)
         private set
 
     init {
         resetBoard()
     }
-
-    // --- CORE LOGIC ---
 
     fun triggerSound(type: SoundType, playerId: Int) {
         soundEvent = SoundEvent(type, playerId)
@@ -101,19 +88,17 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         matchThreatLog.clear()
         board.clear()
         pieces.clear()
+        isMatchProcessed = false
         repeat(35) { board.add(0) }
 
-        // P1 Pieces (AI/Opponent)
         for (i in 0..4) {
             board[i] = 1
             pieces.add(Piece(id = i, owner = 1, pos = Coord.fromIndex(i)))
         }
-        // P2 Pieces (Player)
         for (i in 30..34) {
             board[i] = 2
             pieces.add(Piece(id = i, owner = 2, pos = Coord.fromIndex(i)))
         }
-        // Initial HotSpot (★)
         board[17] = 4
 
         playerCaptured = intArrayOf(0, 0, 0)
@@ -122,13 +107,11 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         soundEvent = null
         timerJob?.cancel()
 
-        // History reset
         historyStack.clear()
         historyBaseIndex = 0
         separationStepsLeft = 0
         historyStack.add(calculateBoardHash())
 
-        // Review state reset
         reviewCursorIndex = -1
         finalGameStateSnapshot = null
     }
@@ -190,8 +173,6 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         restartGame()
     }
 
-    // --- HISTORY & DEADLOCK LOGIC ---
-
     private fun calculateBoardHash(): BoardHash {
         var p1 = 0L
         var p2 = 0L
@@ -226,7 +207,6 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun recordStateAndCheckDeadlock() {
         val currentHash = calculateBoardHash()
-
         var count = 0
         for (i in historyBaseIndex until historyStack.size) {
             if (historyStack[i] == currentHash) count++
@@ -240,8 +220,6 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             historyStack.add(currentHash)
         }
     }
-
-    // --- CHESS CLOCK LOGIC ---
 
     private fun startTimer() {
         timerJob?.cancel()
@@ -276,17 +254,18 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun handleTimeout(winnerId: Int) {
         timerJob?.cancel()
+        gamePhase = GameWaitingFor.GAME_OVER
+
         if (winnerId == 1) {
             triggerSound(SoundType.LOSE, 1)
             winner = "Time's Up! Opponent claims the bout."
+            processTournamentMatchEnd(isWin = false)
         } else {
             triggerSound(SoundType.WIN, 2)
             winner = "Time's Up! You claim the bout."
+            processTournamentMatchEnd(isWin = true)
         }
-        gamePhase = GameWaitingFor.GAME_OVER
     }
-
-    // --- MOVE EXECUTION ---
 
     private fun synchronizeMove(fromIdx: Int, toIdx: Int, owner: Int) {
         val hitTouche = board[toIdx] == 4
@@ -363,7 +342,9 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                     if (playerCaptured[currentPlayerId] >= 2) {
                         timerJob?.cancel()
                         triggerSound(SoundType.WIN, currentPlayerId)
-                        winner = "You won!"; gamePhase = GameWaitingFor.GAME_OVER
+                        winner = "You won!"
+                        gamePhase = GameWaitingFor.GAME_OVER
+                        processTournamentMatchEnd(isWin = true)
                     } else {
                         if (isTutorialMode && (tutorialPhase == TutorialPhase.SHOW_CAPTURE || tutorialPhase == TutorialPhase.WAIT_FOR_TOUCH)) {
                             tutorialPhase = TutorialPhase.SHOW_WIN_COND
@@ -389,8 +370,6 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
-
-    // --- AI & ENGINE INTEGRATION ---
 
     fun requestHint() {
         if (gamePhase != GameWaitingFor.MOVE_PIECE) return
@@ -466,7 +445,9 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             if (playerCaptured[1] >= 2) {
                 timerJob?.cancel()
                 triggerSound(SoundType.LOSE, 1)
-                winner = "AI won :("; gamePhase = GameWaitingFor.GAME_OVER
+                winner = "AI won :("
+                gamePhase = GameWaitingFor.GAME_OVER
+                processTournamentMatchEnd(isWin = false)
             } else {
                 gamePhase = GameWaitingFor.MOVE_PIECE
                 currentPlayerId = 2
@@ -509,8 +490,6 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             pieces[capturedIdx] = pieces[capturedIdx].copy(state = PieceState.CAPTURED, pos = Coord.Invalid)
         }
     }
-
-    // --- UTILS ---
 
     fun getOffsetFromAngle(angle: Double): Int? {
         return when {
@@ -570,15 +549,12 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // --- ÚJ: REVIEW MODE LOGIC ---
-
     fun canReviewPrevious(): Boolean {
         if (reviewCursorIndex == -1) return undoStack.isNotEmpty()
         return reviewCursorIndex > 0
     }
 
     fun canReviewNext(): Boolean {
-        // Bármikor mehetünk előre, kivéve ha már eleve a legfrissebb (jelenlegi) állapotban vagyunk (-1)
         return reviewCursorIndex != -1
     }
 
@@ -586,7 +562,6 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         if (!canReviewPrevious()) return
 
         if (reviewCursorIndex == -1) {
-            // Legelső visszalépésnél elmentjük a játék végi állapotot
             finalGameStateSnapshot = createCurrentSnapshot()
             reviewCursorIndex = undoStack.size - 1
         } else {
@@ -600,9 +575,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
         reviewCursorIndex++
         if (reviewCursorIndex >= undoStack.size) {
-            // Elértük az idősík végét, visszatöltjük a végső állapotot
             finalGameStateSnapshot?.let { applySnapshot(it, isReview = true) }
-            reviewCursorIndex = -1 // JAVÍTÁS: Reseteljük a kurzort a jelenbe!
+            reviewCursorIndex = -1
         } else {
             applySnapshot(undoStack[reviewCursorIndex], isReview = true)
         }
@@ -616,8 +590,12 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         finalGameStateSnapshot = null
     }
 
-    // --- PERSISTENCE & TOURNAMENT FLOW ---
     fun processTournamentMatchEnd(isWin: Boolean): String {
+        if (!isTournamentMode) return ""
+
+        isMatchProcessed = true
+        isInterruptedGame = false
+
         if (matchThreatLog.isNotEmpty()) {
             val totalHs1 = matchThreatLog.sumOf { it.hs1 }.toFloat()
             val totalHs2 = matchThreatLog.sumOf { it.hs2 }.toFloat()
@@ -643,22 +621,43 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             (baseScore * (1.0f + timeBonus)).toInt()
         }
 
-        if (matchThreatLog.isNotEmpty()) {
-            val tHs1 = matchThreatLog.sumOf { it.hs1 }
-            val tHs2 = matchThreatLog.sumOf { it.hs2 }
-            viewModelScope.launch {
+        val resultMsg = tournamentManager.onMatchFinished(isWin, finalScore)
+
+        viewModelScope.launch {
+            withContext(NonCancellable) {
                 val currentSettings = settingsManager.settingsFlow.first()
-                val currentList = currentSettings.recentThreats.split(",").filter { it.isNotEmpty() }.toMutableList()
-                currentList.add("$tHs1:$tHs2")
-                val updatedThreats = currentList.takeLast(3).joinToString(",")
-                settingsManager.updateSettings(currentSettings.copy(recentThreats = updatedThreats))
+
+                val currentThreats = currentSettings.recentThreats.split(",").filter { it.isNotEmpty() }.toMutableList()
+                if (matchThreatLog.isNotEmpty()) {
+                    val tHs1 = matchThreatLog.sumOf { it.hs1 }
+                    val tHs2 = matchThreatLog.sumOf { it.hs2 }
+                    currentThreats.add("$tHs1:$tHs2")
+                }
+                val updatedThreats = currentThreats.takeLast(3).joinToString(",")
+
+                val cleanHistory = currentSettings.tournamentMatchHistory.filter { it == 'W' || it == 'L' }
+                val newResultChar = if (isWin) "W" else "L"
+                val safeHistory = (cleanHistory + newResultChar).takeLast(50)
+
+                settingsManager.updateSettings(
+                    currentSettings.copy(
+                        hasSavedTournamentMatch = false,
+                        recentThreats = updatedThreats,
+                        tournamentRank = tournamentManager.currentRank,
+                        tournamentHighest = tournamentManager.highestRank,
+                        tournamentDefending = tournamentManager.isDefending,
+                        tournamentMatchHistory = safeHistory
+                    )
+                )
             }
         }
 
-        return tournamentManager.onMatchFinished(isWin, finalScore)
+        return resultMsg
     }
 
     suspend fun saveTournamentStateToDisk() {
+        if (gamePhase == GameWaitingFor.GAME_OVER || !isTournamentMode) return
+
         val currentSettings = settingsManager.settingsFlow.first()
         val boardStr = board.joinToString(",")
         val piecesStr = pieces.joinToString("|") { p ->
@@ -679,7 +678,6 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             )
         )
     }
-
     fun loadTournamentState(savedSettings: AppSettings) {
         isTournamentMode = true
         isInterruptedGame = true
@@ -721,22 +719,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun forfeitTournamentMatch() {
+        gamePhase = GameWaitingFor.GAME_OVER
         processTournamentMatchEnd(isWin = false)
-        isTournamentMode = false
-        isInterruptedGame = false
-
-        viewModelScope.launch {
-            val currentSettings = settingsManager.settingsFlow.first()
-            settingsManager.updateSettings(
-                currentSettings.copy(
-                    hasSavedTournamentMatch = false,
-                    tournamentRank = tournamentManager.currentRank,
-                    tournamentHighest = tournamentManager.highestRank,
-                    tournamentDefending = tournamentManager.isDefending,
-                    tournamentMatchHistory = tournamentManager.matchHistoryList.joinToString(",")
-                )
-            )
-        }
     }
 
     override fun onCleared() {

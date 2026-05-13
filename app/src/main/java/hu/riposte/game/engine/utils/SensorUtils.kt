@@ -23,7 +23,7 @@ fun rememberDeviceTilt(): State<Offset> {
             // "Low-pass filter" változók a vajas, sima mozgáshoz
             private var smoothedX = 0f
             private var smoothedY = 0f
-            private val alpha = 0.15f // Kisebb érték = lassabb, de sokkal simább követés
+            private val alpha = 0.15f
 
             override fun onSensorChanged(event: SensorEvent?) {
                 event?.let {

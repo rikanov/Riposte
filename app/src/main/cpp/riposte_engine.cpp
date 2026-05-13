@@ -42,7 +42,7 @@ constexpr bool RiposteEngine::step(uint64_t& set1, const uint64_t set2, const ui
     uint64_t ball = ballMask( set1, stepID >> 3 );
 
     const uint64_t currentPos = ball;
-    set1 &= ~currentPos; // pick up the ball to move
+    set1 &= ~currentPos;
     const uint64_t obstacles = set1 | set2 | sentinelMask;
 
     while( 0 == (stepID & 4) && 0 == ((ball << bitShift) & obstacles) )
@@ -53,8 +53,8 @@ constexpr bool RiposteEngine::step(uint64_t& set1, const uint64_t set2, const ui
     {
         ball >>= bitShift;
     }
-    set1 |= ball; // put down the ball to the selected field
-    return currentPos != ball; // valid if the ball has moved
+    set1 |= ball;
+    return currentPos != ball;
 }
 
 constexpr int RiposteEngine::captureSearch(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, int alfa, int beta, const int depth, const int sepLeft) noexcept
@@ -219,7 +219,7 @@ MoveData RiposteEngine::searchIDA(const uint64_t set1, const uint64_t set2, cons
 
             if( nextSet1 & hotSpot ) [[unlikely]]
             {
-                if (sepLeft > 0) continue; // Illegal move during Halte
+                if (sepLeft > 0) continue;
 
                 uint64_t nextSpot = hotSpot;
                 score = captureRoot(nextSet1, set2, nextSpot, idaDepth, sepLeft);

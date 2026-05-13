@@ -20,14 +20,13 @@ data class AppSettings(
     val nightModeEnabled: Boolean = false,
     val showDailyTips: Boolean = true,
 
-    // Bajnokság progresszió
     val tournamentRank: Int = 20,
     val tournamentHighest: Int = 20,
     val tournamentDefending: Boolean = false,
     val tournamentMatchHistory: String = "",
     val lastTipTime: Long = 0L,
     val highestRating: Int = 0,
-    // Bajnokság mentési hely (Tournament Save Slot)
+    // Tournament Save Slot
     val hasSavedTournamentMatch: Boolean = false,
     val savedTourneyPlayerScore: Int = 0,
     val savedTourneyOppScore: Int = 0,

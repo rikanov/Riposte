@@ -28,9 +28,9 @@ Java_hu_riposte_game_engine_logic_GameViewModel_getBestStepNative(
     jmethodID constructor = env->GetMethodID(moveDataClass, "<init>", "(III)V");
 
     return env->NewObject(moveDataClass, constructor,
-                          (jint)result[0],  // from
-                          (jint)result[1],  // to
-                          (jint)result[2]); // hotspot
+                          (jint)result[0],
+                          (jint)result[1],
+                          (jint)result[2]);
 }
 }
 

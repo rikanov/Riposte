@@ -40,8 +40,7 @@ fun SlantedMenuButton(
     val density = LocalDensity.current
     val slantPx = with(density) { slantAmountDp.toPx() }
 
-    // --- PRÉMIUM SZÍNEK ÉS TRANSZPARENCIA ---
-    // Lecsökkentettem az alfát (0.45f), hogy a háttér jobban átjöjjön
+    // --- PREMIUM COLORS AND OPACITY ---
     val alphaColor = if (isHovered) 0.85f else 0.45f
     val gradientColors = if (item.isEnabled) {
         if (isHovered) listOf(Color(0xFF4A5570), Color(0xFF262C3A))
@@ -60,7 +59,6 @@ fun SlantedMenuButton(
                 scaleX = scale
                 scaleY = scale
 
-                // --- INTENZÍVEBB HULLÁMZÁS (10f és 5f szorzókkal) ---
                 val hoverIntensity = if (isHovered) 0.2f else 1f
                 translationX = sin(phaseState.value + index * 0.8f) * 10f * hoverIntensity
                 translationY = cos(phaseState.value + index * 0.8f) * 5f * hoverIntensity
@@ -72,14 +70,12 @@ fun SlantedMenuButton(
                 color = Color.White.copy(alpha = if (isHovered) 0.7f else 0.15f),
                 shape = SlantedShape(slantPx = slantPx)
             ),
-        contentAlignment = Alignment.Center // Vízszintesen és függőlegesen is középre zár
+        contentAlignment = Alignment.Center
     ) {
-        // Finom belső fényeffekt
         Box(modifier = Modifier.matchParentSize().background(Brush.horizontalGradient(0.0f to Color.White.copy(alpha = 0.1f), 0.3f to Color.Transparent)))
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            // Optikai korrekció: a dőlés miatt kicsit eltoljuk a szöveget, hogy valóban középen tűnjön
             modifier = Modifier.padding(start = slantAmountDp / 2)
         ) {
             if (item.hasSwipeAction) {
@@ -135,7 +131,7 @@ fun ParallelMenuButton(
     val isLocked = item.isPremiumOnly && !isPremiumVersion
     val slantPx = with(density) { slantAmountDp.toPx() }
 
-    // --- TRANSZPARENCIA ÉS SZÍNEK ---
+    // --- TRANSPARENCY AND COLORS ---
     val alphaColor = if (isLocked) 0.3f else if (isHovered) 0.85f else 0.45f
     val gradientColors = if (isStygian) {
         if (isHovered) listOf(Color(0xFF7A2424), Color(0xFF3A1212))
@@ -161,7 +157,6 @@ fun ParallelMenuButton(
                 scaleY = scale
 
                 val hoverIntensity = if (isHovered) 0.2f else 1f
-                // Eltolt fázis (+2f), hogy ne egyszerre mozogjanak a főmenüvel
                 translationX = sin(phaseState.value + index * 0.8f + 2f) * 8f * hoverIntensity
                 translationY = cos(phaseState.value + index * 0.8f + 2f) * 4f * hoverIntensity
             }

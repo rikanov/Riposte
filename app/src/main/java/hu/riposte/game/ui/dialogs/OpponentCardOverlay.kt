@@ -42,9 +42,6 @@ fun OpponentCardOverlay(
     if (opponent == null) return
 
     val currentTheme = LocalGameTheme.current
-
-    // --- 3D ANIMÁCIÓK ("A Súgó Effektus") ---
-    // A kártya lentről (Offset), kisebb méretből (Scale), megfordulva (RotationY) érkezik
     val rotationY by animateFloatAsState(
         targetValue = if (isVisible) 0f else 180f,
         animationSpec = tween(durationMillis = 700, easing = FastOutSlowInEasing),
@@ -60,8 +57,6 @@ fun OpponentCardOverlay(
         animationSpec = tween(durationMillis = 700, easing = FastOutSlowInEasing),
         label = "CardOffset"
     )
-
-    // Sötétítő háttér (Scrim)
     AnimatedVisibility(
         visible = isVisible,
         enter = fadeIn(tween(500)),
@@ -75,12 +70,10 @@ fun OpponentCardOverlay(
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
-                    onClick = onClose // Ha mellékattint, bezáródik
+                    onClick = onClose
                 )
         )
     }
-
-    // Maga a kártya (Csak akkor rajzoljuk, ha épp animálódik vagy látszik)
     if (scale > 0.45f) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -93,21 +86,20 @@ fun OpponentCardOverlay(
                         scaleX = scale
                         scaleY = scale
                         this.rotationY = rotationY
-                        cameraDistance = 16f * density // Térbeli torzítás a forgatáshoz
+                        cameraDistance = 16f * density
                     }
                     .width(300.dp)
-                    .fillMaxHeight(0.65f) // Magas, elegáns kártyaforma
+                    .fillMaxHeight(0.65f)
                     .shadow(24.dp, RoundedCornerShape(16.dp))
                     .clip(RoundedCornerShape(16.dp))
                     .background(Brush.verticalGradient(listOf(Color(0xFF1A1C23), Color(0xFF0D0F14))))
-                    .border(2.dp, Color(0xFFD4AF37), RoundedCornerShape(16.dp)) // Arany keret
+                    .border(2.dp, Color(0xFFD4AF37), RoundedCornerShape(16.dp))
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
-                        onClick = onClose // Ha a kártyára kattint, bezáródik
+                        onClick = onClose
                     )
             ) {
-                // Csak akkor mutatjuk a szöveget, ha már a felénél átfordult (ne legyen tükrözött)
                 if (rotationY <= 90f) {
                     Column(
                         modifier = Modifier
@@ -115,7 +107,6 @@ fun OpponentCardOverlay(
                             .padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // Címer vagy Ikon helye (ide jöhet majd a sisak ikon)
                         Box(
                             modifier = Modifier
                                 .size(60.dp)
@@ -128,7 +119,6 @@ fun OpponentCardOverlay(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // Név és Titulus
                         Text(
                             text = stringResource(id = opponent.nameRes).uppercase(),
                             color = Color(0xFFD4AF37),
@@ -153,8 +143,6 @@ fun OpponentCardOverlay(
                             modifier = Modifier.padding(top = 4.dp),
                             fontFamily = currentTheme.fontFamily
                         )
-
-                        // Díszes elválasztó
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth(0.6f)
@@ -162,8 +150,6 @@ fun OpponentCardOverlay(
                                 .height(1.dp)
                                 .background(Color(0xFFD4AF37).copy(alpha = 0.3f))
                         )
-
-                        // Leírás (Bio) - SCROLLABLE UPGRADE
                         Text(
                             text = stringResource(id = opponent.descriptionRes),
                             color = Color.White.copy(alpha = 0.7f),
@@ -173,8 +159,6 @@ fun OpponentCardOverlay(
                             modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()),
                             fontFamily = currentTheme.fontFamily
                         )
-
-                        // Idézet
                         Text(
                             text = stringResource(id = opponent.quoteRes),
                             color = Color(0xFFD4AF37),
@@ -187,7 +171,6 @@ fun OpponentCardOverlay(
                         )
                     }
                 } else {
-                    // Kártya hátlapja (amíg átfordul)
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
                             text = "R I P O S T E",

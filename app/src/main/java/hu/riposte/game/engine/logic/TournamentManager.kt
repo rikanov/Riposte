@@ -28,7 +28,7 @@ class TournamentManager {
         currentRank = rank.coerceIn(1, 20)
         highestRank = highest.coerceIn(1, 20)
         isDefending = defending
-        highestRating = highestRatingScore // <-- Beolvassuk a mentett rekordot
+        highestRating = highestRatingScore
 
         matchHistoryList = if (historyString.isEmpty()) {
             emptyList()
@@ -87,6 +87,6 @@ class TournamentManager {
         isDefending = false
         matchHistoryList = emptyList()
         riposteRating = 0
-        highestRating = 1000 // Alapértelmezett pontszám
+        highestRating = 1000
     }
 }

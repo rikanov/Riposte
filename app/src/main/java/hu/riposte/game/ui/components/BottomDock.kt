@@ -9,7 +9,7 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape // <-- Fontos import
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -71,7 +71,6 @@ fun RiposteBottomDock(
 
     data class BarItem(val iconRes: Int?, val label: String, val isActive: Boolean, val isSpacer: Boolean = false, val action: () -> Unit = {})
 
-    // DINAMIKUS LISTA ÉPÍTÉS
     val items = buildList {
         add(BarItem(if (appSettings.musicEnabled) R.drawable.ic_dock_musicon else R.drawable.ic_dock_musicoff, stringResource(id = R.string.options_music), appSettings.musicEnabled, false, onMusicToggle))
         add(BarItem(if (appSettings.sfxEnabled) R.drawable.ic_dock_sfxon else R.drawable.ic_dock_sfxoff, stringResource(id = R.string.options_sfx), appSettings.sfxEnabled, false, onSfxToggle))
@@ -80,11 +79,9 @@ fun RiposteBottomDock(
         add(BarItem(R.drawable.ic_dock_themes, stringResource(id = R.string.cd_themes), true, false, onThemeClick))
 
         if (!isTournamentMode) {
-            // Sima játékmód: Undo és Hint
             add(BarItem(R.drawable.ic_dock_undo, "Undo", true, false, onUndoClick))
             add(BarItem(R.drawable.ic_dock_hint, "Hint", true, false, onHintClick))
         } else {
-            // Bajnokság mód: Info gomb az ellenfél kártyájához
             add(BarItem(R.drawable.ic_dock_hint, "Opponent", true, false, onHintClick))
         }
         add(BarItem(R.drawable.ic_dock_info, "Info", true, false, onInfoClick))
@@ -115,7 +112,7 @@ fun RiposteBottomDock(
     )
 
     val shimmerBrush = Brush.linearGradient(
-        colors = listOf(Color.Transparent, Color.White.copy(alpha = 0.25f), Color.Transparent), // JAVÍTÁS: Még finomabb Shimmer
+        colors = listOf(Color.Transparent, Color.White.copy(alpha = 0.25f), Color.Transparent),
         start = Offset(shimmerTranslateAnim, 0f),
         end = Offset(shimmerTranslateAnim + 300f, 300f)
     )
@@ -134,7 +131,7 @@ fun RiposteBottomDock(
             .onGloballyPositioned { barWidth = it.size.width.toFloat() },
         contentAlignment = Alignment.BottomCenter
     ) {
-        // --- DOCK HÁTTÉR ÜVEGLAP ---
+        // --- DOCK BAR GLASS BACKGROUND ---
         Box(
             modifier = Modifier
                 .width(with(densityObj) { (totalDockWidthPx + 80f).toDp() })
@@ -144,11 +141,11 @@ fun RiposteBottomDock(
                     rotationX = 55f
                     cameraDistance = 12f * density
                 }
-                .shadow(16.dp, RoundedCornerShape(16.dp)) // JAVÍTÁS: Lekerekített árnyék, kisebb szórás
-                .clip(RoundedCornerShape(16.dp)) // JAVÍTÁS: Lekerekített sarkok
-                .background(Color.Black.copy(alpha = 0.3f)) // JAVÍTÁS: Sokkal átlátszóbb, tiszta fekete lap
+                .shadow(16.dp, RoundedCornerShape(16.dp))
+                .clip(RoundedCornerShape(16.dp))
+                .background(Color.Black.copy(alpha = 0.3f))
                 .background(shimmerBrush)
-                .border(0.5.dp, Color.White.copy(alpha = 0.4f), RoundedCornerShape(16.dp)) // JAVÍTÁS: Vékony, elegáns keret
+                .border(0.5.dp, Color.White.copy(alpha = 0.4f), RoundedCornerShape(16.dp))
         )
 
         AnimatedVisibility(

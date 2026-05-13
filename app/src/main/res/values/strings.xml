@@ -77,7 +77,7 @@
     <string name="stat_peak_rank">PEAK</string>
     <string name="stat_rating">RIPOSTE RATING</string>
     <string name="stat_global">GLOBAL: UNRANKED</string>
-    <string name="stat_recent_form">RECENT FORM (LAST 10)</string>
+    <string name="stat_recent_form">RECENT FORM</string>
     <string name="btn_save_profile">SAVE PROFILE</string>
     <string name="premium_tease_text">Unlock Online Hall of Fame</string>
     <string name="stat_peak_rating">PEAK RATING</string>
@@ -89,31 +89,89 @@
     <string name="ai_grandmaster">Grandmaster</string>
     <string name="ai_stygian">Stygian</string>
 
-    <string name="quote_classic_win_1">"A masterstroke of absolute precision."</string>
-    <string name="quote_classic_win_2">"The arena bows to your blade."</string>
-    <string name="quote_classic_win_3">"A flawless riposte. The duel is yours."</string>
-    <string name="quote_classic_win_4">"Check and mate in the dance of steel."</string>
+    <string name="quote_destreza_win_1">"Flawless geometry. The circle belongs to you."</string>
+    <string name="quote_destreza_win_2">"Calculated and executed with absolute truth."</string>
+    <string name="quote_destreza_win_3">"The circle is complete. You control the space entirely."</string>
+    <string name="quote_destreza_lose_1">"You stepped out of line, and into your demise."</string>
+    <string name="quote_destreza_lose_2">"Your math was flawed. The opponent found the tangent."</string>
+    <string name="quote_destreza_lose_3">"A broken angle, a shattered defense. The true path was lost."</string>
 
-    <string name="quote_classic_lose_1">"Your guard was broken. The duel ends here."</string>
-    <string name="quote_classic_lose_2">"A fatal miscalculation. The opponent strikes true."</string>
-    <string name="quote_classic_lose_3">"Outmaneuvered. The shadows claim this bout."</string>
+    <string name="quote_maupin_win_1">"A dazzling performance! The crowd roars for your blade."</string>
+    <string name="quote_maupin_win_2">"You pierced their guard and completely stole the show."</string>
+    <string name="quote_maupin_win_3">"A standing ovation for a lethal and dramatic finale!"</string>
+    <string name="quote_maupin_lose_1">"A tragic end to a beautiful aria. The curtain falls."</string>
+    <string name="quote_maupin_lose_2">"Out of breath and out of time. The opponent takes the final bow."</string>
+    <string name="quote_maupin_lose_3">"A missed step, a fatal stumble. The audience gasps in silence."</string>
 
-    <string name="quote_zen_win_1">"The falling leaf finds its peace on the ground."</string>
-    <string name="quote_zen_win_2">"Water cuts through rock not with strength, but persistence."</string>
-    <string name="quote_zen_win_3">"Stillness within, swiftness without."</string>
+    <string name="quote_highwayman_win_1">"Your money or your life? You took both."</string>
+    <string name="quote_highwayman_win_2">"A swift strike in the dark. The loot is yours."</string>
+    <string name="quote_highwayman_win_3">"Another successful ambush. Fade back into the shadows."</string>
+    <string name="quote_highwayman_lose_1">"Caught in the crosshairs. You\'ll hang for this."</string>
+    <string name="quote_highwayman_lose_2">"A slow draw makes for a shallow, unmarked grave."</string>
+    <string name="quote_highwayman_lose_3">"The law of the blade catches up to everyone eventually."</string>
 
-    <string name="quote_zen_lose_1">"Even the strongest bamboo bends in the storm."</string>
-    <string name="quote_zen_lose_2">"A clouded mind leads to a shattered blade."</string>
-    <string name="quote_zen_lose_3">"Do not mourn the loss, learn from the strike."</string>
+    <string name="quote_venice_win_1">"The dance ends, and only you remain standing."</string>
+    <string name="quote_venice_win_2">"Behind the velvet mask lies the face of a true killer."</string>
+    <string name="quote_venice_win_3">"A beautiful deception. The grand prize of the carnival is yours."</string>
+    <string name="quote_venice_lose_1">"A dagger in the dark. You were deceived by the masquerade."</string>
+    <string name="quote_venice_lose_2">"The music stops, and you are left bleeding on the marble."</string>
+    <string name="quote_venice_lose_3">"Trust no one. Especially not the blade hidden in the shadows."</string>
 
-    <string name="quote_modern_win_1">"Target acquired. Threat neutralized."</string>
-    <string name="quote_modern_win_2">"Flawless execution. Tactical dominance."</string>
-    <string name="quote_modern_win_3">"Speed. Precision. Victory."</string>
+    <string name="quote_carbon_win_1">"Gold medal execution. Your speed is unmatched."</string>
+    <string name="quote_carbon_win_2">"Clean touch. The electronic judges rule in your favor."</string>
+    <string name="quote_carbon_win_3">"Perfect form and absolute precision. A flawless victory."</string>
+    <string name="quote_carbon_lose_1">"Off target. The opponent was a fraction of a second faster."</string>
+    <string name="quote_carbon_lose_2">"Red light. Your defense completely failed to register."</string>
+    <string name="quote_carbon_lose_3">"Parry failed. The sensors do not lie."</string>
 
-    <string name="quote_modern_lose_1">"Tactical error detected. Defense compromised."</string>
-    <string name="quote_modern_lose_2">"Outplayed. Recalibrate and try again."</string>
-    <string name="quote_modern_lose_3">"Insufficient speed. The opponent anticipated your move."</string>
+    <string name="quote_inner_win_1">"Mind and blade acting as one. Perfect harmony."</string>
+    <string name="quote_inner_win_2">"You fought without ego, and victory naturally followed."</string>
+    <string name="quote_inner_win_3">"Breathe in victory, breathe out all doubt. You are centered."</string>
+    <string name="quote_inner_lose_1">"Doubt clouded your mind. The fatal strike slipped through."</string>
+    <string name="quote_inner_lose_2">"You lost your center, and the bout went with it."</string>
+    <string name="quote_inner_lose_3">"Your focus wavered for a millisecond, and the blade found its mark."</string>
 
+    <string name="quote_paris_win_1">"Magnifique! A display worthy of the Grand Palais."</string>
+    <string name="quote_paris_win_2">"Elegance and absolute power. The gold is yours."</string>
+    <string name="quote_paris_win_3">"A triumph of style and substance! Chapeau!"</string>
+    <string name="quote_paris_lose_1">"A heartbreaking finish on the grandest stage of all."</string>
+    <string name="quote_paris_lose_2">"The opponent takes the piste. You must yield."</string>
+    <string name="quote_paris_lose_3">"A stumble on the strip. The judges shake their heads in dismay."</string>
+
+    <string name="quote_esport_win_1">"Flawless micro. Opponent fully disconnected from the server."</string>
+    <string name="quote_esport_win_2">"GG WP. Your APM is completely off the charts."</string>
+    <string name="quote_esport_win_3">"Calculated. Executed. Dominated. The ultimate high score."</string>
+    <string name="quote_esport_lose_1">"Input lag fatal. You have been permanently deleted."</string>
+    <string name="quote_esport_lose_2">"System critical failure. Opponent out-scaled your defense."</string>
+    <string name="quote_esport_lose_3">"Skill issue. Your defensive algorithm completely crashed."</string>
+
+    <string name="quote_winter_win_1">"Like a single footprint in fresh snow. Clean and perfect."</string>
+    <string name="quote_winter_win_2">"The blizzard passes. Only you and your blade remain."</string>
+    <string name="quote_winter_win_3">"Cold, precise, and utterly inevitable. A masterful strike."</string>
+    <string name="quote_winter_lose_1">"You froze for a single heartbeat. It was more than enough."</string>
+    <string name="quote_winter_lose_2">"A bitter wind. Your blade was too slow to catch the falling flake."</string>
+    <string name="quote_winter_lose_3">"The ice cracks beneath your feet. A cold and silent end."</string>
+
+    <string name="quote_datura_win_1">"Beautiful but deadly. The venom takes its toll."</string>
+    <string name="quote_datura_win_2">"A subtle, silent sting, and the duel quietly ends."</string>
+    <string name="quote_datura_win_3">"The final petal falls. A beautiful and toxic demise."</string>
+    <string name="quote_datura_lose_1">"Intoxicated by the dance, you completely missed the hidden thorn."</string>
+    <string name="quote_datura_lose_2">"The blossom wilts. You were outmaneuvered and outlived."</string>
+    <string name="quote_datura_lose_3">"You succumbed to the sweet, lethal perfume of absolute defeat."</string>
+
+    <string name="quote_mayan_win_1">"The gods smile upon your tribute. A fierce, primal victory."</string>
+    <string name="quote_mayan_win_2">"Like the jaguar, you struck flawlessly from the deep shadows."</string>
+    <string name="quote_mayan_win_3">"The ancestors roar in approval! A true warrior\'s triumph."</string>
+    <string name="quote_mayan_lose_1">"Your blood waters the sacred earth. Absolute defeat."</string>
+    <string name="quote_mayan_lose_2">"The sun sets on your reign. The opponent claims the sacrifice."</string>
+    <string name="quote_mayan_lose_3">"The jungle reclaims the weak. You are no exception to the rule."</string>
+
+    <string name="quote_african_win_1">"Absolute patience in the heat. A sudden, lethal strike."</string>
+    <string name="quote_african_win_2">"The lion does not miss twice. The savanna is yours."</string>
+    <string name="quote_african_win_3">"The apex predator claims its rightful, hard-earned prize."</string>
+    <string name="quote_african_lose_1">"You struck too soon, exhausted yourself, and missed the prey."</string>
+    <string name="quote_african_lose_2">"The unforgiving sun blinded you. The opponent did not hesitate."</string>
+    <string name="quote_african_lose_3">"The heat took your strength, the opponent took whatever was left."</string>
     <string name="btn_review_board">REVIEW GAME</string>
     <string name="btn_return_to_summary">RETURN TO SUMMARY</string>
 

@@ -40,7 +40,7 @@ private:
         uint8_t flag;
     };
 
-    static constexpr int TT_SIZE = 1048576; // ~24 MB RAM
+    static constexpr int TT_SIZE = 1048576;
     static TTEntry transpositionTable[TT_SIZE];
 
     // --- LAZY SMP)---
@@ -58,4 +58,4 @@ private:
     static MoveData searchIDA(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot, bool isP1, int threadID, const int sepLeft);
 };
 
-#endif // RIPOSTE_ENGINE_H
+#endif

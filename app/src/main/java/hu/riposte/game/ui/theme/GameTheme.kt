@@ -8,7 +8,7 @@ data class GameTheme(
     val id: String,
     val displayName: String,
 
-    // --- KÉPEK ÉS GRAFIKÁK ---
+    // --- PICTURE ASSETS ---
     val backgroundRes: Int,
     val boardBackgroundRes: Int,
     val pieceP1Res: Int,
@@ -16,13 +16,13 @@ data class GameTheme(
     val toucheStarRes: Int,
     val previewImageRes: Int,
 
-    // --- HANGOK ÉS ZENE ---
+    // --- MUSIC & SFX ASSETS ---
     val bgMusicRes: Int,
     val moveSoundP1Res: Int,
     val moveSoundP2Res: Int,
     val toucheSoundRes: Int,
 
-    // --- SZÍNEK ---
+    // --- COLORS ---
     val boardCellDark: Color,
     val boardCellLight: Color,
     val auraP1Color: Color,
@@ -31,12 +31,12 @@ data class GameTheme(
     val textColor: Color,
     val uiAccentColor: Color,
 
-    // --- ÚJ: IDÉZETEK ÉS TIPOGRÁFIA ---
+    // --- QUOTES & TYPOGRAPHY ---
     val victoryQuotes: List<Int>,
     val defeatQuotes: List<Int>,
     val fontFamily: FontFamily,
 
-    // --- ANIMÁCIÓS PARAMÉTEREK ---
+    // --- PARAMETERS FOR ANIMATIONS ---
     val touchePulseDuration: Int = 1200,
     val toucheRotationDuration: Int = 12000,
     val toucheScaleMin: Float = 0.8f,

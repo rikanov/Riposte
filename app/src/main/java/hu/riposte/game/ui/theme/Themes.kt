@@ -4,14 +4,42 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import hu.riposte.game.R
 
-private val classicWins = listOf(R.string.quote_classic_win_1, R.string.quote_classic_win_2, R.string.quote_classic_win_3, R.string.quote_classic_win_4)
-private val classicLoses = listOf(R.string.quote_classic_lose_1, R.string.quote_classic_lose_2, R.string.quote_classic_lose_3)
+private val destrezaWins = listOf(R.string.quote_destreza_win_1, R.string.quote_destreza_win_2, R.string.quote_destreza_win_3)
+private val destrezaLoses = listOf(R.string.quote_destreza_lose_1, R.string.quote_destreza_lose_2, R.string.quote_destreza_lose_3)
 
-private val zenWins = listOf(R.string.quote_zen_win_1, R.string.quote_zen_win_2, R.string.quote_zen_win_3)
-private val zenLoses = listOf(R.string.quote_zen_lose_1, R.string.quote_zen_lose_2, R.string.quote_zen_lose_3)
+private val maupinWins = listOf(R.string.quote_maupin_win_1, R.string.quote_maupin_win_2, R.string.quote_maupin_win_3)
+private val maupinLoses = listOf(R.string.quote_maupin_lose_1, R.string.quote_maupin_lose_2, R.string.quote_maupin_lose_3)
 
-private val modernWins = listOf(R.string.quote_modern_win_1, R.string.quote_modern_win_2, R.string.quote_modern_win_3)
-private val modernLoses = listOf(R.string.quote_modern_lose_1, R.string.quote_modern_lose_2, R.string.quote_modern_lose_3)
+private val highwaymanWins = listOf(R.string.quote_highwayman_win_1, R.string.quote_highwayman_win_2, R.string.quote_highwayman_win_3)
+private val highwaymanLoses = listOf(R.string.quote_highwayman_lose_1, R.string.quote_highwayman_lose_2, R.string.quote_highwayman_lose_3)
+
+private val veniceWins = listOf(R.string.quote_venice_win_1, R.string.quote_venice_win_2, R.string.quote_venice_win_3)
+private val veniceLoses = listOf(R.string.quote_venice_lose_1, R.string.quote_venice_lose_2, R.string.quote_venice_lose_3)
+
+private val carbonWins = listOf(R.string.quote_carbon_win_1, R.string.quote_carbon_win_2, R.string.quote_carbon_win_3)
+private val carbonLoses = listOf(R.string.quote_carbon_lose_1, R.string.quote_carbon_lose_2, R.string.quote_carbon_lose_3)
+
+private val innerWins = listOf(R.string.quote_inner_win_1, R.string.quote_inner_win_2, R.string.quote_inner_win_3)
+private val innerLoses = listOf(R.string.quote_inner_lose_1, R.string.quote_inner_lose_2, R.string.quote_inner_lose_3)
+
+private val parisWins = listOf(R.string.quote_paris_win_1, R.string.quote_paris_win_2, R.string.quote_paris_win_3)
+private val parisLoses = listOf(R.string.quote_paris_lose_1, R.string.quote_paris_lose_2, R.string.quote_paris_lose_3)
+
+private val esportWins = listOf(R.string.quote_esport_win_1, R.string.quote_esport_win_2, R.string.quote_esport_win_3)
+private val esportLoses = listOf(R.string.quote_esport_lose_1, R.string.quote_esport_lose_2, R.string.quote_esport_lose_3)
+
+private val winterWins = listOf(R.string.quote_winter_win_1, R.string.quote_winter_win_2, R.string.quote_winter_win_3)
+private val winterLoses = listOf(R.string.quote_winter_lose_1, R.string.quote_winter_lose_2, R.string.quote_winter_lose_3)
+
+private val daturaWins = listOf(R.string.quote_datura_win_1, R.string.quote_datura_win_2, R.string.quote_datura_win_3)
+private val daturaLoses = listOf(R.string.quote_datura_lose_1, R.string.quote_datura_lose_2, R.string.quote_datura_lose_3)
+
+private val mayanWins = listOf(R.string.quote_mayan_win_1, R.string.quote_mayan_win_2, R.string.quote_mayan_win_3)
+private val mayanLoses = listOf(R.string.quote_mayan_lose_1, R.string.quote_mayan_lose_2, R.string.quote_mayan_lose_3)
+
+private val africanWins = listOf(R.string.quote_african_win_1, R.string.quote_african_win_2, R.string.quote_african_win_3)
+private val africanLoses = listOf(R.string.quote_african_lose_1, R.string.quote_african_lose_2, R.string.quote_african_lose_3)
+
 
 object ThemeRegistry {
 
@@ -35,8 +63,8 @@ object ThemeRegistry {
         containerColor = Color(0xFF3E2723),
         textColor = Color(0xFFFFE082),
         uiAccentColor = Color(0xFFD4AF37),
-        victoryQuotes = classicWins,
-        defeatQuotes = classicLoses,
+        victoryQuotes = destrezaWins,
+        defeatQuotes = destrezaLoses,
         fontFamily = FontFamily.Serif
     )
     val LaMaupin = GameTheme(
@@ -59,8 +87,8 @@ object ThemeRegistry {
         containerColor = Color(0xFF2A1318),
         textColor = Color(0xFFFFF0F5),
         uiAccentColor = Color(0xFFFFB6C1),
-        victoryQuotes = classicWins,
-        defeatQuotes = classicLoses,
+        victoryQuotes = maupinWins,
+        defeatQuotes = maupinLoses,
         fontFamily = FontFamily.Serif
     )
     val Highwayman = GameTheme(
@@ -83,8 +111,8 @@ object ThemeRegistry {
         containerColor = Color(0xFF2D241E),
         textColor = Color(0xFFF5F5F5),
         uiAccentColor = Color(0xFFE6A86A),
-        victoryQuotes = classicWins,
-        defeatQuotes = classicLoses,
+        victoryQuotes = highwaymanWins,
+        defeatQuotes = highwaymanLoses,
         fontFamily = FontFamily.Serif
     )
     val VenetianMasquerade = GameTheme(
@@ -107,8 +135,8 @@ object ThemeRegistry {
         containerColor = Color(0xFF310A31),
         textColor = Color(0xFFFFF8E1),
         uiAccentColor = Color(0xFFFFD180),
-        victoryQuotes = classicWins,
-        defeatQuotes = classicLoses,
+        victoryQuotes = veniceWins,
+        defeatQuotes = veniceLoses,
         fontFamily = FontFamily.Serif
     )
     val OlympicCarbon = GameTheme(
@@ -131,8 +159,8 @@ object ThemeRegistry {
         containerColor = Color(0xFFECEFF1),
         textColor = Color(0xFFE0F7FA),
         uiAccentColor = Color(0xFF18FFFF),
-        victoryQuotes = modernWins,
-        defeatQuotes = modernLoses,
+        victoryQuotes = carbonWins,
+        defeatQuotes = carbonLoses,
         fontFamily = FontFamily.Monospace
     )
     val InnerSpirit = GameTheme(
@@ -155,8 +183,8 @@ object ThemeRegistry {
         containerColor = Color(0xFF1A237E),
         textColor = Color(0xFFE0F7FA),
         uiAccentColor = Color(0xFF82B1FF),
-        victoryQuotes = modernWins,
-        defeatQuotes = modernLoses,
+        victoryQuotes = innerWins,
+        defeatQuotes = innerLoses,
         fontFamily = FontFamily.Monospace
     )
     val Vive2024Paris = GameTheme(
@@ -179,8 +207,8 @@ object ThemeRegistry {
         containerColor = Color(0xFF0A122A),
         textColor = Color(0xFFF0F4F8),
         uiAccentColor = Color(0xFFFFD700),
-        victoryQuotes = modernWins,
-        defeatQuotes = modernLoses,
+        victoryQuotes = parisWins,
+        defeatQuotes = parisLoses,
         fontFamily = FontFamily.Monospace
     )
     val eSportVision = GameTheme(
@@ -203,12 +231,11 @@ object ThemeRegistry {
         containerColor = Color(0xFF111114),
         textColor = Color(0xFFF0F4F8),
         uiAccentColor = Color(0xFF00FFAA),
-        victoryQuotes = modernWins,
-        defeatQuotes = modernLoses,
+        victoryQuotes = esportWins,
+        defeatQuotes = esportLoses,
         fontFamily = FontFamily.Monospace
     )
 
-    // --- ZEN TÉMÁK: Cursive lecserélve SansSerif-re a maximális olvashatóságért ---
     val WinterPagoda = GameTheme(
         id = "winter_pagoda",
         displayName = "Winter Pagoda",
@@ -229,9 +256,9 @@ object ThemeRegistry {
         containerColor = Color(0xFFECEFF1),
         textColor = Color(0xFFE1F5FE),
         uiAccentColor = Color(0xFF18FFFF),
-        victoryQuotes = zenWins,
-        defeatQuotes = zenLoses,
-        fontFamily = FontFamily.SansSerif // JAVÍTVA
+        victoryQuotes = winterWins,
+        defeatQuotes = winterLoses,
+        fontFamily = FontFamily.SansSerif
     )
     val DaturaBlossom = GameTheme(
         id = "datura_blossom",
@@ -253,9 +280,9 @@ object ThemeRegistry {
         containerColor = Color(0xFFF3E5F5),
         textColor = Color(0xFFF3E5F5),
         uiAccentColor = Color(0xFFE040FB),
-        victoryQuotes = zenWins,
-        defeatQuotes = zenLoses,
-        fontFamily = FontFamily.SansSerif // JAVÍTVA
+        victoryQuotes = daturaWins,
+        defeatQuotes = daturaLoses,
+        fontFamily = FontFamily.SansSerif
     )
     val MayanFresco = GameTheme(
         id = "mayan_fresco",
@@ -277,9 +304,9 @@ object ThemeRegistry {
         containerColor = Color(0xFFF1F8E9),
         textColor = Color(0xFFE8F5E9),
         uiAccentColor = Color(0xFFFF7043),
-        victoryQuotes = zenWins,
-        defeatQuotes = zenLoses,
-        fontFamily = FontFamily.SansSerif // JAVÍTVA
+        victoryQuotes = mayanWins,
+        defeatQuotes = mayanLoses,
+        fontFamily = FontFamily.SansSerif
     )
     val AfricanSiesta = GameTheme(
         id = "african_siesta",
@@ -301,9 +328,9 @@ object ThemeRegistry {
         containerColor = Color(0xFFF1F8E9),
         textColor = Color(0xFFFFF3E0),
         uiAccentColor = Color(0xFFFF7043),
-        victoryQuotes = zenWins,
-        defeatQuotes = zenLoses,
-        fontFamily = FontFamily.SansSerif // JAVÍTVA
+        victoryQuotes = africanWins,
+        defeatQuotes = africanLoses,
+        fontFamily = FontFamily.SansSerif
     )
     val Tournament = GameTheme(
         id = "tournament",
@@ -325,8 +352,8 @@ object ThemeRegistry {
         containerColor = Color(0xFF0A0C10),
         textColor = Color.White,
         uiAccentColor = Color(0xFFD4AF37),
-        victoryQuotes = classicWins,
-        defeatQuotes = classicLoses,
+        victoryQuotes = emptyList(),
+        defeatQuotes = emptyList(),
         fontFamily = FontFamily.Serif
     )
 

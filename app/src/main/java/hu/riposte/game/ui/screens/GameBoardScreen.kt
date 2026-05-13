@@ -143,8 +143,6 @@ fun RiposteGameBoard(
     var localSavedThemeId by remember(appSettings.themeId) { mutableStateOf(appSettings.themeId) }
     var isGridVisible by remember { mutableStateOf(true) }
     var showHaltePopup by remember { mutableStateOf(false) }
-
-    // --- ÚJ: REVIEW MÓD ÁLLAPOT ---
     var isReviewingGame by remember { mutableStateOf(false) }
 
     LaunchedEffect(gameViewModel.separationStepsLeft) {
@@ -200,8 +198,6 @@ fun RiposteGameBoard(
             CompositionLocalProvider(LocalGameTheme provides currentTheme) {
 
                 Box(modifier = Modifier.fillMaxSize()) {
-
-                    // 1. HÁTTÉR ÉS GIROSZKÓP
                     Image(
                         painter = painterResource(id = currentTheme.backgroundRes),
                         contentDescription = null,
@@ -213,11 +209,9 @@ fun RiposteGameBoard(
                             translationY = (-deviceTilt.y * 6f * density).coerceIn(-maxBgShift, maxBgShift)
                         }
                     )
-
-                    // 1.5 AMBIENT PARTICLE LAYER
                     ParallaxDustVFX(deviceTilt = deviceTilt, accentColor = currentTheme.uiAccentColor)
 
-                    // 2. JÁTÉKTÁBLA
+                    // 2. GAME BOARD
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -249,13 +243,13 @@ fun RiposteGameBoard(
                                     isNightModeEnabled = appSettings.nightModeEnabled,
                                     isHapticEnabled = appSettings.hapticEnabled,
                                     deviceTilt = deviceTilt,
-                                    isReviewMode = isReviewingGame // <-- ÚJ: Átadjuk az állapotot a táblának
+                                    isReviewMode = isReviewingGame
                                 )
                             }
                         }
                     }
 
-                    // --- 3. TOURNAMENT FEJLÉC ---
+                    // --- 3. TOURNAMENT HEADLINE ---
                     if (gameViewModel.isTournamentMode && gameViewModel.tournamentOpponentNameRes != null) {
                         val targetRank = gameViewModel.tournamentTargetRank ?: 20
                         val playerTime = gameViewModel.playerTimeMs
@@ -277,7 +271,6 @@ fun RiposteGameBoard(
                                 .background(Brush.verticalGradient(listOf(Color(0xFF0A0C10).copy(alpha = 0.8f), Color.Transparent), startY = 0f, endY = Float.POSITIVE_INFINITY))
                                 .padding(top = 12.dp, start = 8.dp, end = 8.dp, bottom = 24.dp)
                         ) {
-                            // BAL OLDAL
                             Column(modifier = Modifier.align(Alignment.TopStart).width(110.dp)) {
                                 Text(
                                     text = gameViewModel.tournamentChallengerName,
@@ -297,8 +290,6 @@ fun RiposteGameBoard(
                                     modifier = Modifier.graphicsLayer { alpha = if (isPlayerActive) pulseAlpha else 0.4f }
                                 )
                             }
-
-                            // KÖZÉP
                             Column(modifier = Modifier.align(Alignment.TopCenter), horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(
                                     text = stringResource(id = R.string.tournament_rank_label, targetRank),
@@ -315,8 +306,6 @@ fun RiposteGameBoard(
                                     fontFamily = currentTheme.fontFamily
                                 )
                             }
-
-                            // JOBB OLDAL
                             Column(modifier = Modifier.align(Alignment.TopEnd).width(110.dp), horizontalAlignment = Alignment.End) {
                                 val currentOppName = stringResource(id = gameViewModel.tournamentOpponentNameRes!!).uppercase()
                                 Text(
@@ -368,7 +357,7 @@ fun RiposteGameBoard(
                         }
                     }
 
-                    // --- 4. GAME OVER SÖTÉTÍTŐ RÉTEG ---
+                    // --- 4. GAME OVER DARKENING LAYER  ---
                     AnimatedVisibility(
                         visible = gameViewModel.gamePhase == GameWaitingFor.GAME_OVER && !gameViewModel.isTutorialMode,
                         enter = fadeIn(animationSpec = tween(1500)),
@@ -381,17 +370,17 @@ fun RiposteGameBoard(
                         GameOverOverlay(
                             isWin = isWin,
                             isTimeOut = isTimeOut,
-                            isTournamentMode = gameViewModel.isTournamentMode,
-                            isReviewingGame = isReviewingGame, // <-- ÚJ: Átadjuk az állapotot
+                            isTournamentMode = gameViewModel.tournamentOpponentNameRes != null,
+                            isReviewingGame = isReviewingGame,
                             onStartReview = {
                                 soundManager.playClick()
                                 isReviewingGame = true
-                            }, // <-- ÚJ
+                            },
                             onStopReview = {
                                 soundManager.playClick()
                                 isReviewingGame = false
                                 gameViewModel.endReviewMode()
-                            }, // <-- ÚJ
+                            },
                             onRematch = {
                                 soundManager.playClick()
                                 gameViewModel.restartGame()
@@ -402,24 +391,10 @@ fun RiposteGameBoard(
                             },
                             onContinueTournament = {
                                 soundManager.playClick()
-                                val historyStr = gameViewModel.processTournamentMatchEnd(isWin)
-                                gameViewModel.isInterruptedGame = false
-                                coroutineScope.launch {
-                                    settingsManager.updateSettings(
-                                        appSettings.copy(
-                                            tournamentRank = gameViewModel.tournamentManager.currentRank,
-                                            tournamentHighest = gameViewModel.tournamentManager.highestRank,
-                                            tournamentDefending = gameViewModel.tournamentManager.isDefending,
-                                            tournamentMatchHistory = historyStr,
-                                            hasSavedTournamentMatch = false
-                                        )
-                                    )
-                                }
                                 onBackToMenu()
                             }
                         )
                     }
-
                     // --- 5. BOTTOM DOCK ---
                     Box(
                         modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 24.dp).padding(horizontal = 16.dp)
@@ -486,7 +461,7 @@ fun RiposteGameBoard(
                         }
                     }
 
-                    // --- 6. ELLENFÉL KÁRTYA OVERLAY ---
+                    // --- 6. OPPONENT'S CARD OVERLAY ---
                     if (gameViewModel.isTournamentMode) {
                         val opponent = TournamentRoster.opponents.values.find { it.nameRes == gameViewModel.tournamentOpponentNameRes }
                         OpponentCardOverlay(

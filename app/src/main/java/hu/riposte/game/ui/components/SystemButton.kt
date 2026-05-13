@@ -21,8 +21,7 @@ import androidx.compose.ui.unit.sp
 
 import hu.riposte.game.ui.theme.LocalGameTheme
 
-// RENDSZERSZÍNEK (Fix, a MainScreen hangulatához)
-val SystemAccent = Color(0xFFD4AF37) // Arany / Sárgaréz
+val SystemAccent = Color(0xFFD4AF37)
 val SystemSurface = Color(0xFF4A5570).copy(alpha = 0.2f)
 
 @Composable
