@@ -27,6 +27,7 @@ data class MainMenuItem(
     val isEnabled: Boolean = true,
     val hasSwipeAction: Boolean = false,
     val isPremiumOnly: Boolean = false,
+    val needsAttention: Boolean = false,
     val action: () -> Unit = {}
 )
 

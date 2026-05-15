@@ -74,7 +74,7 @@ fun MainScreen(
 
     val menuItems = listOf(
         MainMenuItem(stringResource(R.string.menu_resume), isEnabled = isInterruptedGame, action = onResumeGame),
-        MainMenuItem(stringResource(R.string.menu_quick_tutorial), action = onNavigateToTutorial),
+        MainMenuItem(stringResource(R.string.menu_quick_tutorial), needsAttention = appSettings?.hasSeenTutorial == false, action = onNavigateToTutorial),
         MainMenuItem(stringResource(R.string.menu_training_ai), hasSwipeAction = true, action = {}),
         MainMenuItem(stringResource(R.string.menu_local_players)) {
             if (hasSavedTourney) {

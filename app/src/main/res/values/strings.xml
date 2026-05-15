@@ -70,13 +70,14 @@
     <string name="btn_accept_challenge">Accept Challenge</string>
     <string name="btn_en_garde">EN GARDE!</string>
 
-    <string name="profile_title">IDENTITY</string>
-    <string name="profile_name_hint">Enter your name</string>
-    <string name="profile_title_hint">Enter your title</string>
-    <string name="stat_current_rank">CURRENT RANK</string>
-    <string name="stat_peak_rank">PEAK</string>
-    <string name="stat_rating">RIPOSTE RATING</string>
-    <string name="stat_global">GLOBAL: UNRANKED</string>
+    <string name="profile_default_name">CHALLENGER</string>
+    <string name="profile_default_title">Novice</string>
+    <string name="profile_call_to_action">Carve your name into history!</string>
+    <string name="stat_tab_current">CURRENT</string>
+    <string name="stat_tab_peak">PEAK</string>
+    <string name="stat_rank">RANK</string>
+    <string name="stat_score">SCORE</string>
+    <string name="stat_streak">STREAK</string>
     <string name="stat_recent_form">RECENT FORM</string>
     <string name="btn_save_profile">SAVE PROFILE</string>
     <string name="premium_tease_text">Unlock Online Hall of Fame</string>

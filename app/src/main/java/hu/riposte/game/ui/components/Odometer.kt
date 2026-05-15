@@ -48,6 +48,7 @@ fun RiposteOdometer(
 private fun DigitDrum(targetDigit: Int, index: Int, color: Color, fontSize: TextUnit) {
     val drumHeight = 42.dp
 
+    // JAVÍTÁS: Kezdőpont ismét 0f!
     var targetValue by remember { mutableFloatStateOf(0f) }
     var isFirstLaunch by remember { mutableStateOf(true) }
 
@@ -71,7 +72,7 @@ private fun DigitDrum(targetDigit: Int, index: Int, color: Color, fontSize: Text
         targetValue = targetValue,
         animationSpec = tween(
             durationMillis = 800,
-            delayMillis = index * 100,
+            delayMillis = index * 80,
             easing = FastOutSlowInEasing
         ),
         label = "DigitScroll"

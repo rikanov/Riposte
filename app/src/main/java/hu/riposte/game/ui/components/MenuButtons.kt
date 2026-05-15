@@ -11,6 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
@@ -73,7 +74,26 @@ fun SlantedMenuButton(
         contentAlignment = Alignment.Center
     ) {
         Box(modifier = Modifier.matchParentSize().background(Brush.horizontalGradient(0.0f to Color.White.copy(alpha = 0.1f), 0.3f to Color.Transparent)))
-
+        if (item.needsAttention && !isHovered) {
+            val shimmerTransition = rememberInfiniteTransition(label = "shimmer")
+            val shimmerTranslate by shimmerTransition.animateFloat(
+                initialValue = -100f,
+                targetValue = 1000f,
+                animationSpec = infiniteRepeatable(tween(2500, delayMillis = 1500, easing = FastOutSlowInEasing), RepeatMode.Restart),
+                label = "shimmerTranslation"
+            )
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(
+                        Brush.linearGradient(
+                            colors = listOf(Color.Transparent, Color.White.copy(alpha = 0.4f), Color.Transparent),
+                            start = Offset(shimmerTranslate, 0f),
+                            end = Offset(shimmerTranslate + 150f, 0f)
+                        )
+                    )
+            )
+        }
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(start = slantAmountDp / 2)

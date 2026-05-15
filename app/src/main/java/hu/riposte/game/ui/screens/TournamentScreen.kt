@@ -124,7 +124,7 @@ fun TournamentScreen(
                 rank = settings.tournamentRank,
                 highest = settings.tournamentHighest,
                 defending = settings.tournamentDefending,
-                historyString = settings.tournamentMatchHistory,
+                historyString = settings.tournamentScoreHistory,
                 highestRatingScore = settings.highestRating
             )
             val scrollToIndex = max(0, manager.currentRank - 4)
@@ -261,6 +261,7 @@ fun TournamentScreen(
                                 isRevealed = isRevealed,
                                 isLocked = isLocked,
                                 accentColor = accentColor,
+                                needsAttention = isUser && playerName == "CHALLENGER" && playerTitle == "Novice",
                                 onInfoClick = {
                                     soundManager.playClick()
                                     if (isUser) showPlayerStats = true else opponentToShow = opponent
@@ -334,10 +335,16 @@ fun TournamentScreen(
 fun TournamentRowItem(
     rank: Int, name: String, title: String,
     isUser: Boolean, isTarget: Boolean, isHighest: Boolean, isDefeated: Boolean, isRevealed: Boolean, isLocked: Boolean,
+    needsAttention: Boolean = false,
     accentColor: Color, onInfoClick: () -> Unit
 ) {
     val alpha = if (isLocked && !isTarget) 0.3f else if (!isRevealed) 0.15f else if (isDefeated) 0.4f else 1f
-
+    val attentionPulse = if (needsAttention) {
+        rememberInfiniteTransition(label = "rowAttention").animateFloat(
+            initialValue = 0.2f, targetValue = 1f,
+            animationSpec = infiniteRepeatable(tween(1000, easing = EaseInOutSine), RepeatMode.Reverse), label = "pulse"
+        ).value
+    } else 0f
     val bgBrush = if (isUser) Brush.horizontalGradient(listOf(accentColor.copy(alpha = 0.3f), Color.Transparent))
     else if (isTarget) Brush.horizontalGradient(listOf(Color(0xFFFF5555).copy(alpha = 0.2f), Color.Transparent))
     else Brush.horizontalGradient(listOf(Color.White.copy(alpha = 0.05f), Color.Transparent))
@@ -350,8 +357,7 @@ fun TournamentRowItem(
                 .background(bgBrush)
                 .border(
                     width = if (isUser) 1.5.dp else 1.dp,
-                    color = if (isUser) accentColor else Color.Transparent,
-                    shape = RoundedCornerShape(8.dp),
+                    color = if (needsAttention) accentColor.copy(alpha = attentionPulse) else if (isUser) accentColor else Color.Transparent,                    shape = RoundedCornerShape(8.dp),
                 )
                 .clickable(enabled = isRevealed) { onInfoClick() }
                 .padding(horizontal = 12.dp, vertical = 4.dp)

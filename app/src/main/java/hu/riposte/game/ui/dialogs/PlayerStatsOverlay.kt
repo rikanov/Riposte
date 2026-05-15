@@ -131,9 +131,16 @@ fun PlayerStatsOverlay(
     val theme = LocalGameTheme.current
     val accentColor = theme.uiAccentColor
 
-    var editName by remember(appSettings.playerName) { mutableStateOf(appSettings.playerName) }
-    var editTitle by remember(appSettings.playerTitle) { mutableStateOf(appSettings.playerTitle) }
-    var isEditing by remember { mutableStateOf(isFirstLaunch) }
+    val defaultName = stringResource(id = R.string.profile_default_name)
+    val defaultTitle = stringResource(id = R.string.profile_default_title)
+
+    var isEditingName by remember { mutableStateOf(false) }
+    var isEditingTitle by remember { mutableStateOf(false) }
+
+    var nameInput by remember(appSettings.playerName) { mutableStateOf(if (appSettings.playerName == defaultName) "" else appSettings.playerName) }
+    var titleInput by remember(appSettings.playerTitle) { mutableStateOf(if (appSettings.playerTitle == defaultTitle) "" else appSettings.playerTitle) }
+
+    var selectedTab by remember { mutableIntStateOf(0) } // 0 = CURRENT, 1 = PEAK
 
     val rawHistory = appSettings.tournamentMatchHistory
     val cleanHistory = rawHistory.filter { it == 'W' || it == 'L' }
@@ -142,9 +149,18 @@ fun PlayerStatsOverlay(
     val wins = cleanHistory.count { it == 'W' }
     val winRate = if (totalMatches > 0) ((wins.toFloat() / totalMatches) * 100).toInt() else 0
 
-    val baseRating = (21 - appSettings.tournamentRank) * 100
-    val dynamicRating = baseRating + (winRate * 2) + totalMatches
-    val displayRatingValue = if (totalMatches == 0) 0 else dynamicRating
+    val baseRating = (25 - appSettings.tournamentRank) * 100 // 25-ös bázisra igazítva, ahogy a ViewModel is
+    val recentScores = appSettings.tournamentScoreHistory.split(",").mapNotNull { it.toIntOrNull() }
+    val displayRatingValue = recentScores.sum()
+
+    val currentStreak = cleanHistory.takeLastWhile { it == 'W' }.length
+    val historicalStreak = cleanHistory.split('L').maxOfOrNull { it.length } ?: 0
+
+    // Végleges statisztikák
+    val currentRank = appSettings.tournamentRank
+    val peakRank = appSettings.tournamentHighest
+    val peakScore = maxOf(displayRatingValue, appSettings.highestRating)
+    val peakStreak = maxOf(appSettings.peakStreak, historicalStreak, currentStreak)
 
     val threats = appSettings.recentThreats.split(",").filter { it.isNotEmpty() }
     var totalHs1 = 0; var totalHs2 = 0
@@ -164,61 +180,161 @@ fun PlayerStatsOverlay(
         playerOffenseRatio <= 0.45f -> "THE TACTICIAN"
         else -> "THE MAESTRO"
     }
-
     val personaColor = when {
         totalThreats == 0 -> Color.Gray
         playerOffenseRatio >= 0.55f -> Color(0xFFFF4444)
         playerOffenseRatio <= 0.45f -> Color(0xFF44AAFF)
         else -> accentColor
     }
-
     val animatedRatio by animateFloatAsState(targetValue = playerOffenseRatio, animationSpec = tween(1500), label = "")
 
-    GlassDialog(onDismissRequest = { if (!isFirstLaunch) onDismiss() }) {
+    GlassDialog(onDismissRequest = { onDismiss() }) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            if (isEditing) {
-                BasicTextField(
-                    value = editName,
-                    onValueChange = { if (it.length <= 16) editName = it },
-                    textStyle = TextStyle(color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Black, textAlign = TextAlign.Center, fontFamily = theme.fontFamily),
-                    cursorBrush = SolidColor(accentColor),
-                    modifier = Modifier.fillMaxWidth().border(1.dp, accentColor.copy(alpha = 0.5f), RoundedCornerShape(8.dp)).padding(8.dp)
+
+            // --- HÍVÓSZÓ ---
+            val isDefaultProfile = appSettings.playerName == defaultName && appSettings.playerTitle == defaultTitle
+
+            if (isDefaultProfile && !isEditingName) {
+                val pulse = rememberInfiniteTransition(label = "").animateFloat(
+                    initialValue = 0.4f, targetValue = 1f,
+                    animationSpec = infiniteRepeatable(tween(1500, easing = EaseInOutSine), RepeatMode.Reverse), label = ""
                 )
-                Spacer(modifier = Modifier.height(6.dp))
-                BasicTextField(
-                    value = editTitle,
-                    onValueChange = { if (it.length <= 20) editTitle = it },
-                    textStyle = TextStyle(color = accentColor, fontSize = 12.sp, fontStyle = FontStyle.Italic, textAlign = TextAlign.Center, fontFamily = theme.fontFamily),
-                    cursorBrush = SolidColor(accentColor),
-                    modifier = Modifier.fillMaxWidth().background(Color.White.copy(alpha = 0.05f), RoundedCornerShape(8.dp)).padding(6.dp)
+                Text(
+                    text = "✒️ ${stringResource(id = R.string.profile_call_to_action)}",
+                    color = accentColor.copy(alpha = pulse.value),
+                    fontSize = 14.sp,
+                    fontStyle = FontStyle.Italic,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = theme.fontFamily,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(0.8f).padding(bottom = 8.dp)
                 )
+            }
+
+            // --- NÉV MEZŐ ---
+            if (isEditingName) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth(0.9f)
+                ) {
+                    BasicTextField(
+                        value = nameInput,
+                        onValueChange = { if (it.length <= 16) nameInput = it },
+                        textStyle = TextStyle(color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Black, textAlign = TextAlign.Center, fontFamily = theme.fontFamily),
+                        cursorBrush = SolidColor(accentColor),
+                        modifier = Modifier.weight(1f).border(1.dp, accentColor.copy(alpha = 0.5f), RoundedCornerShape(8.dp)).padding(8.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Box(modifier = Modifier.size(40.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFF00C853)).clickable {
+                        soundManager.playClick()
+                        isEditingName = false
+                        val finalName = nameInput.ifBlank { defaultName }
+                        onSaveProfile(finalName, appSettings.playerTitle)
+                    }, contentAlignment = Alignment.Center) {
+                        Text("✓", color = Color.Black, fontSize = 20.sp, fontWeight = FontWeight.Black)
+                    }
+                }
             } else {
-                Text(text = editName.uppercase(), color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Black, fontFamily = theme.fontFamily, modifier = Modifier.clickable { soundManager.playClick(); isEditing = true })
-                Text(text = editTitle, color = accentColor, fontSize = 12.sp, fontStyle = FontStyle.Italic, fontFamily = theme.fontFamily, modifier = Modifier.clickable { soundManager.playClick(); isEditing = true })
+                Text(
+                    text = appSettings.playerName.uppercase(),
+                    // JAVÍTÁS: Kiszürkített Placeholder szín, ha alapértelmezett
+                    color = if (appSettings.playerName == defaultName) Color.White.copy(alpha = 0.3f) else Color.White,
+                    fontSize = 20.sp, fontWeight = FontWeight.Black, fontFamily = theme.fontFamily,
+                    modifier = Modifier.clickable { soundManager.playClick(); isEditingName = true }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // --- TITULUS MEZŐ ---
+            if (isEditingTitle) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth(0.9f)
+                ) {
+                    BasicTextField(
+                        value = titleInput,
+                        onValueChange = { if (it.length <= 20) titleInput = it },
+                        textStyle = TextStyle(color = accentColor, fontSize = 12.sp, fontStyle = FontStyle.Italic, textAlign = TextAlign.Center, fontFamily = theme.fontFamily),
+                        cursorBrush = SolidColor(accentColor),
+                        modifier = Modifier.weight(1f).background(Color.White.copy(alpha = 0.05f), RoundedCornerShape(8.dp)).padding(6.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Box(modifier = Modifier.size(32.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFF00C853)).clickable {
+                        soundManager.playClick()
+                        isEditingTitle = false
+                        val finalTitle = titleInput.ifBlank { defaultTitle }
+                        onSaveProfile(appSettings.playerName, finalTitle)
+                    }, contentAlignment = Alignment.Center) {
+                        Text("✓", color = Color.Black, fontSize = 16.sp, fontWeight = FontWeight.Black)
+                    }
+                }
+            } else {
+                Text(
+                    text = appSettings.playerTitle,
+                    // JAVÍTÁS: Kiszürkített Placeholder szín, ha alapértelmezett
+                    color = if (appSettings.playerTitle == defaultTitle) Color.White.copy(alpha = 0.3f) else accentColor,
+                    fontSize = 12.sp, fontStyle = FontStyle.Italic, fontFamily = theme.fontFamily,
+                    modifier = Modifier.clickable { soundManager.playClick(); isEditingTitle = true }
+                )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Row(
+            // --- ODOMÉTER BLOKK (TABOKKAL EGYBEÉPÍTVE) ---
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color.Black.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
-                    .padding(vertical = 16.dp, horizontal = 8.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(top = 10.dp, bottom = 16.dp, start = 8.dp, end = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                StatColumn(label = "CURRENT\nRANK", value = appSettings.tournamentRank, digitCount = 2, accentColor = Color.White.copy(alpha = 0.6f), fontSize = 20.sp)
-                Box(modifier = Modifier.width(1.dp).height(40.dp).background(Color.White.copy(alpha = 0.1f)))
-                StatColumn(label = "RIPOSTE\nRATING", value = displayRatingValue, digitCount = 4, accentColor = accentColor, fontSize = 24.sp)
-                Box(modifier = Modifier.width(1.dp).height(40.dp).background(Color.White.copy(alpha = 0.1f)))
-                StatColumn(label = "PEAK\nRANK", value = appSettings.tournamentHighest, digitCount = 2, accentColor = Color.White.copy(alpha = 0.6f), fontSize = 20.sp)
+                // TABOK A BOXON BELÜL
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.stat_tab_current),
+                        color = if (selectedTab == 0) accentColor else Color.White.copy(alpha = 0.3f),
+                        fontSize = 12.sp, fontWeight = FontWeight.Black, fontFamily = theme.fontFamily,
+                        modifier = Modifier.clickable { soundManager.playClick(); selectedTab = 0 }.padding(horizontal = 16.dp, vertical = 4.dp)
+                    )
+                    Text(text = "|", color = Color.White.copy(alpha = 0.2f), fontSize = 12.sp)
+                    Text(
+                        text = stringResource(id = R.string.stat_tab_peak),
+                        color = if (selectedTab == 1) accentColor else Color.White.copy(alpha = 0.3f),
+                        fontSize = 12.sp, fontWeight = FontWeight.Black, fontFamily = theme.fontFamily,
+                        modifier = Modifier.clickable { soundManager.playClick(); selectedTab = 1 }.padding(horizontal = 16.dp, vertical = 4.dp)
+                    )
+                }
+
+                val rankToDisplay = if (selectedTab == 0) currentRank else peakRank
+                val scoreToDisplay = if (selectedTab == 0) displayRatingValue else peakScore
+                val streakToDisplay = if (selectedTab == 0) currentStreak else peakStreak
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    StatColumn(label = stringResource(id = R.string.stat_rank), value = rankToDisplay, digitCount = 2, accentColor = Color.White.copy(alpha = 0.6f), fontSize = 20.sp)
+                    Box(modifier = Modifier.width(1.dp).height(40.dp).background(Color.White.copy(alpha = 0.1f)))
+                    StatColumn(label = stringResource(id = R.string.stat_score), value = scoreToDisplay, digitCount = 4, accentColor = accentColor, fontSize = 24.sp)
+                    Box(modifier = Modifier.width(1.dp).height(40.dp).background(Color.White.copy(alpha = 0.1f)))
+                    StatColumn(label = stringResource(id = R.string.stat_streak), value = streakToDisplay, digitCount = 2, accentColor = Color.White.copy(alpha = 0.6f), fontSize = 20.sp)
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // --- RECENT FORM ---
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -251,6 +367,7 @@ fun PlayerStatsOverlay(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // --- COMBAT PERSONA ---
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -280,14 +397,11 @@ fun PlayerStatsOverlay(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            if (isEditing) {
-                Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(accentColor).clickable { soundManager.playClick(); isEditing = false; onSaveProfile(editName.ifBlank { "CHALLENGER" }, editTitle.ifBlank { "Unranked" }) }.padding(12.dp), contentAlignment = Alignment.Center) {
-                    Text(stringResource(id = R.string.btn_save_profile), color = Color.Black, fontSize = 14.sp, fontWeight = FontWeight.Black, letterSpacing = 2.sp, fontFamily = theme.fontFamily)
-                }
-            } else {
-                Box(modifier = Modifier.fillMaxWidth(0.6f).clip(RoundedCornerShape(8.dp)).border(1.dp, accentColor, RoundedCornerShape(8.dp)).clickable { soundManager.playClick(); onDismiss() }.padding(vertical = 12.dp), contentAlignment = Alignment.Center) {
-                    Text(stringResource(id = R.string.btn_close), color = accentColor, fontSize = 14.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp, fontFamily = theme.fontFamily)
-                }
+            Box(
+                modifier = Modifier.fillMaxWidth(0.6f).clip(RoundedCornerShape(8.dp)).border(1.dp, accentColor, RoundedCornerShape(8.dp)).clickable { soundManager.playClick(); onDismiss() }.padding(vertical = 12.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(stringResource(id = R.string.btn_close), color = accentColor, fontSize = 14.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp, fontFamily = theme.fontFamily)
             }
         }
     }

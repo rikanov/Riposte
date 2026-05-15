@@ -606,12 +606,12 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 val defensiveLevel = -totalHs2 / tacticalDifference
                 println("⚔️ PLAYER PROFILE: Offensive = $offensiveLevel, Defensive = $defensiveLevel ⚔️")
             } else {
-                println("⚔️ PLAYER PROFILE: Balanced (totalHs1 == totalHs2) ⚔️")
+                println("⚔️ PLAYER PROFILE: Balanced ⚔️")
             }
         }
 
         val rank = tournamentTargetRank ?: 20
-        val baseScore = ((20 - rank) * (20 - rank)).toFloat()
+        val baseScore = ((25 - rank) * (25 - rank)).toFloat()
 
         val finalScore = if (!isWin) {
             (baseScore * 0.3f).toInt()
@@ -646,7 +646,9 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                         tournamentRank = tournamentManager.currentRank,
                         tournamentHighest = tournamentManager.highestRank,
                         tournamentDefending = tournamentManager.isDefending,
-                        tournamentMatchHistory = safeHistory
+                        tournamentMatchHistory = safeHistory,
+                        tournamentScoreHistory = resultMsg,
+                        highestRating = tournamentManager.highestRating
                     )
                 )
             }

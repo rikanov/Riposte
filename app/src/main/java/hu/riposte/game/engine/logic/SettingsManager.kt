@@ -24,9 +24,11 @@ data class AppSettings(
     val tournamentHighest: Int = 20,
     val tournamentDefending: Boolean = false,
     val tournamentMatchHistory: String = "",
+    val tournamentScoreHistory: String = "", // <--- BIZTOSÍTÉK: Itt tároljuk a "120,45,300" stringet
     val lastTipTime: Long = 0L,
     val highestRating: Int = 0,
-    // Tournament Save Slot
+    val peakStreak: Int = 0,
+
     val hasSavedTournamentMatch: Boolean = false,
     val savedTourneyPlayerScore: Int = 0,
     val savedTourneyOppScore: Int = 0,
@@ -69,7 +71,9 @@ class SettingsManager(private val context: Context) {
         val TOURNAMENT_HIGHEST_KEY = intPreferencesKey("tournament_highest")
         val TOURNAMENT_DEFENDING_KEY = booleanPreferencesKey("tournament_defending")
         val TOURNAMENT_HISTORY_KEY = stringPreferencesKey("tournament_history")
+        val TOURNAMENT_SCORE_HISTORY_KEY = stringPreferencesKey("tournament_score_history") // <--- ÚJ KULCS AZ ADATBÁZISNAK
         val HIGHEST_RATING_KEY = intPreferencesKey("highest_rating")
+        val PEAK_STREAK_KEY = intPreferencesKey("peak_streak")
         val LAST_TIP_TIME_KEY = longPreferencesKey("last_tip_time")
 
         val HAS_SAVED_TOURNEY_KEY = booleanPreferencesKey("has_saved_tourney")
@@ -110,7 +114,10 @@ class SettingsManager(private val context: Context) {
             tournamentHighest = preferences[TOURNAMENT_HIGHEST_KEY] ?: 20,
             tournamentDefending = preferences[TOURNAMENT_DEFENDING_KEY] ?: false,
             tournamentMatchHistory = preferences[TOURNAMENT_HISTORY_KEY] ?: "",
+            tournamentScoreHistory = preferences[TOURNAMENT_SCORE_HISTORY_KEY] ?: "", // <--- BEOLVASÁS!
             lastTipTime = preferences[LAST_TIP_TIME_KEY] ?: 0L,
+            highestRating = preferences[HIGHEST_RATING_KEY] ?: 0,
+            peakStreak = preferences[PEAK_STREAK_KEY] ?: 0,
 
             hasSavedTournamentMatch = preferences[HAS_SAVED_TOURNEY_KEY] ?: false,
             savedTourneyPlayerScore = preferences[SAVED_TOURNEY_P_SCORE] ?: 0,
@@ -152,7 +159,10 @@ class SettingsManager(private val context: Context) {
             preferences[TOURNAMENT_HIGHEST_KEY] = settings.tournamentHighest
             preferences[TOURNAMENT_DEFENDING_KEY] = settings.tournamentDefending
             preferences[TOURNAMENT_HISTORY_KEY] = settings.tournamentMatchHistory
+            preferences[TOURNAMENT_SCORE_HISTORY_KEY] = settings.tournamentScoreHistory // <--- MENTÉS!
             preferences[LAST_TIP_TIME_KEY] = settings.lastTipTime
+            preferences[HIGHEST_RATING_KEY] = settings.highestRating
+            preferences[PEAK_STREAK_KEY] = settings.peakStreak
 
             preferences[HAS_SAVED_TOURNEY_KEY] = settings.hasSavedTournamentMatch
             preferences[SAVED_TOURNEY_P_SCORE] = settings.savedTourneyPlayerScore
