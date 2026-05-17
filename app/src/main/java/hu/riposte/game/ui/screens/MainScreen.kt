@@ -50,7 +50,6 @@ fun MainScreen(
 ) {
     val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
-    val configuration = LocalConfiguration.current
     val coroutineScope = rememberCoroutineScope()
 
     val settingsManager = remember { SettingsManager(context) }

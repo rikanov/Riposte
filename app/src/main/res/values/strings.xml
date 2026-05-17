@@ -90,6 +90,29 @@
     <string name="ai_grandmaster">Grandmaster</string>
     <string name="ai_stygian">Stygian</string>
 
+    <string name="tut_how_to_move">HOW TO MOVE</string>
+    <string name="tut_pro_tip">PRO TIP: AIMING</string>
+    <string name="tut_swipe_desc">Swipe any piece to slide it.\nIt will only stop when it hits a wall or another piece.</string>
+    <string name="tut_aim_desc">Hold your finger on the screen and move it slowly to select your target visually before releasing.</string>
+    <string name="tut_tap_pro_tip">- TAP TO SEE PRO TIP -</string>
+    <string name="tut_tap_play">- TAP TO PLAY -</string>
+
+    <string name="tut_completed_title">TUTORIAL COMPLETED</string>
+    <string name="tut_completed_desc">Great job! You now know all the rules.\nYou are ready to test your skills in real matches!</string>
+    <string name="tut_tap_return">- TAP TO RETURN TO MENU -</string>
+
+    <string name="tut_defeat_title">DON\'T GIVE UP!</string>
+    <string name="tut_defeat_desc">In Training mode, there is no shame in making mistakes. Use the bottom dock tools freely:</string>
+    <string name="tut_dock_undo">UNDO</string>
+    <string name="tut_dock_hint">HINT</string>
+    <string name="tut_dock_info">INFO</string>
+    <string name="tut_dock_menu">MENU</string>
+
+    <string name="tut_step_touche">This is the Touché point.\nTry to stop here!</string>
+    <string name="tut_step_capture">Excellent!\nChoose an opponent\'s piece to capture.</string>
+    <string name="tut_step_win_cond">Take one more piece to win!\nBut beware: if the opponent takes two of yours, you lose!</string>
+    <string name="tut_tap_continue">- TAP ANYWHERE TO CONTINUE -</string>
+
     <string name="quote_destreza_win_1">"Flawless geometry. The circle belongs to you."</string>
     <string name="quote_destreza_win_2">"Calculated and executed with absolute truth."</string>
     <string name="quote_destreza_win_3">"The circle is complete. You control the space entirely."</string>

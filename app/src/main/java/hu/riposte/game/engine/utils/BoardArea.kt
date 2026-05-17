@@ -37,6 +37,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
@@ -50,6 +51,7 @@ import hu.riposte.game.engine.logic.MoveLogic
 import hu.riposte.game.engine.logic.GameViewModel
 import hu.riposte.game.ui.components.PieceDesign
 import hu.riposte.game.ui.theme.LocalGameTheme
+import hu.riposte.game.R
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.pow
@@ -105,8 +107,12 @@ fun RiposteBoardArea(
             .aspectRatio(5f / 7f)
             .shadow(24.dp, RoundedCornerShape(16.dp))
             .clip(RoundedCornerShape(16.dp))
-            .border(if (isAiThinking) 2.dp else 1.5.dp, currentBorderColor, RoundedCornerShape(16.dp))
-    ){
+            .border(
+                if (isAiThinking) 2.dp else 1.5.dp,
+                currentBorderColor,
+                RoundedCornerShape(16.dp)
+            )
+    ) {
         // 1. BACKGROUND
         Image(
             painter = painterResource(id = currentTheme.boardBackgroundRes),
@@ -115,7 +121,11 @@ fun RiposteBoardArea(
             modifier = Modifier.fillMaxSize()
         )
 
-        val dimAlpha by animateFloatAsState(targetValue = if (isNightModeEnabled) 0.5f else 0.0f, animationSpec = tween(800), label = "DimAlpha")
+        val dimAlpha by animateFloatAsState(
+            targetValue = if (isNightModeEnabled) 0.5f else 0.0f,
+            animationSpec = tween(800),
+            label = "DimAlpha"
+        )
         Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = dimAlpha)))
 
         Box(
@@ -123,7 +133,10 @@ fun RiposteBoardArea(
                 .fillMaxSize()
                 .background(
                     Brush.linearGradient(
-                        colors = listOf(Color.White.copy(alpha = 0.15f), Color.White.copy(alpha = 0.02f)),
+                        colors = listOf(
+                            Color.White.copy(alpha = 0.15f),
+                            Color.White.copy(alpha = 0.02f)
+                        ),
                         start = Offset(0f, 0f),
                         end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
                     )
@@ -139,24 +152,47 @@ fun RiposteBoardArea(
         val cellHeightDp = with(density) { cellHeight.toDp() }
 
         // 2. GRID
-        val gridAlpha by animateFloatAsState(targetValue = if (isGridVisible) 1f else 0f, animationSpec = tween(500), label = "grid_alpha")
-        Column(modifier = Modifier.fillMaxSize().padding(4.dp).graphicsLayer { alpha = gridAlpha }) {
+        val gridAlpha by animateFloatAsState(
+            targetValue = if (isGridVisible) 1f else 0f,
+            animationSpec = tween(500),
+            label = "grid_alpha"
+        )
+        Column(
+            modifier = Modifier.fillMaxSize().padding(4.dp).graphicsLayer { alpha = gridAlpha }) {
             for (y in 0 until 7) {
                 Row(modifier = Modifier.weight(1f)) {
                     for (x in 0 until 5) {
                         val isDark = (x + y) % 2 == 0
-                        val tileGradient = if (isDark) Brush.linearGradient(listOf(currentTheme.boardCellDark, Color.Transparent))
-                        else Brush.linearGradient(listOf(currentTheme.boardCellLight, currentTheme.boardCellLight.copy(alpha = 0.3f)))
+                        val tileGradient = if (isDark) Brush.linearGradient(
+                            listOf(
+                                currentTheme.boardCellDark,
+                                Color.Transparent
+                            )
+                        )
+                        else Brush.linearGradient(
+                            listOf(
+                                currentTheme.boardCellLight,
+                                currentTheme.boardCellLight.copy(alpha = 0.3f)
+                            )
+                        )
 
-                        Box(modifier = Modifier.weight(1f).fillMaxHeight().padding(3.dp).background(tileGradient, RoundedCornerShape(8.dp)).border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(8.dp)))
+                        Box(
+                            modifier = Modifier.weight(1f).fillMaxHeight().padding(3.dp)
+                                .background(tileGradient, RoundedCornerShape(8.dp)).border(
+                                    1.dp,
+                                    Color.White.copy(alpha = 0.08f),
+                                    RoundedCornerShape(8.dp)
+                                )
+                        )
                     }
                 }
             }
         }
 
-        // 3. VIZUÁLIS SEGÉDLET
+        // 3. VISUAL HELP
         val activeHint = gameViewModel.activeHint
-        val isDragging = (dragSourceIdx != -1 || isFadingOut) && ghostTargetIdx != -1 && ghostTargetIdx != dragSourceIdx
+        val isDragging =
+            (dragSourceIdx != -1 || isFadingOut) && ghostTargetIdx != -1 && ghostTargetIdx != dragSourceIdx
         val showHint = activeHint != null && !isDragging
 
         if ((isVisualAssistEnabled && isDragging) || showHint) {
@@ -165,20 +201,39 @@ fun RiposteBoardArea(
             val sourcePos = Coord.fromIndex(sIdx)
             val targetPos = Coord.fromIndex(tIdx)
 
-            val startOff = Offset(sourcePos.x * cellWidth + cellWidth/2, sourcePos.y * cellHeight + cellHeight/2)
-            val endOff = Offset(targetPos.x * cellWidth + cellWidth/2, targetPos.y * cellHeight + cellHeight/2)
+            val startOff = Offset(
+                sourcePos.x * cellWidth + cellWidth / 2,
+                sourcePos.y * cellHeight + cellHeight / 2
+            )
+            val endOff = Offset(
+                targetPos.x * cellWidth + cellWidth / 2,
+                targetPos.y * cellHeight + cellHeight / 2
+            )
 
-            val pathColor = if (isDragging) { if (gameViewModel.currentPlayerId == 1) currentTheme.auraP1Color else currentTheme.auraP2Color } else Color(0xFF00E5FF)
+            val pathColor = if (isDragging) {
+                if (gameViewModel.currentPlayerId == 1) currentTheme.auraP1Color else currentTheme.auraP2Color
+            } else Color(0xFF00E5FF)
             val currentAlpha = if (isDragging) ghostAlpha else 0.6f
 
             Canvas(modifier = Modifier.fillMaxSize().graphicsLayer { alpha = currentAlpha }) {
-                drawLine(color = pathColor, start = startOff, end = endOff, strokeWidth = 6.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(20f, 15f), 0f))
+                drawLine(
+                    color = pathColor,
+                    start = startOff,
+                    end = endOff,
+                    strokeWidth = 6.dp.toPx(),
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(20f, 15f), 0f)
+                )
             }
 
             Box(
                 modifier = Modifier
                     .size(cellWidthDp, cellHeightDp)
-                    .offset { IntOffset(targetPos.x * cellWidth.roundToInt(), targetPos.y * cellHeight.roundToInt()) }
+                    .offset {
+                        IntOffset(
+                            targetPos.x * cellWidth.roundToInt(),
+                            targetPos.y * cellHeight.roundToInt()
+                        )
+                    }
                     .graphicsLayer { alpha = currentAlpha }
             ) {
                 PieceDesign(
@@ -195,8 +250,28 @@ fun RiposteBoardArea(
         val isHalte = gameViewModel.separationStepsLeft > 0
         val infiniteTransitionTouche = rememberInfiniteTransition(label = "TouchePulseAnim")
 
-        val animGoldScale by infiniteTransitionTouche.animateFloat(initialValue = currentTheme.toucheScaleMin, targetValue = currentTheme.toucheScaleMax, animationSpec = infiniteRepeatable(tween(currentTheme.touchePulseDuration, easing = FastOutSlowInEasing), RepeatMode.Reverse), label = "GoldPulse")
-        val animGoldRotation by infiniteTransitionTouche.animateFloat(initialValue = 360f, targetValue = 0f, animationSpec = infiniteRepeatable(tween(currentTheme.toucheRotationDuration, easing = LinearEasing), RepeatMode.Restart), label = "GoldRotate")
+        val animGoldScale by infiniteTransitionTouche.animateFloat(
+            initialValue = currentTheme.toucheScaleMin,
+            targetValue = currentTheme.toucheScaleMax,
+            animationSpec = infiniteRepeatable(
+                tween(
+                    currentTheme.touchePulseDuration,
+                    easing = FastOutSlowInEasing
+                ), RepeatMode.Reverse
+            ),
+            label = "GoldPulse"
+        )
+        val animGoldRotation by infiniteTransitionTouche.animateFloat(
+            initialValue = 360f,
+            targetValue = 0f,
+            animationSpec = infiniteRepeatable(
+                tween(
+                    currentTheme.toucheRotationDuration,
+                    easing = LinearEasing
+                ), RepeatMode.Restart
+            ),
+            label = "GoldRotate"
+        )
 
         val finalGoldScale = if (isNightModeEnabled || isHalte) 1f else animGoldScale
         val finalGoldRotation = if (isNightModeEnabled || isHalte) 0f else animGoldRotation
@@ -206,7 +281,11 @@ fun RiposteBoardArea(
             val starX = tPos.x * cellWidth
             val starY = tPos.y * cellHeight
 
-            val shimmerIntensity = if (isNightModeEnabled || isHalte) 0f else ((finalGoldScale - 0.8f) * 5f).coerceIn(0f, 1f)
+            val shimmerIntensity =
+                if (isNightModeEnabled || isHalte) 0f else ((finalGoldScale - 0.8f) * 5f).coerceIn(
+                    0f,
+                    1f
+                )
 
             Box(
                 modifier = Modifier
@@ -215,11 +294,18 @@ fun RiposteBoardArea(
                 contentAlignment = Alignment.Center
             ) {
                 Box(
-                    modifier = Modifier.fillMaxSize(1.8f).drawBehind {
+                    modifier = Modifier.fillMaxSize(1.0f).drawBehind {
                         if (!isNightModeEnabled && !isHalte) {
-                            val glowRadius = (size.minDimension / 2f) * (0.8f + 0.4f * shimmerIntensity)
+                            val glowRadius =
+                                (size.minDimension / 2f) * (0.8f + 0.4f * shimmerIntensity)
                             val glowAlpha = 0.2f + 0.5f * shimmerIntensity
-                            val glowBrush = Brush.radialGradient(colors = listOf(currentTheme.auraP1Color.copy(alpha = glowAlpha), currentTheme.auraP1Color.copy(alpha = glowAlpha * 0.4f), Color.Transparent), radius = glowRadius)
+                            val glowBrush = Brush.radialGradient(
+                                colors = listOf(
+                                    currentTheme.auraP1Color.copy(alpha = glowAlpha),
+                                    currentTheme.auraP1Color.copy(alpha = glowAlpha * 0.4f),
+                                    Color.Transparent
+                                ), radius = glowRadius
+                            )
                             drawCircle(brush = glowBrush, radius = glowRadius)
                         }
                     }
@@ -227,7 +313,11 @@ fun RiposteBoardArea(
                 Image(
                     painter = painterResource(id = currentTheme.toucheStarRes),
                     contentDescription = null,
-                    colorFilter = if (isHalte) ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(0f) }) else null,
+                    colorFilter = if (isHalte) ColorFilter.colorMatrix(ColorMatrix().apply {
+                        setToSaturation(
+                            0f
+                        )
+                    }) else null,
                     modifier = Modifier.fillMaxSize(0.85f).graphicsLayer {
                         scaleX = finalGoldScale
                         scaleY = finalGoldScale
@@ -238,7 +328,7 @@ fun RiposteBoardArea(
             }
         }
 
-        // 5. PIECE RENDERING (Élő bábuk)
+        // 5. PIECE RENDERING
         gameViewModel.pieces.filter { it.state != PieceState.CAPTURED }.forEach { piece ->
             key(piece.id) {
                 val isDying = (piece.state == PieceState.BEING_CAPTURED)
@@ -254,18 +344,34 @@ fun RiposteBoardArea(
                     label = "PieceSlide"
                 )
 
-                val captureRotation by animateFloatAsState(targetValue = if (isDying) 720f else 0f, animationSpec = tween(1200, easing = LinearOutSlowInEasing), label = "")
-                val captureScale by animateFloatAsState(targetValue = if (isDying) 0f else 1f, animationSpec = tween(800, easing = FastOutSlowInEasing), label = "")
-                val captureAlpha by animateFloatAsState(targetValue = if (isDying) 0f else 1f, animationSpec = tween(300), label = "")
+                val captureRotation by animateFloatAsState(
+                    targetValue = if (isDying) 720f else 0f,
+                    animationSpec = tween(1200, easing = LinearOutSlowInEasing),
+                    label = ""
+                )
+                val captureScale by animateFloatAsState(
+                    targetValue = if (isDying) 0f else 1f,
+                    animationSpec = tween(800, easing = FastOutSlowInEasing),
+                    label = ""
+                )
+                val captureAlpha by animateFloatAsState(
+                    targetValue = if (isDying) 0f else 1f,
+                    animationSpec = tween(300),
+                    label = ""
+                )
 
-                val shouldPulseForCapture = (gameViewModel.gamePhase == GameWaitingFor.TAKE_PIECE) && (piece.owner != gameViewModel.currentPlayerId) && (piece.state == PieceState.IN_PLAY)
+                val shouldPulseForCapture =
+                    (gameViewModel.gamePhase == GameWaitingFor.TAKE_PIECE) && (piece.owner != gameViewModel.currentPlayerId) && (piece.state == PieceState.IN_PLAY)
                 val isBeingDragged = (dragSourceIdx == piece.pos.toIndex())
 
                 Box(
                     modifier = Modifier
                         .size(cellWidthDp, cellHeightDp)
                         .offset { animOffset }
-                        .graphicsLayer { rotationZ = captureRotation; scaleX = captureScale; scaleY = captureScale; alpha = captureAlpha },
+                        .graphicsLayer {
+                            rotationZ = captureRotation; scaleX = captureScale; scaleY =
+                            captureScale; alpha = captureAlpha
+                        },
                     contentAlignment = Alignment.Center
                 ) {
 
@@ -306,9 +412,8 @@ fun RiposteBoardArea(
             }
         }
 
-// --- 6. INPUT OVERLAY VAGY REVIEW SWIPE ---
+// --- 6. INPUT OVERLAY OR REVIEW SWIPE ---
         if (isReviewMode) {
-            // REVIEW MÓD: Bábuk mozgatása helyett történet lapozás
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -317,16 +422,17 @@ fun RiposteBoardArea(
                         detectHorizontalDragGestures(
                             onDragStart = { dragAccumulator = 0f },
                             onDragEnd = {
-                                // JAVÍTÁS: Élőben (dinamikusan) kérdezzük le az engedélyeket a ViewModeltől!
-                                // A specifikáció szerint: Balra húzás (< 0) = Visszalépés a múltba
                                 if (dragAccumulator < -40f && gameViewModel.canReviewPrevious()) {
                                     gameViewModel.reviewPreviousMove()
-                                    if (isHapticEnabled) haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    if (isHapticEnabled) haptic.performHapticFeedback(
+                                        HapticFeedbackType.TextHandleMove
+                                    )
                                 }
-                                // Jobbra húzás (> 0) = Előrelépés a jövőbe
                                 else if (dragAccumulator > 40f && gameViewModel.canReviewNext()) {
                                     gameViewModel.reviewNextMove()
-                                    if (isHapticEnabled) haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    if (isHapticEnabled) haptic.performHapticFeedback(
+                                        HapticFeedbackType.TextHandleMove
+                                    )
                                 }
                                 dragAccumulator = 0f
                             },
@@ -338,14 +444,12 @@ fun RiposteBoardArea(
                         )
                     }
             ) {
-                // Áttetsző, pulzáló Swipe indikátor a tábla alján
-                val infinitePulse = rememberInfiniteTransition(label="swipePulse")
+                val infinitePulse = rememberInfiniteTransition(label = "swipePulse")
                 val alphaPulse by infinitePulse.animateFloat(
                     initialValue = 0.3f, targetValue = 0.9f,
                     animationSpec = infiniteRepeatable(tween(1000), RepeatMode.Reverse), label = ""
                 )
 
-                // A vizuális nyilakhoz továbbra is lekérdezzük az állapotot, mert a Compose ide mindig visszatér rajzolni
                 val showLeftArrow = gameViewModel.canReviewPrevious()
                 val showRightArrow = gameViewModel.canReviewNext()
                 val leftArrow = if (showLeftArrow) "◀◀" else "  "
@@ -366,7 +470,6 @@ fun RiposteBoardArea(
                 )
             }
         } else {
-            // EREDETI INPUT OVERLAY (A játék normál menetéhez)
             Column(modifier = Modifier.fillMaxSize()) {
                 for (y in 0 until 7) {
                     Row(modifier = Modifier.weight(1f)) {
@@ -394,14 +497,23 @@ fun RiposteBoardArea(
                                                 change.consume()
                                                 dragAccumulator += dragAmount
 
-                                                val angle = atan2(dragAccumulator.y, dragAccumulator.x) * 180 / PI
+                                                val angle = atan2(
+                                                    dragAccumulator.y,
+                                                    dragAccumulator.x
+                                                ) * 180 / PI
                                                 val offset = gameViewModel.getOffsetFromAngle(angle)
                                                 if (offset != null) {
-                                                    val newTarget = MoveLogic.calculateTargetIndex(gameViewModel.board, dragSourceIdx, offset)
+                                                    val newTarget = MoveLogic.calculateTargetIndex(
+                                                        gameViewModel.board,
+                                                        dragSourceIdx,
+                                                        offset
+                                                    )
                                                     if (newTarget != ghostTargetIdx) {
                                                         ghostTargetIdx = newTarget
                                                         if (ghostTargetIdx != -1 && ghostTargetIdx != dragSourceIdx && isHapticEnabled) {
-                                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                                            haptic.performHapticFeedback(
+                                                                HapticFeedbackType.TextHandleMove
+                                                            )
                                                         }
                                                     }
                                                 } else {
@@ -410,18 +522,31 @@ fun RiposteBoardArea(
                                             },
                                             onDragEnd = {
                                                 if (dragSourceIdx == -1) return@detectDragGestures
-                                                val distance = sqrt(dragAccumulator.x.pow(2) + dragAccumulator.y.pow(2))
+                                                val distance = sqrt(
+                                                    dragAccumulator.x.pow(2) + dragAccumulator.y.pow(
+                                                        2
+                                                    )
+                                                )
 
                                                 if (distance >= 60f) {
                                                     val simulatedDrag = dragAccumulator * 10f
-                                                    gameViewModel.handleSwipe(dragSourceIdx, simulatedDrag)
+                                                    gameViewModel.handleSwipe(
+                                                        dragSourceIdx,
+                                                        simulatedDrag
+                                                    )
                                                 }
                                                 isFadingOut = true
-                                                coroutineScope.launch { delay(500); dragSourceIdx = -1; ghostTargetIdx = -1; isFadingOut = false }
+                                                coroutineScope.launch {
+                                                    delay(500); dragSourceIdx = -1; ghostTargetIdx =
+                                                    -1; isFadingOut = false
+                                                }
                                             },
                                             onDragCancel = {
                                                 isFadingOut = true
-                                                coroutineScope.launch { delay(300); dragSourceIdx = -1; ghostTargetIdx = -1; isFadingOut = false }
+                                                coroutineScope.launch {
+                                                    delay(300); dragSourceIdx = -1; ghostTargetIdx =
+                                                    -1; isFadingOut = false
+                                                }
                                             }
                                         )
                                     }
@@ -441,14 +566,21 @@ fun RiposteBoardArea(
         }
 
         // 7. TUTORIAL OVERLAY
-        val showTutorialOverlay = gameViewModel.isTutorialMode && (gameViewModel.tutorialPhase == TutorialPhase.SHOW_TOUCHE || gameViewModel.tutorialPhase == TutorialPhase.SHOW_CAPTURE || gameViewModel.tutorialPhase == TutorialPhase.SHOW_WIN_COND)
+        val showTutorialOverlay =
+            gameViewModel.isTutorialMode && (gameViewModel.tutorialPhase == TutorialPhase.SHOW_TOUCHE || gameViewModel.tutorialPhase == TutorialPhase.SHOW_CAPTURE || gameViewModel.tutorialPhase == TutorialPhase.SHOW_WIN_COND)
 
-        AnimatedVisibility(visible = showTutorialOverlay, enter = fadeIn(animationSpec = tween(500)), exit = fadeOut(animationSpec = tween(300))) {
-            val highlightIdx = if (gameViewModel.tutorialPhase == TutorialPhase.SHOW_TOUCHE) gameViewModel.board.indexOf(4) else -1
-            val tutText = when(gameViewModel.tutorialPhase) {
-                TutorialPhase.SHOW_TOUCHE -> "This is the Touché point.\nTry to stop here!"
-                TutorialPhase.SHOW_CAPTURE -> "Excellent!\nChoose an opponent's piece to capture."
-                TutorialPhase.SHOW_WIN_COND -> "Take one more piece to win!\nBut beware: if the opponent takes two of yours, you lose!"
+        AnimatedVisibility(
+            visible = showTutorialOverlay,
+            enter = fadeIn(animationSpec = tween(500)),
+            exit = fadeOut(animationSpec = tween(300))
+        ) {
+            val highlightIdx =
+                if (gameViewModel.tutorialPhase == TutorialPhase.SHOW_TOUCHE) gameViewModel.board.indexOf(4) else -1
+
+            val tutText = when (gameViewModel.tutorialPhase) {
+                TutorialPhase.SHOW_TOUCHE -> stringResource(R.string.tut_step_touche)
+                TutorialPhase.SHOW_CAPTURE -> stringResource(R.string.tut_step_capture)
+                TutorialPhase.SHOW_WIN_COND -> stringResource(R.string.tut_step_win_cond)
                 else -> ""
             }
 
@@ -457,7 +589,9 @@ fun RiposteBoardArea(
                     detectTapGestures {
                         when (gameViewModel.tutorialPhase) {
                             TutorialPhase.SHOW_TOUCHE, TutorialPhase.SHOW_CAPTURE -> gameViewModel.tutorialPhase = TutorialPhase.WAIT_FOR_TOUCH
-                            TutorialPhase.SHOW_WIN_COND -> { gameViewModel.tutorialPhase = TutorialPhase.FINISHED; gameViewModel.resumeTutorialTurn() }
+                            TutorialPhase.SHOW_WIN_COND -> {
+                                gameViewModel.tutorialPhase = TutorialPhase.FINISHED; gameViewModel.resumeTutorialTurn()
+                            }
                             else -> {}
                         }
                     }
@@ -475,17 +609,46 @@ fun RiposteBoardArea(
                             op(rectPath, circlePath, PathOperation.Difference)
                         } else { addPath(rectPath) }
                     }
-                    drawPath(overlayPath, color = Color.Black.copy(alpha = 0.75f))
+                    drawPath(overlayPath, color = Color.Black.copy(alpha = 0.5f))
                 }
 
                 Column(
-                    modifier = Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = 40.dp, start = 24.dp, end = 24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Top
                 ) {
-                    Text(text = tutText, color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Black, textAlign = TextAlign.Center, modifier = Modifier.background(currentTheme.containerColor.copy(alpha=0.9f), RoundedCornerShape(12.dp)).border(1.dp, currentTheme.uiAccentColor, RoundedCornerShape(12.dp)).padding(16.dp))
+                    Text(
+                        text = tutText,
+                        color = currentTheme.uiAccentColor,
+                        fontFamily = currentTheme.fontFamily,
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Black,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .background(
+                                currentTheme.containerColor.copy(alpha = 0.95f),
+                                RoundedCornerShape(12.dp)
+                            )
+                            .border(1.dp, currentTheme.uiAccentColor.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+                            .padding(16.dp)
+                    )
                     Spacer(modifier = Modifier.height(32.dp))
-                    val infinitePulse = rememberInfiniteTransition(label="TutPulse")
-                    val alphaPulse by infinitePulse.animateFloat(initialValue = 0.3f, targetValue = 1f, animationSpec = infiniteRepeatable(tween(800), RepeatMode.Reverse), label="")
-                    Text(text = "- TAP ANYWHERE TO CONTINUE -", color = currentTheme.uiAccentColor.copy(alpha = alphaPulse), fontWeight = FontWeight.Bold, fontSize = 12.sp, letterSpacing = 1.sp)
+                    val infinitePulse = rememberInfiniteTransition(label = "TutPulse")
+                    val alphaPulse by infinitePulse.animateFloat(
+                        initialValue = 0.3f, targetValue = 1f,
+                        animationSpec = infiniteRepeatable(tween(800), RepeatMode.Reverse), label = ""
+                    )
+
+                    Text(
+                        text = stringResource(R.string.tut_tap_continue),
+                        color = currentTheme.uiAccentColor.copy(alpha = alphaPulse),
+                        fontFamily = currentTheme.fontFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp,
+                        letterSpacing = 1.sp
+                    )
                 }
             }
         }

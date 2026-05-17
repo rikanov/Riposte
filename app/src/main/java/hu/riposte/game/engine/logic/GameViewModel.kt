@@ -83,12 +83,16 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     fun triggerSound(type: SoundType, playerId: Int) {
         soundEvent = SoundEvent(type, playerId)
     }
-
+    fun clearSoundEvent() {
+        soundEvent = null
+    }
     private fun resetBoard() {
         matchThreatLog.clear()
         board.clear()
         pieces.clear()
         isMatchProcessed = false
+        winner = null
+        soundEvent = null
         repeat(35) { board.add(0) }
 
         for (i in 0..4) {
@@ -164,10 +168,14 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         isTutorialMode = true
         tutorialPhase = TutorialPhase.FREE_PLAY
         tutorialMoveCount = 0
+        winner = null
+        soundEvent = null
         settings = GameSettings(
             gameMode = GameMode.VS_AI,
             startingPlayer = StartingPlayer.PLAYER,
-            difficulty = 4,
+            difficulty = 3,
+            offensiveWeight = 10,
+            defensiveWeight = 10,
             riposteAllowed = true
         )
         restartGame()

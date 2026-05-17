@@ -1,37 +1,18 @@
 package hu.riposte.game.ui.dialogs
 
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.keyframes
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.TouchApp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,22 +22,24 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import hu.riposte.game.R
 import hu.riposte.game.engine.logic.SoundManager
 import hu.riposte.game.ui.theme.LocalGameTheme
 
 @Composable
-fun TutorialWelcomeDialog(
+fun TutorialWelcomeOverlay(
     soundManager: SoundManager,
     onDismiss: () -> Unit
 ) {
-    val accentColor = LocalGameTheme.current.uiAccentColor
+    val theme = LocalGameTheme.current
+    val accentColor = theme.uiAccentColor
 
     var currentPhase by remember { mutableIntStateOf(1) }
-
     val infiniteTransition = rememberInfiniteTransition(label = "TutAnim")
 
     val swipeX1 by infiniteTransition.animateFloat(
@@ -80,37 +63,50 @@ fun TutorialWelcomeDialog(
         ), label = "ts2"
     )
 
-    GlassDialog(onDismissRequest = { }) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable {
-                    soundManager.playClick()
-                    if (currentPhase == 1) {
-                        currentPhase = 2
-                    } else {
-                        onDismiss()
-                    }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color.Black.copy(alpha = 0.85f))
+            .clickable {
+                soundManager.playClick()
+                if (currentPhase == 1) {
+                    currentPhase = 2
+                } else {
+                    onDismiss()
                 }
-                .padding(vertical = 16.dp),
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = if (currentPhase == 1) "HOW TO MOVE" else "PRO TIP: AIMING",
-                color = accentColor, fontWeight = FontWeight.Black, letterSpacing = 2.sp, fontSize = 20.sp
+                text = if (currentPhase == 1) stringResource(R.string.tut_how_to_move) else stringResource(R.string.tut_pro_tip),
+                color = accentColor,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 2.sp,
+                fontSize = 20.sp,
+                fontFamily = theme.fontFamily
             )
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            Box(modifier = Modifier.size(120.dp).clip(RoundedCornerShape(16.dp)).background(Color.Black.copy(alpha = 0.4f)), contentAlignment = Alignment.Center) {
-
-                // Aktuális fázis animációinak kiválasztása
+            Box(
+                modifier = Modifier
+                    .size(120.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(accentColor.copy(alpha = 0.08f))
+                    .border(1.dp, accentColor.copy(alpha = 0.3f), RoundedCornerShape(16.dp)),
+                contentAlignment = Alignment.Center
+            ) {
                 val currentSwipeX = if (currentPhase == 1) swipeX1 else swipeX2
                 val currentTouchScale = if (currentPhase == 1) touchScale1 else touchScale2
                 val currentTouchAlpha = if (currentTouchScale <= 1.0f) 1f else 0f
 
                 if (currentPhase == 1) {
                     Box(modifier = Modifier.width(100.dp).height(40.dp).background(
-                        Brush.horizontalGradient(colors = listOf(Color.Transparent, accentColor.copy(alpha = 0.3f), accentColor.copy(alpha = 0.8f))),
+                        Brush.horizontalGradient(colors = listOf(Color.Transparent, accentColor.copy(alpha = 0.2f), accentColor.copy(alpha = 0.6f))),
                         shape = RoundedCornerShape(20.dp)
                     ).graphicsLayer { alpha = currentTouchAlpha * 0.8f }
                     )
@@ -119,12 +115,13 @@ fun TutorialWelcomeDialog(
                         Canvas(modifier = Modifier.fillMaxSize()) {
                             drawLine(color = accentColor, start = Offset(0f, size.height/2), end = Offset(size.width, size.height/2), strokeWidth = 4.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(15f, 10f), 0f))
                         }
-                        Image(painter = painterResource(id = LocalGameTheme.current.pieceP1Res), contentDescription = null, modifier = Modifier.size(40.dp).offset(x = 40.dp).graphicsLayer { alpha = 0.4f })
+                        Image(painter = painterResource(id = theme.pieceP2Res), contentDescription = null, modifier = Modifier.size(40.dp).offset(x = 40.dp).graphicsLayer { alpha = 0.3f })
                     }
                 }
                 val pieceOffset = if (currentTouchScale <= 0.9f) currentSwipeX.coerceAtLeast(-40f) else -40f
+
                 Image(
-                    painter = painterResource(id = LocalGameTheme.current.pieceP1Res), contentDescription = "Tutorial Piece",
+                    painter = painterResource(id = theme.pieceP2Res), contentDescription = "Tutorial Piece",
                     modifier = Modifier.size(40.dp).offset(x = pieceOffset.dp)
                 )
                 Icon(
@@ -133,67 +130,173 @@ fun TutorialWelcomeDialog(
                 )
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
+
             Text(
-                text = if (currentPhase == 1) "Swipe any piece to slide it.\nIt will only stop when it hits a wall or another piece."
-                else "Hold your finger on the screen and move it slowly to select your target visually before releasing.",
-                color = DialogContentColor, textAlign = TextAlign.Center, fontSize = 15.sp, modifier = Modifier.padding(horizontal = 8.dp)
+                text = if (currentPhase == 1) stringResource(R.string.tut_swipe_desc) else stringResource(R.string.tut_aim_desc),
+                color = accentColor.copy(alpha = 0.85f),
+                fontFamily = theme.fontFamily,
+                textAlign = TextAlign.Center,
+                fontSize = 15.sp,
+                modifier = Modifier.padding(horizontal = 24.dp)
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
-            val infinitePulse = rememberInfiniteTransition()
+            Spacer(modifier = Modifier.height(24.dp))
+            val infinitePulse = rememberInfiniteTransition(label = "pulse")
             val textAlpha by infinitePulse.animateFloat(initialValue = 0.3f, targetValue = 1f, animationSpec = infiniteRepeatable(tween(800), RepeatMode.Reverse), label = "")
 
             Text(
-                text = if (currentPhase == 1) "- TAP TO SEE PRO TIP -" else "- TAP TO PLAY -",
-                color = accentColor.copy(alpha = textAlpha), fontWeight = FontWeight.Bold, fontSize = 12.sp, letterSpacing = 1.sp
+                text = if (currentPhase == 1) stringResource(R.string.tut_tap_pro_tip) else stringResource(R.string.tut_tap_play),
+                color = accentColor.copy(alpha = textAlpha),
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.sp,
+                letterSpacing = 1.sp,
+                fontFamily = theme.fontFamily
             )
         }
     }
 }
+
 @Composable
-fun TutorialCompleteDialog(
+fun TutorialCompleteOverlay(
     soundManager: SoundManager,
     onBackToMenu: () -> Unit
 ) {
-    val accentColor = LocalGameTheme.current.uiAccentColor
+    val theme = LocalGameTheme.current
+    val accentColor = theme.uiAccentColor
 
-    val infinitePulse = rememberInfiniteTransition()
+    val infinitePulse = rememberInfiniteTransition(label = "pulse")
     val textAlpha by infinitePulse.animateFloat(
-        initialValue = 0.3f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(800), RepeatMode.Reverse),
-        label = "PulseAnim"
+        initialValue = 0.3f, targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(800), RepeatMode.Reverse), label = "PulseAnim"
     )
 
-    GlassDialog(onDismissRequest = { /* Csak a belső felületre kattintva zárható be */ }) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color.Black.copy(alpha = 0.85f))
+            .clickable {
+                soundManager.playClick()
+                onBackToMenu()
+            },
+        contentAlignment = Alignment.Center
+    ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable {
-                    soundManager.playClick()
-                    onBackToMenu()
-                }
-                .padding(vertical = 16.dp, horizontal = 8.dp)
+            modifier = Modifier.padding(16.dp)
         ) {
-            Text("TUTORIAL COMPLETED", color = accentColor, fontWeight = FontWeight.Black, fontSize = 18.sp, letterSpacing = 1.sp)
+            Text(
+                text = stringResource(R.string.tut_completed_title),
+                color = accentColor,
+                fontWeight = FontWeight.Black,
+                fontSize = 18.sp,
+                letterSpacing = 1.sp,
+                fontFamily = theme.fontFamily
+            )
+            Spacer(Modifier.height(16.dp))
+            Text(
+                text = stringResource(R.string.tut_completed_desc),
+                color = accentColor.copy(alpha = 0.85f),
+                textAlign = TextAlign.Center,
+                fontSize = 14.sp,
+                fontFamily = theme.fontFamily
+            )
+            Spacer(Modifier.height(32.dp))
+            Text(
+                text = stringResource(R.string.tut_tap_return),
+                color = accentColor.copy(alpha = textAlpha),
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.sp,
+                letterSpacing = 1.sp,
+                fontFamily = theme.fontFamily
+            )
+        }
+    }
+}
+
+@Composable
+fun TutorialDefeatOverlay(
+    soundManager: SoundManager,
+    onDismiss: () -> Unit
+) {
+    val theme = LocalGameTheme.current
+    val accentColor = theme.uiAccentColor
+
+    val infinitePulse = rememberInfiniteTransition(label = "pulse")
+    val textAlpha by infinitePulse.animateFloat(
+        initialValue = 0.3f, targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(800), RepeatMode.Reverse), label = "PulseAnim"
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color.Black.copy(alpha = 0.85f))
+            .clickable {
+                soundManager.playClick()
+                onDismiss()
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.tut_defeat_title),
+                color = accentColor,
+                fontWeight = FontWeight.Black,
+                fontSize = 20.sp,
+                letterSpacing = 2.sp,
+                fontFamily = theme.fontFamily
+            )
             Spacer(Modifier.height(16.dp))
 
             Text(
-                "Great job! You now know all the rules.\nYou are ready to test your skills in the real matches!",
-                color = Color.White, textAlign = TextAlign.Center, fontSize = 14.sp
+                text = stringResource(R.string.tut_defeat_desc),
+                color = Color.White.copy(alpha = 0.9f),
+                textAlign = TextAlign.Center,
+                fontSize = 14.sp,
+                fontFamily = theme.fontFamily
             )
+            Spacer(Modifier.height(24.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                DockToolExplanation(iconRes = R.drawable.ic_dock_undo, label = stringResource(R.string.tut_dock_undo), color = accentColor)
+                DockToolExplanation(iconRes = R.drawable.ic_dock_hint, label = stringResource(R.string.tut_dock_hint), color = accentColor)
+                DockToolExplanation(iconRes = R.drawable.ic_dock_info, label = stringResource(R.string.tut_dock_info), color = accentColor)
+                DockToolExplanation(iconRes = R.drawable.ic_dock_menu, label = stringResource(R.string.tut_dock_menu), color = accentColor)
+            }
 
             Spacer(Modifier.height(32.dp))
 
             Text(
-                text = "- TAP TO RETURN TO MENU -",
+                text = stringResource(R.string.tut_tap_continue),
                 color = accentColor.copy(alpha = textAlpha),
                 fontWeight = FontWeight.Bold,
                 fontSize = 12.sp,
-                letterSpacing = 1.sp
+                letterSpacing = 1.sp,
+                fontFamily = theme.fontFamily
             )
         }
+    }
+}
+
+@Composable
+private fun DockToolExplanation(iconRes: Int, label: String, color: Color) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Icon(
+            painter = painterResource(id = iconRes),
+            contentDescription = label,
+            tint = color,
+            modifier = Modifier.size(32.dp)
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(text = label, color = Color.White.copy(alpha = 0.7f), fontSize = 10.sp, fontWeight = FontWeight.Bold)
     }
 }

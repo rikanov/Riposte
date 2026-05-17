@@ -5,12 +5,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Text
-import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -20,7 +15,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -31,6 +25,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
 import hu.riposte.game.ui.theme.LocalGameTheme
 import hu.riposte.game.R
 import hu.riposte.game.engine.data.GameWaitingFor
@@ -44,11 +40,11 @@ import hu.riposte.game.engine.utils.RiposteBoardArea
 import hu.riposte.game.engine.utils.rememberDeviceTilt
 import hu.riposte.game.ui.theme.ThemeRegistry
 import hu.riposte.game.ui.dialogs.OpponentCardOverlay
-import hu.riposte.game.ui.components.RiposteDialogButton
 import hu.riposte.game.ui.components.RiposteBottomDock
 import hu.riposte.game.ui.dialogs.ThemeSelectorDialog
-import hu.riposte.game.ui.dialogs.TutorialCompleteDialog
-import hu.riposte.game.ui.dialogs.TutorialWelcomeDialog
+import hu.riposte.game.ui.dialogs.TutorialCompleteOverlay
+import hu.riposte.game.ui.dialogs.TutorialDefeatOverlay
+import hu.riposte.game.ui.dialogs.TutorialWelcomeOverlay
 import hu.riposte.game.ui.dialogs.GameOverOverlay
 import hu.riposte.game.ui.dialogs.InfoSheetsDialog
 import kotlinx.coroutines.delay
@@ -111,7 +107,7 @@ fun formatTime(ms: Long): String {
     val totalSeconds = max(0, ms / 1000)
     val m = totalSeconds / 60
     val s = totalSeconds % 60
-    return java.lang.String.format("%02d:%02d", m, s)
+    return java.lang.String.format(java.util.Locale.US,"%02d:%02d", m, s)
 }
 
 @Composable
@@ -120,7 +116,6 @@ fun RiposteGameBoard(
     soundManager: SoundManager,
     onBackToMenu: () -> Unit
 ) {
-    val configuration = LocalConfiguration.current
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
     val coroutineScope = rememberCoroutineScope()
@@ -182,6 +177,7 @@ fun RiposteGameBoard(
                 SoundType.WIN -> if (appSettings.sfxEnabled) soundManager.playWin()
                 SoundType.LOSE -> if (appSettings.sfxEnabled) soundManager.playLose()
             }
+            gameViewModel.clearSoundEvent() // <--- ITT
         }
     }
 
@@ -211,7 +207,7 @@ fun RiposteGameBoard(
                     )
                     ParallaxDustVFX(deviceTilt = deviceTilt, accentColor = currentTheme.uiAccentColor)
 
-                    // 2. GAME BOARD
+                    // 2. GAME BOARD AND OVERLAYS
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -245,6 +241,45 @@ fun RiposteGameBoard(
                                     deviceTilt = deviceTilt,
                                     isReviewMode = isReviewingGame
                                 )
+
+                                // --- TUTORIAL OVERLAYS ---
+                                if (gameViewModel.gamePhase == GameWaitingFor.TUTORIAL_WELCOME) {
+                                    TutorialWelcomeOverlay(
+                                        soundManager = soundManager,
+                                        onDismiss = {
+                                            soundManager.playClick()
+                                            coroutineScope.launch { settingsManager.updateSettings(appSettings.copy(hasSeenTutorial = true)) }
+                                            gameViewModel.startTutorial()
+                                        }
+                                    )
+                                }
+
+                                val isWin = gameViewModel.winner?.contains("You", ignoreCase = true) == true || gameViewModel.winner?.contains("Player", ignoreCase = true) == true
+                                val isTutorialGameOver = gameViewModel.gamePhase == GameWaitingFor.GAME_OVER && gameViewModel.isTutorialMode
+
+                                if (showTutorialComplete || (isTutorialGameOver && isWin)) {
+                                    TutorialCompleteOverlay(
+                                        soundManager = soundManager,
+                                        onBackToMenu = {
+                                            soundManager.playClick()
+                                            showTutorialComplete = false
+                                            gameViewModel.isTutorialMode = false
+                                            gameViewModel.tutorialPhase = TutorialPhase.NOT_ACTIVE
+                                            onBackToMenu()
+                                        }
+                                    )
+                                }
+
+                                if (isTutorialGameOver && !isWin) {
+                                    TutorialDefeatOverlay(
+                                        soundManager = soundManager,
+                                        onDismiss = {
+                                            soundManager.playClick()
+                                            gameViewModel.gamePhase = GameWaitingFor.MOVE_PIECE
+                                            gameViewModel.undo()
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
@@ -395,6 +430,7 @@ fun RiposteGameBoard(
                             }
                         )
                     }
+
                     // --- 5. BOTTOM DOCK ---
                     Box(
                         modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 24.dp).padding(horizontal = 16.dp)
@@ -481,42 +517,6 @@ fun RiposteGameBoard(
         // 2. PERSISTENT DIALOGS LAYER
         CompositionLocalProvider(LocalGameTheme provides activeTheme) {
 
-            if (gameViewModel.gamePhase == GameWaitingFor.TUTORIAL_WELCOME) {
-                TutorialWelcomeDialog(
-                    soundManager = soundManager,
-                    onDismiss = {
-                        soundManager.playClick()
-                        coroutineScope.launch { settingsManager.updateSettings(appSettings.copy(hasSeenTutorial = true)) }
-                        gameViewModel.startTutorial()
-                    }
-                )
-            }
-            if (showTutorialComplete) {
-                TutorialCompleteDialog(
-                    soundManager = soundManager,
-                    onBackToMenu = {
-                        showTutorialComplete = false
-                        gameViewModel.isTutorialMode = false
-                        gameViewModel.tutorialPhase = TutorialPhase.NOT_ACTIVE
-                        onBackToMenu()
-                    }
-                )
-            }
-
-            if (gameViewModel.gamePhase == GameWaitingFor.GAME_OVER && gameViewModel.isTutorialMode) {
-                val isWin = gameViewModel.winner?.contains("You", ignoreCase = true) == true || gameViewModel.winner?.contains("Player", ignoreCase = true) == true
-                if (isWin) {
-                    TutorialCompleteDialog(
-                        soundManager = soundManager,
-                        onBackToMenu = {
-                            gameViewModel.isTutorialMode = false
-                            gameViewModel.tutorialPhase = TutorialPhase.NOT_ACTIVE
-                            onBackToMenu()
-                        }
-                    )
-                }
-            }
-
             if (showThemeDialog) {
                 ThemeSelectorDialog(
                     currentThemeId = localSavedThemeId,
@@ -536,6 +536,7 @@ fun RiposteGameBoard(
                     soundManager = soundManager
                 )
             }
+
             if (showInfoSheetsDialog) {
                 InfoSheetsDialog(
                     appSettings = appSettings,
@@ -549,7 +550,6 @@ fun RiposteGameBoard(
                     }
                 )
             }
-
         }
     }
 }
