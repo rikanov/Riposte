@@ -20,21 +20,20 @@ The Slide: Once a piece moves, it must slide continuously until it hits an obsta
 
 #### 🤺 Capturing & Shifting Focus 
 
-When a player’s piece lands exactly on the Touché Point, the opponent's piece on that square is captured and removed from the board.
+When a player’s piece lands exactly on the **Touché Point** (marked with a ★), they score a hit. Instead of capturing a piece specifically on that square, the successful player is granted the right to **choose and remove any one of the opponent's pieces** currently on the board.
 
 However, the combat doesn't end there:
 
-The player who made the capture must immediately relocate the Touché Point to the square where their captured piece originally stood.
-
-A player wins the bout by capturing two of the opponent's pieces.
+*   **Relocation:** The player who made the capture must immediately relocate the Touché Point to the square where the captured piece was standing.
+*   **The Bout:** A player wins the match by scoring two successful captures.
+*   **Time Pressure:** In Tournament Mode, players compete against a Chess Clock (starting at 3 minutes). Scoring a Touché rewards the player with a **+60 second time bonus**, rewarding aggressive yet precise play.
 
 **Fencing Analogy:** This represents a successful Touché. The moment you strike, the "line of engagement" shifts instantly. Both fencers must immediately adjust their footwork and distance to adapt to the new reality of the piste.
 
 #### 📜 Rules & Variations 
 
-The Riposte (Classic Rule): If Player A captures Player B's piece, Player B is granted an immediate, single-turn opportunity to counter-attack.
-
-Clean Cut (Tournament Rule): A strict variant where the "Riposte" is disabled. Once a piece is captured, it is removed without an immediate chance for a counter-strike.
+*   **The Riposte (Classic Rule):** If Player A captures Player B's piece, Player B is granted an immediate, single-turn opportunity to counter-attack by moving onto the new Touché Point.
+*   **Clean Cut (Tournament Rule):** A strict variant where the "Riposte" is restricted. After a capture, the opponent is forbidden from landing on the new Touché Point during their very next turn, simulating the disorientation after being struck.
 
 **Fencing Analogy:** In real fencing, a Parry-Riposte is a defensive action followed by an immediate offensive strike. The game’s logic perfectly mirrors this fierce struggle for the "right of way."
 
@@ -52,12 +51,9 @@ Original Core: The game concept, ruleset, and the high-performance C++ Game Engi
 
 AI Co-pilot: Google Gemini (including 3.1 Pro and Ultra models) serves as a high-level project collaborator. Its role includes:
 
-**Refactoring and optimizing** complex Kotlin UI components.
-
-**Assisting in the implementation** of the "Hall of Legends" personality-based heuristics.
-
-**Generating edge-case test scenarios** and performing deep code audits for memory safety.
-
+* **Refactoring and architectural migration:** Successfully driving the complex transition from a pure Android architecture to a full **Kotlin Multiplatform (KMP)** structure. This included abstracting the platform-specific C++ JNI engine via `expect/actual` interfaces, migrating the Jetpack Compose UI to Compose Multiplatform, and sharing core logic across both Android and Desktop (JVM) targets.
+* **Assisting in the implementation** of the "Hall of Legends" personality-based heuristics.
+* **Generating edge-case test scenarios** and performing deep code audits for memory safety.
 Every line of AI-suggested code is reviewed, tested, and manually integrated. The AI acts as an advanced pair-programmer, while the overall architecture and creative direction remain firmly in human hands.
 
 ## Artistic Direction & AI Collaboration

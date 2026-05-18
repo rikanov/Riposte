@@ -1,0 +1,255 @@
+Riposte/app/src/
+├── androidMain
+│   ├── AndroidManifest.xml
+│   ├── cpp
+│   │   ├── adapter_struct.h
+│   │   ├── CMakeLists.txt
+│   │   ├── heuristic.h
+│   │   ├── native-lib.cpp
+│   │   ├── riposte_engine.cpp
+│   │   ├── riposte_engine.h
+│   │   ├── riposte_tt_engine.cpp
+│   │   └── riposte_tt_engine.h
+│   ├── ic_launcher-playstore.png
+│   ├── kotlin
+│   │   └── hu
+│   │       └── riposte
+│   │           └── game
+│   │               ├── engine
+│   │               │   ├── data
+│   │               │   ├── logic
+│   │               │   │   ├── AndroidPlatform.kt
+│   │               │   │   ├── NativeEngine.kt
+│   │               │   │   ├── SettingsManager.kt
+│   │               │   │   └── SoundManager.kt
+│   │               │   └── utils
+│   │               │       └── SensorUtils.kt
+│   │               ├── MainActivity.kt
+│   │               ├── RiposteNavigation.kt
+│   │               └── ui
+│   │                   └── screens
+│   │                       └── IntroScreen.kt
+│   └── res
+│       ├── drawable
+│       ├── mipmap-anydpi-v26
+│       │   ├── ic_launcher_round.xml
+│       │   └── ic_launcher.xml
+│       ├── mipmap-hdpi
+│       │   ├── ic_launcher_foreground.webp
+│       │   ├── ic_launcher_round.webp
+│       │   └── ic_launcher.webp
+│       ├── mipmap-mdpi
+│       │   ├── ic_launcher_foreground.webp
+│       │   ├── ic_launcher_round.webp
+│       │   └── ic_launcher.webp
+│       ├── mipmap-xhdpi
+│       │   ├── ic_launcher_foreground.webp
+│       │   ├── ic_launcher_round.webp
+│       │   └── ic_launcher.webp
+│       ├── mipmap-xxhdpi
+│       │   ├── ic_launcher_foreground.webp
+│       │   ├── ic_launcher_round.webp
+│       │   └── ic_launcher.webp
+│       ├── mipmap-xxxhdpi
+│       │   ├── ic_launcher_foreground.webp
+│       │   ├── ic_launcher_round.webp
+│       │   └── ic_launcher.webp
+│       ├── raw
+│       ├── values
+│       │   ├── colors.xml
+│       │   ├── ic_launcher_background.xml
+│       │   ├── strings.xml
+│       │   └── themes.xml
+│       └── xml
+│           ├── backup_rules.xml
+│           └── data_extraction_rules.xml
+├── androidTest
+│   └── kotlin
+│       └── hu
+│           └── riposte
+│               └── game
+│                   └── ExampleInstrumentedTest.kt
+├── commonMain
+│   ├── composeResources
+│   │   ├── drawable
+│   │   │   ├── bg_african.webp
+│   │   │   ├── bg_board_african.webp
+│   │   │   ├── bg_board_carbon.webp
+│   │   │   ├── bg_board_datura.webp
+│   │   │   ├── bg_board_destreza.webp
+│   │   │   ├── bg_board_esport.webp
+│   │   │   ├── bg_board_highwayman.webp
+│   │   │   ├── bg_board_inner.webp
+│   │   │   ├── bg_board_la_maupin.webp
+│   │   │   ├── bg_board_mayan.webp
+│   │   │   ├── bg_board_venice.webp
+│   │   │   ├── bg_board_vive2024.webp
+│   │   │   ├── bg_board_winter.webp
+│   │   │   ├── bg_carbon.webp
+│   │   │   ├── bg_datura.webp
+│   │   │   ├── bg_destreza.webp
+│   │   │   ├── bg_esport.webp
+│   │   │   ├── bg_hall.webp
+│   │   │   ├── bg_highwayman.webp
+│   │   │   ├── bg_inner.webp
+│   │   │   ├── bg_la_maupin.webp
+│   │   │   ├── bg_mayan.webp
+│   │   │   ├── bg_venice.webp
+│   │   │   ├── bg_vive2024.webp
+│   │   │   ├── bg_winter.webp
+│   │   │   ├── ic_african_p1.webp
+│   │   │   ├── ic_african_p2.webp
+│   │   │   ├── ic_carbon_p1.webp
+│   │   │   ├── ic_carbon_p2.webp
+│   │   │   ├── ic_datura_p1.webp
+│   │   │   ├── ic_datura_p2.webp
+│   │   │   ├── ic_defeat_bg.xml
+│   │   │   ├── ic_destreza_p1.webp
+│   │   │   ├── ic_destreza_p2.webp
+│   │   │   ├── ic_dock_daylight.webp
+│   │   │   ├── ic_dock_grid.webp
+│   │   │   ├── ic_dock_hint.webp
+│   │   │   ├── ic_dock_info.webp
+│   │   │   ├── ic_dock_menu.webp
+│   │   │   ├── ic_dock_musicoff.webp
+│   │   │   ├── ic_dock_musicon.webp
+│   │   │   ├── ic_dock_night.webp
+│   │   │   ├── ic_dock_sfxoff.webp
+│   │   │   ├── ic_dock_sfxon.webp
+│   │   │   ├── ic_dock_themes.webp
+│   │   │   ├── ic_dock_undo.webp
+│   │   │   ├── ic_esport_p1.webp
+│   │   │   ├── ic_esport_p2.webp
+│   │   │   ├── ic_highwayman_p1.webp
+│   │   │   ├── ic_highwayman_p2.webp
+│   │   │   ├── ic_inner_p1.webp
+│   │   │   ├── ic_inner_p2.webp
+│   │   │   ├── ic_la_maupin_p1.webp
+│   │   │   ├── ic_la_maupin_p2.webp
+│   │   │   ├── ic_la_riposte_text.xml
+│   │   │   ├── ic_launcher_background.xml
+│   │   │   ├── ic_launcher_foreground.xml
+│   │   │   ├── ic_letter_r.webp
+│   │   │   ├── ic_logo_r.xml
+│   │   │   ├── ic_mayan_p1.webp
+│   │   │   ├── ic_mayan_p2.webp
+│   │   │   ├── ic_piece_p1.xml
+│   │   │   ├── ic_piece_p2.xml
+│   │   │   ├── ic_touche_star.xml
+│   │   │   ├── ic_venice_p1.webp
+│   │   │   ├── ic_venice_p2.webp
+│   │   │   ├── ic_victory_bg.xml
+│   │   │   ├── ic_vive2024_p1.webp
+│   │   │   ├── ic_vive2024_p2.webp
+│   │   │   ├── ic_winter_p1.webp
+│   │   │   ├── ic_winter_p2.webp
+│   │   │   ├── intro_logo.webp
+│   │   │   ├── is_piece_p2.xml
+│   │   │   ├── logo_hall.webp
+│   │   │   ├── main_menu_diorama_bg.webp
+│   │   │   └── main_typography.webp
+│   │   ├── files
+│   │   │   ├── bg_music_african.ogg
+│   │   │   ├── bg_music_carbon.ogg
+│   │   │   ├── bg_music_datura.ogg
+│   │   │   ├── bg_music_destreza.ogg
+│   │   │   ├── bg_music_esport.ogg
+│   │   │   ├── bg_music_highwayman.ogg
+│   │   │   ├── bg_music_inner.ogg
+│   │   │   ├── bg_music_la_maupin.ogg
+│   │   │   ├── bg_music_mayan.ogg
+│   │   │   ├── bg_music_venice.ogg
+│   │   │   ├── bg_music_vive2024.ogg
+│   │   │   ├── bg_music_winter.ogg
+│   │   │   ├── defeat.ogg
+│   │   │   ├── intro_video.mp4
+│   │   │   ├── main_menu_music.ogg
+│   │   │   ├── menu_click.ogg
+│   │   │   ├── p1_move_destreza.ogg
+│   │   │   ├── p1_move_jungle.ogg
+│   │   │   ├── p1_move_la_maupin.ogg
+│   │   │   ├── p1_move.ogg
+│   │   │   ├── p2_move_destreza.ogg
+│   │   │   ├── p2_move_jungle.ogg
+│   │   │   ├── p2_move_la_maupin.ogg
+│   │   │   ├── p2_move.ogg
+│   │   │   ├── toggle_off.ogg
+│   │   │   ├── toggle_on.ogg
+│   │   │   ├── touche_hit_destreza.ogg
+│   │   │   ├── touche_hit_jungle.ogg
+│   │   │   ├── touche_hit_la_maupin.ogg
+│   │   │   ├── touche_hit.ogg
+│   │   │   └── victory.ogg
+│   │   └── values
+│   │       └── strings.xml
+│   └── kotlin
+│       └── hu
+│           └── riposte
+│               └── game
+│                   ├── engine
+│                   │   ├── data
+│                   │   │   ├── GameModels.kt
+│                   │   │   ├── MoveData.kt
+│                   │   │   └── TournamentData.kt
+│                   │   ├── logic
+│                   │   │   ├── AppSettings.kt
+│                   │   │   ├── ExpectManagers.kt
+│                   │   │   ├── GameViewModel.kt
+│                   │   │   ├── MoveLogic.kt
+│                   │   │   ├── NativeEngine.kt
+│                   │   │   └── TournamentManager.kt
+│                   │   └── utils
+│                   │       ├── BoardArea.kt
+│                   │       └── ExpectUtils.kt
+│                   └── ui
+│                       ├── components
+│                       │   ├── BottomDock.kt
+│                       │   ├── DialogButton.kt
+│                       │   ├── MainMenu.kt
+│                       │   ├── MenuButtons.kt
+│                       │   ├── Odometer.kt
+│                       │   ├── PieceDesign.kt
+│                       │   ├── SystemButton.kt
+│                       │   └── VolumetricLightOrgan.kt
+│                       ├── dialogs
+│                       │   ├── Dialogs.kt
+│                       │   ├── GameOverOverlay.kt
+│                       │   ├── InfoSheetsDialog.kt
+│                       │   ├── OpponentCardOverlay.kt
+│                       │   ├── OptionsDialog.kt
+│                       │   ├── PlayerStatsOverlay.kt
+│                       │   ├── PremiumUnlockDialog.kt
+│                       │   ├── ThemeDialogs.kt
+│                       │   └── TutorialDialogs.kt
+│                       ├── screens
+│                       │   ├── GameBoardScreen.kt
+│                       │   ├── MainScreen.kt
+│                       │   ├── SplashScreen.kt
+│                       │   └── TournamentScreen.kt
+│                       ├── theme
+│                       │   ├── Color.kt
+│                       │   ├── GameTheme.kt
+│                       │   ├── Theme.kt
+│                       │   ├── Themes.kt
+│                       │   └── Type.kt
+│                       └── utils
+│                           └── ResourceUtils.kt
+├── desktopMain
+│   └── kotlin
+│       └── hu
+│           └── riposte
+│               └── game
+│                   └── engine
+│                       ├── logic
+│                       │   ├── DesktopPlatform.kt
+│                       │   └── NativeEngine.kt
+│                       └── utils
+│                           └── SensorUtils.kt
+└── test
+    └── kotlin
+        └── hu
+            └── riposte
+                └── game
+                    └── ExampleUnitTest.kt
+
+61 directories, 192 files
