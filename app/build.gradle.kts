@@ -104,7 +104,10 @@ compose.desktop {
     application {
         mainClass = "hu.riposte.game.MainKt"
         nativeDistributions {
-            targetFormats(org.jetbrains.compose.desktop.application.dsl.TargetFormat.Rpm)
+            targetFormats( org.jetbrains.compose.desktop.application.dsl.TargetFormat.Deb,
+                           org.jetbrains.compose.desktop.application.dsl.TargetFormat.Rpm,
+                           org.jetbrains.compose.desktop.application.dsl.TargetFormat.Msi,
+                           org.jetbrains.compose.desktop.application.dsl.TargetFormat.Exe)
             packageName = "Riposte"
             packageVersion = "1.0.0"
         }

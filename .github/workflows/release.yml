@@ -48,7 +48,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            app/build/compose/binaries/main/*/*.msi
-            app/build/compose/binaries/main/*/*.exe
-            app/build/compose/binaries/main/*/*.deb
-            app/build/compose/binaries/main/*/*.rpm
+            app/build/compose/binaries/main/**/*.msi
+            app/build/compose/binaries/main/**/*.exe
+            app/build/compose/binaries/main/**/*.deb
+            app/build/compose/binaries/main/**/*.rpm
