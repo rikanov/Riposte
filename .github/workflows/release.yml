@@ -39,6 +39,27 @@ jobs:
         if: "!startsWith(github.ref, 'refs/tags/v')"
         run: gradle compileKotlinDesktop
 
+      - name: Build Native Engine (Linux)
+        if: startsWith(github.ref, 'refs/tags/v') && matrix.os == 'ubuntu-latest'
+        run: |
+          mkdir -p app/src/desktopMain/resources
+          cd app/src/cpp
+          mkdir -p build && cd build
+          cmake -DCMAKE_BUILD_TYPE=Release ..
+          make
+          cp libriposte.so ../../../desktopMain/resources/
+
+      - name: Build Native Engine (Windows)
+        if: startsWith(github.ref, 'refs/tags/v') && matrix.os == 'windows-latest'
+        run: |
+          New-Item -ItemType Directory -Force -Path app\src\desktopMain\resources
+          cd app\src\cpp
+          New-Item -ItemType Directory -Force -Path build
+          cd build
+          cmake ..
+          cmake --build . --config Release
+          Copy-Item "Release\riposte.dll" -Destination "..\..\..\desktopMain\resources\"
+
       - name: generate installers (KMP)
         if: startsWith(github.ref, 'refs/tags/v')
         run: gradle packageDistributionForCurrentOS

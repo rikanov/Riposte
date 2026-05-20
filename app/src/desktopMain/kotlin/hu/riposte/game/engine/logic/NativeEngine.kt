@@ -1,25 +1,38 @@
 package hu.riposte.game.engine.logic
 
 import hu.riposte.game.engine.data.MoveData
+import java.io.File
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 
 actual object NativeEngine {
     init {
+        val isWindows = System.getProperty("os.name").lowercase().contains("win")
+        val libName = if (isWindows) "riposte.dll" else "libriposte.so"
+
         try {
-            System.loadLibrary("riposte")
-        } catch (e: UnsatisfiedLinkError) {
-            // Fallback for local development via Gradle :app:run
-            val projectDir = java.io.File(System.getProperty("user.dir"))
-            // The run task might execute from the root or the /app dir, so we check the path
-            val libPath = if (projectDir.name == "app") {
-                java.io.File(projectDir, "src/cpp/build/libriposte.so")
+            // 1. Developer (IDE) path - Fallback for local development via Gradle :app:run
+            val projectDir = File(System.getProperty("user.dir"))
+            val devPath = if (projectDir.name == "app") {
+                File(projectDir, "src/cpp/build/$libName")
             } else {
-                java.io.File(projectDir, "app/src/cpp/build/libriposte.so")
+                File(projectDir, "app/src/cpp/build/$libName")
             }
-            if (libPath.exists()) {
-                System.load(libPath.absolutePath)
+
+            if (devPath.exists()) {
+                System.load(devPath.absolutePath)
             } else {
-                println("Warning: Native library not found at ${libPath.absolutePath}. AI will not work.")
+                val inputStream = NativeEngine::class.java.getResourceAsStream("/$libName")
+                    ?: throw RuntimeException(" $libName not found!")
+
+                val tempFile = File.createTempFile("riposte_ai_", if (isWindows) ".dll" else ".so")
+                tempFile.deleteOnExit()
+                Files.copy(inputStream, tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
+                System.load(tempFile.absolutePath)
             }
+        } catch (e: Exception) {
+            System.err.println("CRITICAL JNI ERROR: ${e.message}")
+            e.printStackTrace()
         }
     }
 
