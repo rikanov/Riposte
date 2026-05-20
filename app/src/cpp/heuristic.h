@@ -4,6 +4,22 @@
 #include <cstdint>
 #include <initializer_list>
 
+// --- MSVC compatibility layer ---
+#ifdef _MSC_VER
+#include <bit>
+
+constexpr inline int __builtin_popcountll(unsigned long long x) {
+    return std::popcount(x);
+}
+
+constexpr inline int __builtin_ctzll(unsigned long long x) {
+    return std::countr_zero(x);
+}
+
+constexpr inline int __builtin_clzll(unsigned long long x) {
+    return std::countl_zero(x);
+}
+#endif
 namespace Heuristic {
     constexpr static int WIN = 1280;
     constexpr static int heuristicLow = -1024;
