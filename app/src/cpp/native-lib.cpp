@@ -1,9 +1,18 @@
 #include <jni.h>
 #include "riposte_engine.h"
 #include "riposte_tt_engine.h"
-#include <android/log.h>
-#define LOG_TAG "RiposteEngine"
-#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+#ifdef __ANDROID__ \
+// --- ANDROID ---
+    #include <android/log.h>
+    #define LOG_TAG "RiposteEngine"
+    #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+    #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+#else
+// --- DESKTOP (LINUX) ---
+    #include <iostream>
+    #define LOGI(...) do { printf("[INFO] " __VA_ARGS__); printf("\n"); } while(0)
+    #define LOGE(...) do { printf("[ERROR] " __VA_ARGS__); printf("\n"); } while(0)
+#endif
 
 extern "C" {
 JNIEXPORT jobject JNICALL

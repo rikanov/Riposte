@@ -450,6 +450,11 @@ class GameViewModel {
 
             applyAiMove(move)
 
+            if (move.from == -1) {
+                gamePhase = GameWaitingFor.MOVE_PIECE
+                return@launch
+            }
+
             if (playerCaptured[1] >= 2) {
                 timerJob?.cancel()
                 triggerSound(SoundType.LOSE, 1)

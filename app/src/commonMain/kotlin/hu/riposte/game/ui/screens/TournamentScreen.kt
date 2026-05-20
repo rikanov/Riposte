@@ -306,6 +306,17 @@ fun TournamentScreen(
                             } else if (!gameViewModel.isPremiumVersion && manager.currentRank == 15 && !manager.isDefending) {
                                 showPremiumDialog = true
                             } else {
+                                gameViewModel.isTournamentMode = true
+                                val opponent = gameViewModel.tournamentManager.getNextOpponent()
+                                gameViewModel.startNewGame(
+                                    hu.riposte.game.engine.data.GameSettings(
+                                        gameMode = hu.riposte.game.engine.data.GameMode.VS_AI,
+                                        startingPlayer = hu.riposte.game.engine.data.StartingPlayer.ALTERNATING,
+                                        difficulty = opponent.engineDepth,
+                                        riposteAllowed = true
+                                    ),
+                                    isTournament = true
+                                )
                                 onStartMatch()
                             }
                         }

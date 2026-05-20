@@ -34,7 +34,6 @@ import hu.riposte.game.ui.theme.LocalGameTheme
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
-import kotlin.math.min
 import kotlin.math.sin
 import org.jetbrains.compose.resources.*
 import riposte.app.generated.resources.*
@@ -54,15 +53,13 @@ fun RiposteBottomDock(
     onUndoClick: () -> Unit,
     onHintClick: () -> Unit,
     onInfoClick: () -> Unit,
-    isTournamentMode: Boolean
+    isTournamentMode: Boolean,
 ) {
-    val currentTheme = LocalGameTheme.current
     val haptic = LocalHapticFeedback.current
     val densityObj = LocalDensity.current
     val density = densityObj.density
 
     // Simplified layout for KMP for now
-    val iconSize = 40.dp
     val boardHeight = 60.dp
 
     data class BarItem(val iconRes: DrawableResource?, val label: String, val isActive: Boolean, val isSpacer: Boolean = false, val action: () -> Unit = {})
@@ -93,9 +90,11 @@ fun RiposteBottomDock(
     var isTouching by remember { mutableStateOf(false) }
     var barWidth by remember { mutableFloatStateOf(1f) }
 
-    val itemWidthPx = barWidth / items.size
-    val totalDockWidthPx = barWidth
+    val totalRowWidthPx = barWidth * 0.9f
+    val itemWidthPx = totalRowWidthPx / items.size
     val hoveredIndex = touchX?.let { x -> (x / itemWidthPx).toInt().coerceIn(0, items.size - 1) } ?: -1
+
+    val dynamicIconSize = with(densityObj) { (barWidth * 0.1f).toDp() }.coerceIn(36.dp, 64.dp)
 
     val infiniteTransition = rememberInfiniteTransition(label = "DockAnimations")
 
@@ -168,7 +167,7 @@ fun RiposteBottomDock(
                 .fillMaxWidth(0.9f)
                 .height(80.dp)
                 .align(Alignment.BottomCenter)
-                .pointerInput(Unit) {
+                .pointerInput(itemWidthPx) {
                     awaitEachGesture {
                         val down = awaitFirstDown()
                         isTouching = true; touchX = down.position.x; down.consume()
@@ -223,9 +222,9 @@ fun RiposteBottomDock(
                         Image(
                             painter = painterResource(item.iconRes),
                             contentDescription = item.label,
-                            contentScale = ContentScale.Crop,
+                            contentScale = ContentScale.Fit,
                             modifier = Modifier
-                                .size(iconSize)
+                                .size(dynamicIconSize)
                                 .shadow(8.dp, CircleShape)
                                 .clip(CircleShape)
                                 .border(1.5.dp, Color.White.copy(alpha = 0.2f), CircleShape)

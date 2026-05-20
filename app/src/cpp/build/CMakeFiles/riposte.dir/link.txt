@@ -1,0 +1,1 @@
+/usr/bin/c++ -fPIC -shared -Wl,--dependency-file=CMakeFiles/riposte.dir/link.d -Wl,-soname,libriposte.so -o libriposte.so "CMakeFiles/riposte.dir/native-lib.cpp.o" CMakeFiles/riposte.dir/riposte_engine.cpp.o CMakeFiles/riposte.dir/riposte_tt_engine.cpp.o

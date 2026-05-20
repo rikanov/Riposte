@@ -1,6 +1,7 @@
 #include "riposte_engine.h"
 #include "heuristic.h"
 #include <random>
+#include <ctime>
 
 using namespace Heuristic;
 
@@ -9,7 +10,7 @@ static int allowRiposte = true;
 static int currentOffWeight = 10;
 static int currentDefWeight = 10;
 
-static inline int regression(int x)
+static constexpr inline int regression(int x)
 {
     return x + (x < heuristicLow) - (x > heuristicHigh);
 }

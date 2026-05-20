@@ -1,15 +1,6 @@
-Riposte/app/src/
+Riposte/app/src
 ├── androidMain
 │   ├── AndroidManifest.xml
-│   ├── cpp
-│   │   ├── adapter_struct.h
-│   │   ├── CMakeLists.txt
-│   │   ├── heuristic.h
-│   │   ├── native-lib.cpp
-│   │   ├── riposte_engine.cpp
-│   │   ├── riposte_engine.h
-│   │   ├── riposte_tt_engine.cpp
-│   │   └── riposte_tt_engine.h
 │   ├── ic_launcher-playstore.png
 │   ├── kotlin
 │   │   └── hu
@@ -234,17 +225,74 @@ Riposte/app/src/
 │                       │   └── Type.kt
 │                       └── utils
 │                           └── ResourceUtils.kt
+├── cpp
+│   ├── adapter_struct.h
+│   ├── build
+│   │   ├── CMakeCache.txt
+│   │   ├── CMakeFiles
+│   │   │   ├── 4.2.3
+│   │   │   │   ├── CMakeCCompiler.cmake
+│   │   │   │   ├── CMakeCXXCompiler.cmake
+│   │   │   │   ├── CMakeDetermineCompilerABI_C.bin
+│   │   │   │   ├── CMakeDetermineCompilerABI_CXX.bin
+│   │   │   │   ├── CMakeSystem.cmake
+│   │   │   │   ├── CompilerIdC
+│   │   │   │   │   ├── a.out
+│   │   │   │   │   ├── CMakeCCompilerId.c
+│   │   │   │   │   └── tmp
+│   │   │   │   └── CompilerIdCXX
+│   │   │   │       ├── a.out
+│   │   │   │       ├── CMakeCXXCompilerId.cpp
+│   │   │   │       └── tmp
+│   │   │   ├── cmake.check_cache
+│   │   │   ├── CMakeConfigureLog.yaml
+│   │   │   ├── CMakeDirectoryInformation.cmake
+│   │   │   ├── InstallScripts.json
+│   │   │   ├── Makefile2
+│   │   │   ├── Makefile.cmake
+│   │   │   ├── pkgRedirects
+│   │   │   ├── progress.marks
+│   │   │   ├── riposte.dir
+│   │   │   │   ├── build.make
+│   │   │   │   ├── cmake_clean.cmake
+│   │   │   │   ├── compiler_depend.internal
+│   │   │   │   ├── compiler_depend.make
+│   │   │   │   ├── compiler_depend.ts
+│   │   │   │   ├── DependInfo.cmake
+│   │   │   │   ├── depend.make
+│   │   │   │   ├── flags.make
+│   │   │   │   ├── link.d
+│   │   │   │   ├── link.txt
+│   │   │   │   ├── native-lib.cpp.o
+│   │   │   │   ├── native-lib.cpp.o.d
+│   │   │   │   ├── progress.make
+│   │   │   │   ├── riposte_engine.cpp.o
+│   │   │   │   ├── riposte_engine.cpp.o.d
+│   │   │   │   ├── riposte_tt_engine.cpp.o
+│   │   │   │   └── riposte_tt_engine.cpp.o.d
+│   │   │   └── TargetDirectories.txt
+│   │   ├── cmake_install.cmake
+│   │   ├── libriposte.so
+│   │   └── Makefile
+│   ├── CMakeLists.txt
+│   ├── heuristic.h
+│   ├── native-lib.cpp
+│   ├── riposte_engine.cpp
+│   ├── riposte_engine.h
+│   ├── riposte_tt_engine.cpp
+│   └── riposte_tt_engine.h
 ├── desktopMain
 │   └── kotlin
 │       └── hu
 │           └── riposte
 │               └── game
-│                   └── engine
-│                       ├── logic
-│                       │   ├── DesktopPlatform.kt
-│                       │   └── NativeEngine.kt
-│                       └── utils
-│                           └── SensorUtils.kt
+│                   ├── engine
+│                   │   ├── logic
+│                   │   │   ├── DesktopPlatform.kt
+│                   │   │   └── NativeEngine.kt
+│                   │   └── utils
+│                   │       └── SensorUtils.kt
+│                   └── Main.kt
 └── test
     └── kotlin
         └── hu
@@ -252,4 +300,4 @@ Riposte/app/src/
                 └── game
                     └── ExampleUnitTest.kt
 
-61 directories, 192 files
+70 directories, 231 files

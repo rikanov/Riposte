@@ -70,23 +70,12 @@ fun RiposteApp(soundManager: SoundManager) {
                     navController.navigate(Screen.Tournament.route) { launchSingleTop = true }
                 },
                 onNavigateToTutorial = {
-                    gameViewModel.isTutorialMode = true
-                    gameViewModel.gamePhase = GameWaitingFor.TUTORIAL_WELCOME
                     navController.navigate(Screen.Game.route) { launchSingleTop = true }
                 },
                 onNavigateToAiTraining = {
                     navController.navigate(Screen.Game.route) { launchSingleTop = true }
                 },
                 onNavigateToLocal = {
-                    gameViewModel.startNewGame(
-                        GameSettings(
-                            gameMode = GameMode.LOCAL_MULTIPLAYER,
-                            startingPlayer = StartingPlayer.ALTERNATING,
-                            difficulty = 5,
-                            riposteAllowed = gameViewModel.settings.riposteAllowed,
-                        ),
-                        isTournament = false
-                    )
                     navController.navigate(Screen.Game.route) { launchSingleTop = true }
                 },
                 onExitGame = {
@@ -133,18 +122,6 @@ fun RiposteApp(soundManager: SoundManager) {
                     navController.popBackStack(Screen.Main.route, inclusive = false)
                 },
                 onStartMatch = {
-                    gameViewModel.isTournamentMode = true
-                    val opponent = gameViewModel.tournamentManager.getNextOpponent()
-
-                    gameViewModel.startNewGame(
-                        GameSettings(
-                            gameMode = GameMode.VS_AI,
-                            startingPlayer = StartingPlayer.ALTERNATING,
-                            difficulty = opponent.engineDepth,
-                            riposteAllowed = true
-                        ),
-                        isTournament = true
-                    )
                     navController.navigate(Screen.Game.route) { launchSingleTop = true }
                 },
                 onResumeGame = {

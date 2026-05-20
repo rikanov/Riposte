@@ -12,9 +12,9 @@ import androidx.compose.ui.graphics.*
 import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -64,13 +64,12 @@ fun InteractiveMainMenu(
     aiDifficultyItems: List<MainMenuItem>,
     isPremiumVersion: Boolean,
     soundManager: SoundManager,
-    haptic: HapticFeedback
+    haptic: HapticFeedback,
+    screenHeight: Dp,
+    screenWidth: Dp
 ) {
-    val configuration = LocalConfiguration.current
     val density = LocalDensity.current
 
-    val screenHeight = configuration.screenHeightDp.dp
-    val screenWidth = configuration.screenWidthDp.dp
     val slopeRatio = 0.7349f
 
     val targetMenuHeight = screenHeight / 3f
@@ -80,7 +79,7 @@ fun InteractiveMainMenu(
 
     val itemHeight = targetMenuHeight / heightMultiplier
     val itemSpacing = itemHeight * spacingRatio
-    val menuFontSize = (itemHeight.value * 0.35f).sp
+    val menuFontSize = with(density) { (itemHeight * 0.35f).toSp() }
 
     val widthStep = (itemHeight + itemSpacing) * slopeRatio
     val slantAmountDp = itemHeight * slopeRatio
@@ -128,8 +127,9 @@ fun InteractiveMainMenu(
                             touchY = change.position.y
 
                             val currentMainIdx = (touchY!! / itemTotalHeightPx).toInt().coerceIn(0, menuItems.size - 1)
+                            val isTrainingItem = menuItems[currentMainIdx].hasSwipeAction
 
-                            if (!showAiSubMenu && currentMainIdx == 2 && startX - touchX!! > 50f) {
+                            if (!showAiSubMenu && isTrainingItem && startX - touchX!! > 50f) {
                                 showAiSubMenu = true
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             }
@@ -152,9 +152,14 @@ fun InteractiveMainMenu(
                             selectedItem.action()
                         } else {
                             val selectedItem = menuItems[finalMainIndex]
-                            if (selectedItem.isEnabled && finalMainIndex != 2) {
-                                soundManager.playClick()
-                                selectedItem.action()
+                            if (selectedItem.isEnabled) {
+                                if (selectedItem.hasSwipeAction) {
+                                    showAiSubMenu = true
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                } else {
+                                    soundManager.playClick()
+                                    selectedItem.action()
+                                }
                             }
                         }
                     }
@@ -218,7 +223,7 @@ fun InteractiveMainMenu(
             menuItems.forEachIndexed { index, item ->
                 val buttonWidth = topWidth + (widthStep * index)
                 val isThisMainHovered = (!showAiSubMenu && isTouching && hoveredMainIndex == index)
-                val forceHover = (showAiSubMenu && index == 2)
+                val forceHover = (showAiSubMenu && hoveredMainIndex == index && item.hasSwipeAction)
                 val targetScale = if (isThisMainHovered || forceHover) 1.4f else 1f
                 val scale by animateFloatAsState(targetValue = targetScale, label = "MainScaleAnim")
 

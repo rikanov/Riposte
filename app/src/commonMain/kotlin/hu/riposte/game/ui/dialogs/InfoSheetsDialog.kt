@@ -117,143 +117,149 @@ fun InfoSheetsDialog(
             Spacer(modifier = Modifier.height(24.dp))
 
             val currentTips = categories[selectedTabIndex]
-            key(selectedTabIndex) {
-                val pagerState = rememberPagerState(
-                    initialPage = pageIndexes[selectedTabIndex].coerceIn(0, currentTips.size - 1),
-                    pageCount = { currentTips.size }
-                )
-                LaunchedEffect(pagerState.currentPage) {
-                    pageIndexes[selectedTabIndex] = pagerState.currentPage
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    val canScrollBackward = pagerState.currentPage > 0
-                    Box(
-                        modifier = Modifier.size(40.dp).clickable(
-                            enabled = canScrollBackward,
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null
-                        ) {
-                            soundManager.playClick()
-                            coroutineScope.launch { pagerState.animateScrollToPage(pagerState.currentPage - 1) }
-                        },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "◀",
-                            color = if (canScrollBackward) accentColor else Color.Transparent,
-                            fontSize = 20.sp,
-                            fontFamily = fontFamily
-                        )
+            if (currentTips.isNotEmpty()) {
+                key(selectedTabIndex) {
+                    val pagerState = rememberPagerState(
+                        initialPage = pageIndexes[selectedTabIndex].coerceIn(0, currentTips.size - 1),
+                        pageCount = { currentTips.size }
+                    )
+                    LaunchedEffect(pagerState.currentPage) {
+                        pageIndexes[selectedTabIndex] = pagerState.currentPage
                     }
-                    HorizontalPager(
-                        state = pagerState,
-                        modifier = Modifier.weight(1f).height(280.dp)
-                    ) { page ->
-                        val tipParts = currentTips[page].split("\n")
-                        val title = tipParts.getOrNull(0) ?: "INFO"
-                        val body = tipParts.getOrNull(1) ?: currentTips[page]
 
-                        val scrollState = rememberScrollState()
-                        val canScrollMore by remember { derivedStateOf { scrollState.value < scrollState.maxValue } }
-
-                        Box(modifier = Modifier.fillMaxSize()) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .background(Color(0xFF151921).copy(alpha = 0.9f))
-                                    .border(1.dp, accentColor.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
-                                    .padding(16.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        val canScrollBackward = pagerState.currentPage > 0
+                        Box(
+                            modifier = Modifier.size(40.dp).clickable(
+                                enabled = canScrollBackward,
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
                             ) {
-                                Text(
-                                    text = title.uppercase(),
-                                    color = accentColor,
-                                    fontWeight = FontWeight.Black,
-                                    fontSize = 15.sp,
-                                    textAlign = TextAlign.Center,
-                                    fontFamily = fontFamily
-                                )
-                                Spacer(Modifier.height(12.dp))
-                                Box(modifier = Modifier.weight(1f).verticalScroll(scrollState)) {
+                                soundManager.playClick()
+                                coroutineScope.launch { pagerState.animateScrollToPage(pagerState.currentPage - 1) }
+                            },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "◀",
+                                color = if (canScrollBackward) accentColor else Color.Transparent,
+                                fontSize = 20.sp,
+                                fontFamily = fontFamily
+                            )
+                        }
+                        HorizontalPager(
+                            state = pagerState,
+                            modifier = Modifier.weight(1f).height(280.dp)
+                        ) { page ->
+                            val tipParts = currentTips[page].split("\n")
+                            val title = tipParts.getOrNull(0) ?: "INFO"
+                            val body = tipParts.getOrNull(1) ?: currentTips[page]
+
+                            val scrollState = rememberScrollState()
+                            val canScrollMore by remember { derivedStateOf { scrollState.value < scrollState.maxValue } }
+
+                            Box(modifier = Modifier.fillMaxSize()) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(RoundedCornerShape(16.dp))
+                                        .background(Color(0xFF151921).copy(alpha = 0.9f))
+                                        .border(1.dp, accentColor.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
+                                        .padding(16.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
                                     Text(
-                                        text = body,
-                                        color = currentTheme.textColor.copy(alpha = 0.9f),
+                                        text = title.uppercase(),
+                                        color = accentColor,
+                                        fontWeight = FontWeight.Black,
+                                        fontSize = 15.sp,
                                         textAlign = TextAlign.Center,
-                                        fontSize = 14.sp,
-                                        lineHeight = 20.sp,
-                                        fontStyle = FontStyle.Italic,
                                         fontFamily = fontFamily
+                                    )
+                                    Spacer(Modifier.height(12.dp))
+                                    Box(modifier = Modifier.weight(1f).verticalScroll(scrollState)) {
+                                        Text(
+                                            text = body,
+                                            color = currentTheme.textColor.copy(alpha = 0.9f),
+                                            textAlign = TextAlign.Center,
+                                            fontSize = 14.sp,
+                                            lineHeight = 20.sp,
+                                            fontStyle = FontStyle.Italic,
+                                            fontFamily = fontFamily
+                                        )
+                                    }
+                                }
+                                val visibilityAlpha by animateFloatAsState(
+                                    targetValue = if (canScrollMore) 1f else 0f,
+                                    animationSpec = tween(300),
+                                    label = "arrow_visibility"
+                                )
+
+                                if (visibilityAlpha > 0f) {
+                                    val infiniteTransition = rememberInfiniteTransition(label = "arrow_anim")
+                                    val arrowY by infiniteTransition.animateFloat(
+                                        initialValue = -5f,
+                                        targetValue = 5f,
+                                        animationSpec = infiniteRepeatable(tween(600, easing = EaseInOutSine), RepeatMode.Reverse),
+                                        label = "arrow_y"
+                                    )
+                                    val arrowPulseAlpha by infiniteTransition.animateFloat(
+                                        initialValue = 0.3f,
+                                        targetValue = 1f,
+                                        animationSpec = infiniteRepeatable(tween(600, easing = EaseInOutSine), RepeatMode.Reverse),
+                                        label = "arrow_alpha"
+                                    )
+
+                                    Text(
+                                        text = "▼",
+                                        color = accentColor.copy(alpha = arrowPulseAlpha * visibilityAlpha),
+                                        fontSize = 14.sp,
+                                        fontFamily = fontFamily,
+                                        modifier = Modifier
+                                            .align(Alignment.BottomCenter)
+                                            .padding(bottom = 8.dp)
+                                            .graphicsLayer { translationY = arrowY }
                                     )
                                 }
                             }
-                            val visibilityAlpha by animateFloatAsState(
-                                targetValue = if (canScrollMore) 1f else 0f,
-                                animationSpec = tween(300),
-                                label = "arrow_visibility"
+                        }
+                        val canScrollForward = pagerState.currentPage < currentTips.size - 1
+                        Box(
+                            modifier = Modifier.size(40.dp).clickable(
+                                enabled = canScrollForward,
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) {
+                                soundManager.playClick()
+                                coroutineScope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) }
+                            },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "▶",
+                                color = if (canScrollForward) accentColor else Color.Transparent,
+                                fontSize = 20.sp,
+                                fontFamily = fontFamily
                             )
-
-                            if (visibilityAlpha > 0f) {
-                                val infiniteTransition = rememberInfiniteTransition(label = "arrow_anim")
-                                val arrowY by infiniteTransition.animateFloat(
-                                    initialValue = -5f,
-                                    targetValue = 5f,
-                                    animationSpec = infiniteRepeatable(tween(600, easing = EaseInOutSine), RepeatMode.Reverse),
-                                    label = "arrow_y"
-                                )
-                                val arrowPulseAlpha by infiniteTransition.animateFloat(
-                                    initialValue = 0.3f,
-                                    targetValue = 1f,
-                                    animationSpec = infiniteRepeatable(tween(600, easing = EaseInOutSine), RepeatMode.Reverse),
-                                    label = "arrow_alpha"
-                                )
-
-                                Text(
-                                    text = "▼",
-                                    color = accentColor.copy(alpha = arrowPulseAlpha * visibilityAlpha),
-                                    fontSize = 14.sp,
-                                    fontFamily = fontFamily,
-                                    modifier = Modifier
-                                        .align(Alignment.BottomCenter)
-                                        .padding(bottom = 8.dp)
-                                        .graphicsLayer { translationY = arrowY }
-                                )
-                            }
                         }
                     }
-                    val canScrollForward = pagerState.currentPage < currentTips.size - 1
-                    Box(
-                        modifier = Modifier.size(40.dp).clickable(
-                            enabled = canScrollForward,
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null
-                        ) {
-                            soundManager.playClick()
-                            coroutineScope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) }
-                        },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "▶",
-                            color = if (canScrollForward) accentColor else Color.Transparent,
-                            fontSize = 20.sp,
-                            fontFamily = fontFamily
-                        )
-                    }
-                }
 
-                Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    text = "${pagerState.currentPage + 1} / ${currentTips.size}",
-                    color = Color.White.copy(alpha = 0.4f),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = fontFamily
-                )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "${pagerState.currentPage + 1} / ${currentTips.size}",
+                        color = Color.White.copy(alpha = 0.4f),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = fontFamily
+                    )
+                }
+            } else {
+                Box(modifier = Modifier.fillMaxWidth().height(280.dp), contentAlignment = Alignment.Center) {
+                    Text("Loading...", color = accentColor, fontFamily = fontFamily)
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))

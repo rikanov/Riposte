@@ -10,17 +10,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import hu.riposte.game.ui.theme.LocalGameTheme
 import riposte.app.generated.resources.*
 import org.jetbrains.compose.resources.*
@@ -28,7 +24,9 @@ import hu.riposte.game.engine.logic.AppSettings
 import hu.riposte.game.engine.logic.createSettingsManager
 import hu.riposte.game.engine.logic.SoundManager
 import hu.riposte.game.ui.theme.ThemeRegistry
+import hu.riposte.game.engine.data.GameMode
 import hu.riposte.game.engine.data.GameSettings
+import hu.riposte.game.engine.data.StartingPlayer
 import hu.riposte.game.engine.logic.GameViewModel
 import hu.riposte.game.ui.components.InteractiveMainMenu
 import hu.riposte.game.ui.components.MainMenuItem
@@ -73,14 +71,29 @@ fun MainScreen(
 
     val menuItems = listOf(
         MainMenuItem(stringResource(Res.string.menu_resume), isEnabled = isInterruptedGame, action = onResumeGame),
-        MainMenuItem(stringResource(Res.string.menu_quick_tutorial), needsAttention = appSettings?.hasSeenTutorial == false, action = onNavigateToTutorial),
+        MainMenuItem(stringResource(Res.string.menu_quick_tutorial), needsAttention = appSettings?.hasSeenTutorial == false) {
+            gameViewModel.startTutorial()
+            onNavigateToTutorial()
+        },
         MainMenuItem(stringResource(Res.string.menu_training_ai), hasSwipeAction = true, action = {}),
         MainMenuItem(stringResource(Res.string.menu_local_players)) {
+            val startLocal = {
+                gameViewModel.startNewGame(
+                    GameSettings(
+                        gameMode = GameMode.LOCAL_MULTIPLAYER,
+                        startingPlayer = StartingPlayer.ALTERNATING,
+                        difficulty = 5,
+                        riposteAllowed = true
+                    ),
+                    isTournament = false
+                )
+                onNavigateToLocal()
+            }
             if (hasSavedTourney) {
-                pendingAction = onNavigateToLocal
+                pendingAction = startLocal
                 showForfeitWarningDialog = true
             } else {
-                onNavigateToLocal()
+                startLocal()
             }
         },
         MainMenuItem(stringResource(Res.string.menu_tournament), action = onNavigateToTournament),
@@ -114,10 +127,11 @@ fun MainScreen(
 
     val activeThemeId = appSettings?.themeId ?: "abstract_sunrise"
     val activeTheme = remember(activeThemeId) { ThemeRegistry.getThemeById(activeThemeId) }
-    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
 
     CompositionLocalProvider(LocalGameTheme provides activeTheme) {
-        Box(modifier = Modifier.fillMaxSize()) {
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val screenWidth = maxWidth
+            val screenHeight = maxHeight
 
             // 1. BACKGROUND
             Image(
@@ -146,7 +160,9 @@ fun MainScreen(
                 aiDifficultyItems = aiDifficultyItems,
                 isPremiumVersion = gameViewModel.isPremiumVersion,
                 soundManager = soundManager,
-                haptic = haptic
+                haptic = haptic,
+                screenWidth = screenWidth,
+                screenHeight = screenHeight
             )
 
             // 4. DIALOGS

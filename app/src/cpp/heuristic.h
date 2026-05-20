@@ -1,8 +1,8 @@
 #ifndef RIPOSTE_HEURISTIC_H
 #define RIPOSTE_HEURISTIC_H
 
-#include <__algorithm/max.h>
 #include <cstdint>
+#include <initializer_list>
 
 namespace Heuristic {
     constexpr static int WIN = 1280;
@@ -10,6 +10,10 @@ namespace Heuristic {
     constexpr static int heuristicHigh = 1024;
     constexpr static uint64_t sentinelMask = 0x7F83060C183060FF;
 
+    constexpr static inline int max(const int a, const int b)
+    {
+        return a > b ? a : b;
+    }
     constexpr int rayCasting(const uint64_t set1, const uint64_t set2, const uint64_t hotSpot) {
         int result = 0;
 
@@ -38,9 +42,9 @@ namespace Heuristic {
         constexpr uint64_t chessMask1 = 0x5555555555555555;
         constexpr uint64_t chessMask2 = 0xAAAAAAAAAAAAAAAA;
 
-        int hs1 = std::max(__builtin_popcountll((set1 | hotSpot) & chessMask1),
+        int hs1 = max(__builtin_popcountll((set1 | hotSpot) & chessMask1),
                            __builtin_popcountll((set1 | hotSpot) & chessMask2));
-        int hs2 = std::max(__builtin_popcountll((set2 | hotSpot) & chessMask1),
+        int hs2 = max(__builtin_popcountll((set2 | hotSpot) & chessMask1),
                            __builtin_popcountll((set2 | hotSpot) & chessMask2));
 
         hs1 += rayCasting(set1, set2, hotSpot);
