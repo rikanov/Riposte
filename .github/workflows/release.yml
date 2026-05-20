@@ -50,7 +50,6 @@ jobs:
           mkdir -p build && cd build
           cmake -DCMAKE_BUILD_TYPE=Release ..
           make
-          # JAVÍTOTT ÚTVONAL: Csak 2 szintet megyünk vissza (src/desktopMain...)
           cp libriposte.so ../../desktopMain/resources/
 
       - name: Build Native Engine (Windows)
@@ -64,9 +63,13 @@ jobs:
           cmake --build . --config Release
           Copy-Item "Release\riposte.dll" -Destination "..\..\desktopMain\resources\"
 
-      - name: generate installers (KMP)
+      - name: generate installers (KMP Desktop)
         if: startsWith(github.ref, 'refs/tags/v')
         run: gradle packageDistributionForCurrentOS
+
+      - name: generate Android APK & AAB
+        if: startsWith(github.ref, 'refs/tags/v') && matrix.os == 'ubuntu-latest'
+        run: gradle :app:assembleRelease :app:bundleRelease
 
       - name: upload to release
         if: startsWith(github.ref, 'refs/tags/v')
@@ -77,3 +80,5 @@ jobs:
             app/build/compose/binaries/main/**/*.exe
             app/build/compose/binaries/main/**/*.deb
             app/build/compose/binaries/main/**/*.rpm
+            app/build/outputs/apk/release/*.apk
+            app/build/outputs/bundle/release/*.aab
