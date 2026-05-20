@@ -1,3 +1,0 @@
-/home/rikanov/AndroidStudioProjects/Riposte/app/src/cpp/build/CMakeFiles/riposte.dir
-/home/rikanov/AndroidStudioProjects/Riposte/app/src/cpp/build/CMakeFiles/edit_cache.dir
-/home/rikanov/AndroidStudioProjects/Riposte/app/src/cpp/build/CMakeFiles/rebuild_cache.dir
