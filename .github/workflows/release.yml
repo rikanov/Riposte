@@ -9,6 +9,9 @@ on:
 permissions:
   contents: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build-and-release:
     strategy:
@@ -47,7 +50,8 @@ jobs:
           mkdir -p build && cd build
           cmake -DCMAKE_BUILD_TYPE=Release ..
           make
-          cp libriposte.so ../../../desktopMain/resources/
+          # JAVÍTOTT ÚTVONAL: Csak 2 szintet megyünk vissza (src/desktopMain...)
+          cp libriposte.so ../../desktopMain/resources/
 
       - name: Build Native Engine (Windows)
         if: startsWith(github.ref, 'refs/tags/v') && matrix.os == 'windows-latest'
