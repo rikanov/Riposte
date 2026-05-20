@@ -62,7 +62,7 @@ jobs:
           cd build
           cmake ..
           cmake --build . --config Release
-          Copy-Item "Release\riposte.dll" -Destination "..\..\..\desktopMain\resources\"
+          Copy-Item "Release\riposte.dll" -Destination "..\..\desktopMain\resources\"
 
       - name: generate installers (KMP)
         if: startsWith(github.ref, 'refs/tags/v')
