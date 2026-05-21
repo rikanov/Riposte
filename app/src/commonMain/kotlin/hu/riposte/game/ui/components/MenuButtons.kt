@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -40,6 +41,7 @@ fun SlantedMenuButton(
 ) {
     val density = LocalDensity.current
     val slantPx = with(density) { slantAmountDp.toPx() }
+    val hPx = with(density) { buttonHeight.toPx() }
 
     // --- PREMIUM COLORS AND OPACITY ---
     val alphaColor = if (isHovered) 0.85f else 0.45f
@@ -61,8 +63,9 @@ fun SlantedMenuButton(
                 scaleY = scale
 
                 val hoverIntensity = if (isHovered) 0.2f else 1f
-                translationX = sin(phaseState.value + index * 0.8f) * 10f * hoverIntensity
-                translationY = cos(phaseState.value + index * 0.8f) * 5f * hoverIntensity
+                // FELEZETT AMPLITÚDÓ: 10f -> 5f, 5f -> 2.5f
+                translationX = sin(phaseState.value + index * 0.8f) * 5f * hoverIntensity
+                translationY = cos(phaseState.value + index * 0.8f) * 2.5f * hoverIntensity
             }
             .clip(SlantedShape(slantPx = slantPx))
             .background(Brush.horizontalGradient(gradientColors), alpha = alphaColor)
@@ -74,6 +77,7 @@ fun SlantedMenuButton(
         contentAlignment = Alignment.Center
     ) {
         Box(modifier = Modifier.matchParentSize().background(Brush.horizontalGradient(0.0f to Color.White.copy(alpha = 0.1f), 0.3f to Color.Transparent)))
+
         if (item.needsAttention && !isHovered) {
             val shimmerTransition = rememberInfiniteTransition(label = "shimmer")
             val shimmerTranslate by shimmerTransition.animateFloat(
@@ -82,18 +86,28 @@ fun SlantedMenuButton(
                 animationSpec = infiniteRepeatable(tween(2500, delayMillis = 1500, easing = FastOutSlowInEasing), RepeatMode.Restart),
                 label = "shimmerTranslation"
             )
+
+            // SZINUSZOS INTENZITÁS: 0-tól indul, középen a legerősebb (0.6f), majd elhalványul
+            val progress = (shimmerTranslate + 100f) / 1100f
+            val shimmerIntensity = (sin(progress * PI).toFloat() * 0.6f).coerceIn(0f, 1f)
+
+            // PÁRHUZAMOS GRADIENS VEKTOR: A vágás irányára merőleges gradiens vonalat húzunk
+            val gradDx = 150f
+            val gradDy = 150f * (slantPx / hPx)
+
             Box(
                 modifier = Modifier
                     .matchParentSize()
                     .background(
                         Brush.linearGradient(
-                            colors = listOf(Color.Transparent, Color.White.copy(alpha = 0.4f), Color.Transparent),
+                            colors = listOf(Color.Transparent, Color.White.copy(alpha = shimmerIntensity), Color.Transparent),
                             start = Offset(shimmerTranslate, 0f),
-                            end = Offset(shimmerTranslate + 150f, 0f)
+                            end = Offset(shimmerTranslate + gradDx, gradDy)
                         )
                     )
             )
         }
+
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(start = slantAmountDp / 2)
@@ -177,8 +191,9 @@ fun ParallelMenuButton(
                 scaleY = scale
 
                 val hoverIntensity = if (isHovered) 0.2f else 1f
-                translationX = sin(phaseState.value + index * 0.8f + 2f) * 8f * hoverIntensity
-                translationY = cos(phaseState.value + index * 0.8f + 2f) * 4f * hoverIntensity
+                // FELEZETT AMPLITÚDÓ: 8f -> 4f, 4f -> 2f
+                translationX = sin(phaseState.value + index * 0.8f + 2f) * 4f * hoverIntensity
+                translationY = cos(phaseState.value + index * 0.8f + 2f) * 2f * hoverIntensity
             }
             .clip(ParallelSubMenuShape(slantPx = slantPx))
             .background(Brush.horizontalGradient(gradientColors.reversed()), alpha = alphaColor)

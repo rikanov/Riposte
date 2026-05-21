@@ -93,7 +93,7 @@ fun InteractiveMainMenu(
     val infiniteTransition = rememberInfiniteTransition(label = "MenuWobble")
     val phaseState = infiniteTransition.animateFloat(
         initialValue = 0f, targetValue = (2*PI).toFloat(),
-        animationSpec = infiniteRepeatable(tween(8000, easing = LinearEasing), RepeatMode.Restart), label = "Phase"
+        animationSpec = infiniteRepeatable(tween(12000, easing = LinearEasing), RepeatMode.Restart), label = "Phase"
     )
 
     var touchX by remember { mutableStateOf<Float?>(null) }
