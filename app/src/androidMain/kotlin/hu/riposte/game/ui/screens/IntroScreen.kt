@@ -8,6 +8,7 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -18,7 +19,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.MediaItem
@@ -49,6 +49,8 @@ fun IntroScreen(
 
     val logoAlpha = remember { Animatable(0f) }
 
+    val interactionSource = remember { MutableInteractionSource() }
+
     val overlayFadeAlpha by animateFloatAsState(
         targetValue = if (isFinishing) 0f else 1f,
         animationSpec = tween(600, easing = LinearEasing),
@@ -58,13 +60,6 @@ fun IntroScreen(
     // ExoPlayer Setup
     val exoPlayer = remember {
         ExoPlayer.Builder(context).build().apply {
-            // Note: intro_video.mp4 is in commonMain/composeResources/files/
-            // On Android, we can still use the generated R if the plugin exposes it, 
-            // but we moved it out of res/raw.
-            // Actually, we moved it to composeResources/files. 
-            // We might need to handle it differently for ExoPlayer.
-            // For now, I'll try to use the raw resource ID if it's still available through some magic, 
-            // or use the asset path.
             val videoUri = Uri.parse("asset:///composeResources/riposte.app.generated.resources/files/intro_video.mp4")
             setMediaItem(MediaItem.fromUri(videoUri))
             prepare()
@@ -92,15 +87,9 @@ fun IntroScreen(
         }
     }
 
-    // --- AZ ÚJ, LETISZTULT KOREOGRÁFIA ---
     LaunchedEffect(Unit) {
-        // 1. Várjuk a videó 12. másodpercéig
         delay(10000)
-
-        // 2. Megjelenik a fényorgona (automatikusan elkezd forogni és lüktetni)
         showEffects = true
-
-        // 3. Megkezdjük a logó 1200 ms-os beúsztatását (fade-in)
         logoAlpha.animateTo(
             targetValue = 1f,
             animationSpec = tween(12000, easing = LinearOutSlowInEasing)
@@ -110,9 +99,13 @@ fun IntroScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .clickable(enabled = !isFinishing) { isFinishing = true }
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                enabled = !isFinishing
+            ) { isFinishing = true }
     ) {
-        // VIDEO RÉTEG
+        // VIDEO LAYER
         AndroidView(
             factory = {
                 PlayerView(context).apply {
@@ -125,7 +118,6 @@ fun IntroScreen(
             modifier = Modifier.fillMaxSize()
         )
 
-        // EFFEKT ÉS LOGÓ RÉTEG
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -133,13 +125,11 @@ fun IntroScreen(
             contentAlignment = Alignment.Center
         ) {
             if (showEffects) {
-                // 1. A Volumetric Light Organ (mögötte)
                 VolumetricLightOrgan(
                     accentColor = Color(0xFFD4AF37),
                     centerYRatio = 0.5f
                 )
 
-                // 2. A fő logó egyszerű fade animációval (előtte)
                 Image(
                     painter = painterResource(Res.drawable.intro_logo),
                     contentDescription = "La Riposte Logo",
@@ -148,7 +138,6 @@ fun IntroScreen(
                         .width(logoWidth)
                         .graphicsLayer {
                             alpha = logoAlpha.value
-                            // Egy hajszálnyi méretnövekedés a dráma kedvéért
                             scaleX = 0.95f + (logoAlpha.value * 0.05f)
                             scaleY = 0.95f + (logoAlpha.value * 0.05f)
                         }
