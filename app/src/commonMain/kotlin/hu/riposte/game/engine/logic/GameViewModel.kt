@@ -130,8 +130,8 @@ class GameViewModel {
         }
 
         if (isTournamentMode) {
-            playerTimeMs = 180_000L
-            opponentTimeMs = 180_000L
+            playerTimeMs = if (tournamentManager.isDefending) 240_000L else 180_000L
+            opponentTimeMs = if (tournamentManager.isDefending) 180_000L else 240_000L
             startTimer()
         }
 

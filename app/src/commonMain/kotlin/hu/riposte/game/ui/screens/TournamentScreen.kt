@@ -236,7 +236,8 @@ fun TournamentScreen(
                             val isTarget = if (manager.currentRank == 1) rank == 2
                             else (manager.isDefending && rank == manager.currentRank + 1) || (!manager.isDefending && rank == manager.currentRank - 1)
 
-                            val isRevealed = rank >= manager.highestRank || (rank == 14 && manager.highestRank == 15) || isTarget
+                            val isLoreUnlocked = appSettings?.loreUnlocked == true
+                            val isRevealed = isLoreUnlocked || rank >= manager.highestRank || (rank == 14 && manager.highestRank == 15) || isTarget
                             val isHighest = rank == manager.highestRank
                             val isDefeated = rank > manager.currentRank && !isTarget
 

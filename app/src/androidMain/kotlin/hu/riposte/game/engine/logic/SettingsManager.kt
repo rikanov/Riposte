@@ -25,7 +25,7 @@ actual class SettingsManager {
         val HAS_SEEN_TUTORIAL_KEY = booleanPreferencesKey("has_seen_tutorial")
         val NIGHT_MODE_KEY = booleanPreferencesKey("night_mode_enabled")
 
-        val SHOW_TIPS_KEY = booleanPreferencesKey("show_tips")
+        val LORE_UNLOCKED_KEY = booleanPreferencesKey("lore_unlocked")
         val TOURNAMENT_RANK_KEY = intPreferencesKey("tournament_rank")
         val TOURNAMENT_HIGHEST_KEY = intPreferencesKey("tournament_highest")
         val TOURNAMENT_DEFENDING_KEY = booleanPreferencesKey("tournament_defending")
@@ -67,7 +67,7 @@ actual class SettingsManager {
             themeId = preferences[THEME_ID_KEY] ?: "abstract_sunrise",
             hasSeenTutorial = preferences[HAS_SEEN_TUTORIAL_KEY] ?: false,
             nightModeEnabled = preferences[NIGHT_MODE_KEY] ?: false,
-            showDailyTips = preferences[SHOW_TIPS_KEY] ?: true,
+            loreUnlocked = preferences[LORE_UNLOCKED_KEY] ?: false,
 
             tournamentRank = preferences[TOURNAMENT_RANK_KEY] ?: 20,
             tournamentHighest = preferences[TOURNAMENT_HIGHEST_KEY] ?: 20,
@@ -112,7 +112,7 @@ actual class SettingsManager {
             preferences[THEME_ID_KEY] = settings.themeId
             preferences[HAS_SEEN_TUTORIAL_KEY] = settings.hasSeenTutorial
             preferences[NIGHT_MODE_KEY] = settings.nightModeEnabled
-            preferences[SHOW_TIPS_KEY] = settings.showDailyTips
+            preferences[LORE_UNLOCKED_KEY] = settings.loreUnlocked
 
             preferences[TOURNAMENT_RANK_KEY] = settings.tournamentRank
             preferences[TOURNAMENT_HIGHEST_KEY] = settings.tournamentHighest

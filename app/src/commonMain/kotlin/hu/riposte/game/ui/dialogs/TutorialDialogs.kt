@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.TouchApp
@@ -26,6 +27,7 @@ import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.DrawableResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import riposte.app.generated.resources.*
@@ -230,7 +232,7 @@ fun TutorialDefeatOverlay(
         animationSpec = infiniteRepeatable(tween(800), RepeatMode.Reverse), label = "PulseAnim"
     )
 
-    Box(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .clip(RoundedCornerShape(16.dp))
@@ -241,6 +243,8 @@ fun TutorialDefeatOverlay(
             },
         contentAlignment = Alignment.Center
     ) {
+        val iconSize = maxWidth * 0.1f
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(16.dp)
@@ -268,10 +272,10 @@ fun TutorialDefeatOverlay(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                DockToolExplanation(iconRes = Res.drawable.ic_dock_undo, label = stringResource(Res.string.tut_dock_undo), color = accentColor)
-                DockToolExplanation(iconRes = Res.drawable.ic_dock_hint, label = stringResource(Res.string.tut_dock_hint), color = accentColor)
-                DockToolExplanation(iconRes = Res.drawable.ic_dock_info, label = stringResource(Res.string.tut_dock_info), color = accentColor)
-                DockToolExplanation(iconRes = Res.drawable.ic_dock_menu, label = stringResource(Res.string.tut_dock_menu), color = accentColor)
+                DockToolExplanation(iconRes = Res.drawable.ic_dock_undo, label = stringResource(Res.string.tut_dock_undo), color = accentColor, iconSize = iconSize)
+                DockToolExplanation(iconRes = Res.drawable.ic_dock_hint, label = stringResource(Res.string.tut_dock_hint), color = accentColor, iconSize = iconSize)
+                DockToolExplanation(iconRes = Res.drawable.ic_dock_info, label = stringResource(Res.string.tut_dock_info), color = accentColor, iconSize = iconSize)
+                DockToolExplanation(iconRes = Res.drawable.ic_dock_menu, label = stringResource(Res.string.tut_dock_menu), color = accentColor, iconSize = iconSize)
             }
 
             Spacer(Modifier.height(32.dp))
@@ -289,15 +293,23 @@ fun TutorialDefeatOverlay(
 }
 
 @Composable
-private fun DockToolExplanation(iconRes: DrawableResource, label: String, color: Color) {
+private fun DockToolExplanation(iconRes: DrawableResource, label: String, color: Color, iconSize: Dp) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Icon(
-            painter = painterResource(iconRes),
-            contentDescription = label,
-            tint = color,
-            modifier = Modifier.size(32.dp)
-        )
-        Spacer(modifier = Modifier.height(4.dp))
+        Box(
+            modifier = Modifier
+                .size(iconSize)
+                .background(color, CircleShape)
+                .padding(iconSize * 0.2f),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(iconRes),
+                contentDescription = label,
+                tint = Color.Black,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
         Text(text = label, color = Color.White.copy(alpha = 0.7f), fontSize = 10.sp, fontWeight = FontWeight.Bold)
     }
 }

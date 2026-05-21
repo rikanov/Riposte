@@ -11,7 +11,7 @@ data class AppSettings(
     val themeId: String = "abstract_sunrise",
     val hasSeenTutorial: Boolean = false,
     val nightModeEnabled: Boolean = false,
-    val showDailyTips: Boolean = true,
+    val loreUnlocked: Boolean = false,
 
     val tournamentRank: Int = 20,
     val tournamentHighest: Int = 20,
