@@ -156,20 +156,26 @@ Riposte/app/src
 │   │   │   ├── intro_video.mp4
 │   │   │   ├── main_menu_music.ogg
 │   │   │   ├── menu_click.ogg
+│   │   │   ├── p1_move_datura.ogg
 │   │   │   ├── p1_move_destreza.ogg
 │   │   │   ├── p1_move_jungle.ogg
 │   │   │   ├── p1_move_la_maupin.ogg
 │   │   │   ├── p1_move.ogg
+│   │   │   ├── p1_move_winter.ogg
+│   │   │   ├── p2_move_datura.ogg
 │   │   │   ├── p2_move_destreza.ogg
 │   │   │   ├── p2_move_jungle.ogg
 │   │   │   ├── p2_move_la_maupin.ogg
 │   │   │   ├── p2_move.ogg
+│   │   │   ├── p2_move_winter.ogg
 │   │   │   ├── toggle_off.ogg
 │   │   │   ├── toggle_on.ogg
+│   │   │   ├── touche_hit_datura.ogg
 │   │   │   ├── touche_hit_destreza.ogg
 │   │   │   ├── touche_hit_jungle.ogg
 │   │   │   ├── touche_hit_la_maupin.ogg
 │   │   │   ├── touche_hit.ogg
+│   │   │   ├── touche_hit_winter.ogg
 │   │   │   └── victory.ogg
 │   │   └── values
 │   │       └── strings.xml
@@ -300,4 +306,4 @@ Riposte/app/src
                 └── game
                     └── ExampleUnitTest.kt
 
-70 directories, 231 files
+70 directories, 237 files
