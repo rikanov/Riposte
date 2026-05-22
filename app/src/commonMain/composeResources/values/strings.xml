@@ -127,12 +127,12 @@
     <string name="quote_maupin_lose_2">&quot;Out of breath and out of time. The opponent takes the final bow.&quot;</string>
     <string name="quote_maupin_lose_3">&quot;A missed step, a fatal stumble. The audience gasps in silence.&quot;</string>
 
-    <string name="quote_highwayman_win_1">&quot;Your money or your life? You took both.&quot;</string>
-    <string name="quote_highwayman_win_2">&quot;A swift strike in the dark. The loot is yours.&quot;</string>
-    <string name="quote_highwayman_win_3">&quot;Another successful ambush. Fade back into the shadows.&quot;</string>
-    <string name="quote_highwayman_lose_1">&quot;Caught in the crosshairs. You&apos;ll hang for this.&quot;</string>
-    <string name="quote_highwayman_lose_2">&quot;A slow draw makes for a shallow, unmarked grave.&quot;</string>
-    <string name="quote_highwayman_lose_3">&quot;The law of the blade catches up to everyone eventually.&quot;</string>
+    <string name="quote_highwayman_win_1">"The King's highway is safe once more. Excellent work, soldier."</string>
+    <string name="quote_highwayman_win_2">"King George extends his gratitude. The rogue has been dealt with."</string>
+    <string name="quote_highwayman_win_3">"Law and order restored. Send this scoundrel to the gallows."</string>
+    <string name="quote_highwayman_lose_1">"The rogue escaped, melting away into the pitch-black night."</string>
+    <string name="quote_highwayman_lose_2">"Stand and deliver! Your purse is gone, and the highwayman rides free."</string>
+    <string name="quote_highwayman_lose_3">"Ambushed in the dark. The King's gold is lost."</string>
 
     <string name="quote_venice_win_1">&quot;The dance ends, and only you remain standing.&quot;</string>
     <string name="quote_venice_win_2">&quot;Behind the velvet mask lies the face of a true killer.&quot;</string>
