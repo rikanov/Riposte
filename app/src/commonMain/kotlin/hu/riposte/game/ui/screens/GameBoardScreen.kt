@@ -310,7 +310,7 @@ fun RiposteGameBoard(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .align(Alignment.TopCenter)
-                                .background(Brush.verticalGradient(listOf(Color(0xFF0A0C10).copy(alpha = 0.8f), Color.Transparent), startY = 0f, endY = Float.POSITIVE_INFINITY))
+                                .background(Brush.verticalGradient(listOf(Color(0xFF0A0C10).copy(alpha = 0.8f), Color.Transparent)))
                                 .padding(top = 12.dp, start = 8.dp, end = 8.dp, bottom = 24.dp)
                         ) {
                             Column(modifier = Modifier.align(Alignment.TopStart).width(110.dp)) {
