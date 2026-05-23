@@ -1,5 +1,21 @@
 ## La Riposte: The Fencing-Inspired Strategic Board Game
 
+[![Itch.io](https://img.shields.io/badge/Available%20on-Itch.io-FA5C5C?style=for-the-badge&logo=itch.io&logoColor=white)](https://rikanov.itch.io/riposte)
+[![Google Play](https://img.shields.io/badge/Get%20it%20on-Google%20Play-00E5FF?style=for-the-badge&logo=google-play&logoColor=white)](https://play.google.com/store/apps/details?id=hu.riposte.game)
+
+A minimalist, open-source strategic board game inspired by the elegant art of historical fencing, played on a 5x7 grid.
+
+---
+
+## 🐛 Support & Bug Reports
+
+Since the game is completely open-source and ad-free, community feedback is the best way to help it grow. If you encounter a bug or have a feature request, please do not send it via email or store reviews. Instead, use the official channel:
+
+1. Open the **[Issues](../../issues)** tab here on GitHub.
+2. Click the **New Issue** button.
+3. Briefly describe the issue (specify your platform: Android, Windows, or Linux, and explain what exactly happened).
+
+This keeps bug tracking completely transparent and integrates it directly into the development process.
 La Riposte is a minimalist, abstract strategy game played on a 5x7 grid. It simulates the tactical "push and pull" of a fencing bout through high-speed movement, calculated exchanges, and strategic positioning.
 
 #### 🎯 The Core Objective
