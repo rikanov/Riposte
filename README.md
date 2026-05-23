@@ -1,4 +1,4 @@
-## La Riposte: The Fencing-Inspired Strategic Board Game
+# La Riposte: The Fencing-Inspired Strategic Board Game
 
 [![Itch.io](https://img.shields.io/badge/Available%20on-Itch.io-FA5C5C?style=for-the-badge&logo=itch.io&logoColor=white)](https://rikanov.itch.io/riposte)
 [![Google Play](https://img.shields.io/badge/Get%20it%20on-Google%20Play-00E5FF?style=for-the-badge&logo=google-play&logoColor=white)](https://play.google.com/store/apps/details?id=hu.riposte.game)
@@ -7,7 +7,7 @@ A minimalist, open-source strategic board game inspired by the elegant art of hi
 
 ---
 
-## 🐛 Support & Bug Reports
+### 🐛 Support & Bug Reports
 
 Since the game is completely open-source and ad-free, community feedback is the best way to help it grow. If you encounter a bug or have a feature request, please do not send it via email or store reviews. Instead, use the official channel:
 
@@ -16,9 +16,10 @@ Since the game is completely open-source and ad-free, community feedback is the 
 3. Briefly describe the issue (specify your platform: Android, Windows, or Linux, and explain what exactly happened).
 
 This keeps bug tracking completely transparent and integrates it directly into the development process.
-La Riposte is a minimalist, abstract strategy game played on a 5x7 grid. It simulates the tactical "push and pull" of a fencing bout through high-speed movement, calculated exchanges, and strategic positioning.
 
-#### 🎯 The Core Objective
+## 🎯 The Core Objective
+
+La Riposte is a minimalist, abstract strategy game played on a 5x7 grid. It simulates the tactical "push and pull" of a fencing bout through high-speed movement, calculated exchanges, and strategic positioning.
 
 The goal is to successfully perform a capture on the Touché Point (marked with a ★) twice.
 
@@ -59,7 +60,7 @@ La Riposte does not rely on simple "Easy, Medium, or Hard" difficulty sliders. I
 
 Facing a new opponent means facing a completely different heuristic mindset. The AI engine dynamically adjusts its tactical weights (Aggression, Defense, and Mobility) to reflect the real-world or fictional persona of the fencer.
 
-## 🛠️ Development Methodology & AI Collaboration
+### 🛠️ Development Methodology & AI Collaboration
 
 The development of Riposte follows a Human-Centric AI-Assisted model.
 
@@ -74,7 +75,7 @@ AI Co-pilot: Google Gemini (including 3.1 Pro and Ultra models) serves as a high
 
 Every line of AI-suggested code is reviewed, tested, and manually integrated. The AI acts as an advanced pair-programmer, while the overall architecture and creative direction remain firmly in human hands.
 
-## Artistic Direction & AI Collaboration
+### Artistic Direction & AI Collaboration
 
 The visual and auditory landscape of *Riposte* is the result of a deliberate collaboration between human curation and Generative AI.
 
