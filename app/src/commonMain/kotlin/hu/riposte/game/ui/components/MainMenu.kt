@@ -1,8 +1,6 @@
 package hu.riposte.game.ui.components
 
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -12,12 +10,13 @@ import androidx.compose.ui.graphics.*
 import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.PointerType
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import hu.riposte.game.engine.logic.SoundManager
 import kotlin.math.PI
 import kotlin.math.abs
@@ -98,7 +97,9 @@ fun InteractiveMainMenu(
 
     var touchX by remember { mutableStateOf<Float?>(null) }
     var touchY by remember { mutableStateOf<Float?>(null) }
-    var isTouching by remember { mutableStateOf(false) }
+    var isTouching by remember { mutableStateOf(false) } // Ez fogja reprezentálni a "Hover" állapotot is
+    var isDragging by remember { mutableStateOf(false) }
+    var dragStartX by remember { mutableStateOf<Float?>(null) }
     var showAiSubMenu by remember { mutableStateOf(false) }
 
     val itemTotalHeightPx = with(density) { (itemHeight + itemSpacing).toPx() }
@@ -109,65 +110,86 @@ fun InteractiveMainMenu(
             .fillMaxWidth(0.9f)
             .height(targetMenuHeight)
             .pointerInput(Unit) {
-                awaitEachGesture {
-                    val down = awaitFirstDown()
-                    isTouching = true
-                    touchX = down.position.x
-                    touchY = down.position.y
-                    showAiSubMenu = false
-                    down.consume()
-
-                    val startX = touchX!!
-
-                    do {
+                awaitPointerEventScope {
+                    while (true) {
                         val event = awaitPointerEvent()
-                        val change = event.changes.firstOrNull()
-                        if (change != null) {
-                            touchX = change.position.x
-                            touchY = change.position.y
+                        val pos = event.changes.firstOrNull()?.position
+                        val isTouch = event.changes.firstOrNull()?.type == PointerType.Touch
 
-                            val currentMainIdx = (touchY!! / itemTotalHeightPx).toInt().coerceIn(0, menuItems.size - 1)
-                            val isTrainingItem = menuItems[currentMainIdx].hasSwipeAction
+                        when (event.type) {
+                            PointerEventType.Move, PointerEventType.Enter -> {
+                                if (pos != null) {
+                                    touchX = pos.x
+                                    touchY = pos.y
+                                    isTouching = true
 
-                            if (!showAiSubMenu && isTrainingItem && startX - touchX!! > 50f) {
-                                showAiSubMenu = true
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            }
-                            if (showAiSubMenu && touchX!! - startX > -20f) {
-                                showAiSubMenu = false
-                            }
+                                    if (isDragging && dragStartX != null) {
+                                        val currentMainIdx = (pos.y / itemTotalHeightPx).toInt().coerceIn(0, menuItems.size - 1)
+                                        val isTrainingItem = menuItems[currentMainIdx].hasSwipeAction
 
-                            change.consume()
-                        }
-                    } while (event.changes.any { it.pressed })
-
-                    val releaseY = touchY
-                    if (releaseY != null) {
-                        val finalMainIndex = (releaseY / itemTotalHeightPx).toInt().coerceIn(0, menuItems.size - 1)
-                        val finalSubIndex = ((releaseY - subMenuYOffsetPx) / itemTotalHeightPx).toInt().coerceIn(0, aiDifficultyItems.size - 1)
-
-                        if (showAiSubMenu) {
-                            val selectedItem = aiDifficultyItems[finalSubIndex]
-                            soundManager.playClick()
-                            selectedItem.action()
-                        } else {
-                            val selectedItem = menuItems[finalMainIndex]
-                            if (selectedItem.isEnabled) {
-                                if (selectedItem.hasSwipeAction) {
-                                    showAiSubMenu = true
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                } else {
-                                    soundManager.playClick()
-                                    selectedItem.action()
+                                        if (!showAiSubMenu && isTrainingItem && dragStartX!! - pos.x > 50f) {
+                                            showAiSubMenu = true
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        }
+                                        if (showAiSubMenu && pos.x - dragStartX!! > -20f) {
+                                            showAiSubMenu = false
+                                        }
+                                    }
                                 }
+                            }
+                            PointerEventType.Press -> {
+                                if (pos != null) {
+                                    touchX = pos.x
+                                    touchY = pos.y
+                                    isTouching = true
+                                    isDragging = true
+                                    dragStartX = pos.x
+                                    showAiSubMenu = false
+                                }
+                            }
+                            PointerEventType.Release -> {
+                                val releaseY = touchY
+                                if (releaseY != null) {
+                                    val finalMainIndex = (releaseY / itemTotalHeightPx).toInt().coerceIn(0, menuItems.size - 1)
+                                    val finalSubIndex = ((releaseY - subMenuYOffsetPx) / itemTotalHeightPx).toInt().coerceIn(0, aiDifficultyItems.size - 1)
+
+                                    if (showAiSubMenu) {
+                                        val selectedItem = aiDifficultyItems[finalSubIndex]
+                                        soundManager.playClick()
+                                        selectedItem.action()
+                                    } else {
+                                        val selectedItem = menuItems[finalMainIndex]
+                                        if (selectedItem.isEnabled) {
+                                            if (selectedItem.hasSwipeAction) {
+                                                showAiSubMenu = true
+                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            } else {
+                                                soundManager.playClick()
+                                                selectedItem.action()
+                                            }
+                                        }
+                                    }
+                                }
+                                isDragging = false
+                                dragStartX = null
+                                showAiSubMenu = false
+
+                                if (isTouch) {
+                                    isTouching = false
+                                    touchX = null
+                                    touchY = null
+                                }
+                            }
+                            PointerEventType.Exit -> {
+                                isTouching = false
+                                isDragging = false
+                                dragStartX = null
+                                showAiSubMenu = false
+                                touchX = null
+                                touchY = null
                             }
                         }
                     }
-
-                    isTouching = false
-                    showAiSubMenu = false
-                    touchX = null
-                    touchY = null
                 }
             }
     ) {

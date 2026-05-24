@@ -413,6 +413,7 @@ fun RiposteGameBoard(
                             isTimeOut = isTimeOut,
                             isTournamentMode = gameViewModel.tournamentOpponentNameRes != null,
                             isReviewingGame = isReviewingGame,
+                            opponentRank = gameViewModel.tournamentTargetRank,
                             onStartReview = {
                                 soundManager.playClick()
                                 isReviewingGame = true

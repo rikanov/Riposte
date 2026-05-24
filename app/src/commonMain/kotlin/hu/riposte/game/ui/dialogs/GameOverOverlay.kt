@@ -37,6 +37,7 @@ fun GameOverOverlay(
     isTimeOut: Boolean,
     isTournamentMode: Boolean,
     isReviewingGame: Boolean,
+    opponentRank: Int? = null,
     onStartReview: () -> Unit,
     onStopReview: () -> Unit,
     onRematch: () -> Unit,
@@ -47,8 +48,19 @@ fun GameOverOverlay(
     val accentColor = theme.uiAccentColor
 
     val quotes = if (isWin) theme.victoryQuotes else theme.defeatQuotes
-    val quoteResId = remember { if (quotes.isNotEmpty()) quotes.random() else Res.string.game_over_victory }
-
+    val quoteResId = remember(isTournamentMode, opponentRank, isWin) {
+        if (isTournamentMode && opponentRank != null) {
+            val opponent = hu.riposte.game.engine.data.TournamentRoster.getOpponent(opponentRank)
+            if (opponent != null) {
+                if (isWin) opponent.quoteWin else opponent.quoteLose
+            } else {
+                if (isWin) Res.string.quote_tourney_generic_win else Res.string.quote_tourney_generic_lose
+            }
+        } else {
+            val quotes = if (isWin) theme.victoryQuotes else theme.defeatQuotes
+            if (quotes.isNotEmpty()) quotes.random() else Res.string.game_over_victory
+        }
+    }
     val mainText = if (isTimeOut) stringResource(Res.string.game_over_timeout)
     else if (isWin) stringResource(Res.string.game_over_victory)
     else stringResource(Res.string.game_over_defeat)

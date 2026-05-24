@@ -107,7 +107,7 @@ fun OptionsDialog(
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 RiposteSystemToggleButton(
                     modifier = Modifier.weight(1f),
-                    text = "Unlock All Profiles",
+                    text = stringResource(Res.string.options_unlock_profiles),
                     isActive = appSettings.loreUnlocked,
                     onClick = {
                         soundManager.playClick()
@@ -117,7 +117,7 @@ fun OptionsDialog(
 
                 RiposteSystemButton(
                     modifier = Modifier.weight(1f),
-                    text = "Reset Tournament",
+                    text = stringResource(Res.string.options_reset_tournament),
                     onClick = {
                         soundManager.playClick()
                         showResetConfirm = true
@@ -161,7 +161,7 @@ fun ResetConfirmationDialog(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "WARNING",
+                text = stringResource(Res.string.options_reset_warning_title),
                 color = Color(0xFFFF5555),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Black,
@@ -171,7 +171,7 @@ fun ResetConfirmationDialog(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "This action will permanently erase your tournament progress, rank, and match history. Are you absolutely sure?",
+                text = stringResource(Res.string.options_reset_warning_msg),
                 color = Color.White.copy(alpha = 0.9f),
                 fontSize = 14.sp,
                 textAlign = TextAlign.Center,
@@ -188,7 +188,7 @@ fun ResetConfirmationDialog(
                 )
 
                 RiposteSystemButton(
-                    text = "ERASE",
+                    text = stringResource(Res.string.options_btn_erase),
                     modifier = Modifier.weight(1f),
                     isHanging = true,
                     onClick = { soundManager.playClick(); onConfirm() }

@@ -5,8 +5,6 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,6 +20,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.PointerType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
@@ -168,25 +168,45 @@ fun RiposteBottomDock(
                 .height(80.dp)
                 .align(Alignment.BottomCenter)
                 .pointerInput(itemWidthPx) {
-                    awaitEachGesture {
-                        val down = awaitFirstDown()
-                        isTouching = true; touchX = down.position.x; down.consume()
-
-                        do {
+                    awaitPointerEventScope {
+                        while (true) {
                             val event = awaitPointerEvent()
-                            val change = event.changes.firstOrNull()
-                            if (change != null) { touchX = change.position.x; change.consume() }
-                        } while (event.changes.any { it.pressed })
+                            val pos = event.changes.firstOrNull()?.position
+                            val isTouch = event.changes.firstOrNull()?.type == PointerType.Touch
 
-                        val releaseX = touchX
-                        if (releaseX != null) {
-                            val finalIndex = (releaseX / itemWidthPx).toInt().coerceIn(0, currentItems.size - 1)
-                            if (!currentItems[finalIndex].isSpacer) {
-                                currentItems[finalIndex].action()
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            when (event.type) {
+                                PointerEventType.Move, PointerEventType.Enter -> {
+                                    if (pos != null) {
+                                        touchX = pos.x
+                                        isTouching = true
+                                    }
+                                }
+                                PointerEventType.Press -> {
+                                    if (pos != null) {
+                                        touchX = pos.x
+                                        isTouching = true
+                                    }
+                                }
+                                PointerEventType.Release -> {
+                                    val releaseX = touchX
+                                    if (releaseX != null) {
+                                        val finalIndex = (releaseX / itemWidthPx).toInt().coerceIn(0, currentItems.size - 1)
+                                        if (!currentItems[finalIndex].isSpacer) {
+                                            currentItems[finalIndex].action()
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        }
+                                    }
+                                    if (isTouch) {
+                                        isTouching = false
+                                        touchX = null
+                                    }
+                                }
+                                PointerEventType.Exit -> {
+                                    isTouching = false
+                                    touchX = null
+                                }
                             }
                         }
-                        isTouching = false; touchX = null
                     }
                 },
             horizontalArrangement = Arrangement.SpaceEvenly,

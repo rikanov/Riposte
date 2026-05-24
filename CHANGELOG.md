@@ -7,14 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.1] - 2026-05-23
 
+### Added
+- **Hall of Legends:** Added Beatrice 'Bebe' Vio to the Tournament roster.
+- **Personalized Lore:** All 19 Tournament opponents now feature unique, individualized victory and defeat quotes.
+
 ### Changed
 - **Desktop UX:** Migrated menu and dock interactions from touch-centric gestures (`awaitEachGesture`) to complete pointer event handling (`awaitPointerEventScope`). 
 - **UI Elements:** Main menu and dock items now fully support native mouse hover states (scaling, highlighting, and animations) without requiring a click-and-hold action.
 - **Swipe Actions:** Opening the AI training sub-menu on desktop is now triggered by a standard drag interaction rather than a touch-swipe.
+- **Navigation:** Streamlined Tournament mode flow; exiting the 'Review Board' now returns the player directly to the Tournament Screen instead of the Game Over dialog.
+- **Localization:** Extracted remaining hardcoded string constants from `OptionsDialog.kt` into `strings.xml`.
 
 ### Fixed
 - Resolved an issue where pointer exit and release states could become stuck or behave unpredictably when using a physical mouse instead of a touchscreen.
-
 ## [1.0.0] - 2026-05-20
 
 ### Added

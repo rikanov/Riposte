@@ -25,6 +25,11 @@
     <string name="options_grid">GRID</string>
     <string name="options_notify">NOTIFY</string>
     <string name="options_about">ABOUT THE GAME</string>
+    <string name="options_unlock_profiles">Unlock All Profiles</string>
+    <string name="options_reset_tournament">Reset Tournament</string>
+    <string name="options_reset_warning_title">DANGER ZONE</string>
+    <string name="options_reset_warning_msg">This action will permanently erase your tournament progress, rank, and match history. Are you absolutely sure?</string>
+    <string name="options_btn_erase">ERASE</string>
     <string name="btn_ok">OK</string>
     <string name="btn_close">CLOSE</string>
 
@@ -45,7 +50,7 @@
     <string name="btn_rematch">REMATCH</string>
 
     <string name="app_name_title">RIPOSTE</string>
-    <string name="app_version">v1.0.0</string>
+    <string name="app_version">v1.0.1</string>
     <string name="about_description">A strategic board game inspired by the elegant and deadly art of fencing. Designed for those who appreciate logic, timing, and the perfect strike.</string>
     <string name="about_developer">Developed by Robert Ikanov</string>
     <string name="menu_resume">Back</string>
@@ -119,83 +124,73 @@
     <string name="quote_destreza_lose_1">&quot;You stepped out of line, and into your demise.&quot;</string>
     <string name="quote_destreza_lose_2">&quot;Your math was flawed. The opponent found the tangent.&quot;</string>
     <string name="quote_destreza_lose_3">&quot;A broken angle, a shattered defense. The true path was lost.&quot;</string>
-
     <string name="quote_maupin_win_1">&quot;A dazzling performance! The crowd roars for your blade.&quot;</string>
     <string name="quote_maupin_win_2">&quot;You pierced their guard and completely stole the show.&quot;</string>
     <string name="quote_maupin_win_3">&quot;A standing ovation for a lethal and dramatic finale!&quot;</string>
     <string name="quote_maupin_lose_1">&quot;A tragic end to a beautiful aria. The curtain falls.&quot;</string>
     <string name="quote_maupin_lose_2">&quot;Out of breath and out of time. The opponent takes the final bow.&quot;</string>
     <string name="quote_maupin_lose_3">&quot;A missed step, a fatal stumble. The audience gasps in silence.&quot;</string>
-
-    <string name="quote_highwayman_win_1">"The King's highway is safe once more. Excellent work, soldier."</string>
-    <string name="quote_highwayman_win_2">"King George extends his gratitude. The rogue has been dealt with."</string>
-    <string name="quote_highwayman_win_3">"Law and order restored. Send this scoundrel to the gallows."</string>
-    <string name="quote_highwayman_lose_1">"The rogue escaped, melting away into the pitch-black night."</string>
-    <string name="quote_highwayman_lose_2">"Stand and deliver! Your purse is gone, and the highwayman rides free."</string>
-    <string name="quote_highwayman_lose_3">"Ambushed in the dark. The King's gold is lost."</string>
-
+    <string name="quote_highwayman_win_1">&quot;The King's highway is safe once more. Excellent work, soldier.&quot;</string>
+    <string name="quote_highwayman_win_2">&quot;King George extends his gratitude. The rogue has been dealt with.&quot;</string>
+    <string name="quote_highwayman_win_3">&quot;Law and order restored. Send this scoundrel to the gallows.&quot;</string>
+    <string name="quote_highwayman_lose_1">&quot;The rogue escaped, melting away into the pitch-black night.&quot;</string>
+    <string name="quote_highwayman_lose_2">&quot;Stand and deliver! Your purse is gone, and the highwayman rides free.&quot;</string>
+    <string name="quote_highwayman_lose_3">&quot;Ambushed in the dark. The King's gold is lost.&quot;</string>
     <string name="quote_venice_win_1">&quot;The dance ends, and only you remain standing.&quot;</string>
     <string name="quote_venice_win_2">&quot;Behind the velvet mask lies the face of a true killer.&quot;</string>
     <string name="quote_venice_win_3">&quot;A beautiful deception. The grand prize of the carnival is yours.&quot;</string>
     <string name="quote_venice_lose_1">&quot;A dagger in the dark. You were deceived by the masquerade.&quot;</string>
     <string name="quote_venice_lose_2">&quot;The music stops, and you are left bleeding on the marble.&quot;</string>
     <string name="quote_venice_lose_3">&quot;Trust no one. Especially not the blade hidden in the shadows.&quot;</string>
-
     <string name="quote_carbon_win_1">&quot;Gold medal execution. Your speed is unmatched.&quot;</string>
     <string name="quote_carbon_win_2">&quot;Clean touch. The electronic judges rule in your favor.&quot;</string>
     <string name="quote_carbon_win_3">&quot;Perfect form and absolute precision. A flawless victory.&quot;</string>
     <string name="quote_carbon_lose_1">&quot;Off target. The opponent was a fraction of a second faster.&quot;</string>
     <string name="quote_carbon_lose_2">&quot;Red light. Your defense completely failed to register.&quot;</string>
     <string name="quote_carbon_lose_3">&quot;Parry failed. The sensors do not lie.&quot;</string>
-
     <string name="quote_inner_win_1">&quot;Mind and blade acting as one. Perfect harmony.&quot;</string>
     <string name="quote_inner_win_2">&quot;You fought without ego, and victory naturally followed.&quot;</string>
     <string name="quote_inner_win_3">&quot;Breathe in victory, breathe out all doubt. You are centered.&quot;</string>
     <string name="quote_inner_lose_1">&quot;Doubt clouded your mind. The fatal strike slipped through.&quot;</string>
     <string name="quote_inner_lose_2">&quot;You lost your center, and the bout went with it.&quot;</string>
     <string name="quote_inner_lose_3">&quot;Your focus wavered for a millisecond, and the blade found its mark.&quot;</string>
-
     <string name="quote_paris_win_1">&quot;Magnifique! A display worthy of the Grand Palais.&quot;</string>
     <string name="quote_paris_win_2">&quot;Elegance and absolute power. The gold is yours.&quot;</string>
     <string name="quote_paris_win_3">&quot;A triumph of style and substance! Chapeau!&quot;</string>
     <string name="quote_paris_lose_1">&quot;A heartbreaking finish on the grandest stage of all.&quot;</string>
     <string name="quote_paris_lose_2">&quot;The opponent takes the piste. You must yield.&quot;</string>
     <string name="quote_paris_lose_3">&quot;A stumble on the strip. The judges shake their heads in dismay.&quot;</string>
-
     <string name="quote_esport_win_1">&quot;Flawless micro. Opponent fully disconnected from the server.&quot;</string>
     <string name="quote_esport_win_2">&quot;GG WP. Your APM is completely off the charts.&quot;</string>
     <string name="quote_esport_win_3">&quot;Calculated. Executed. Dominated. The ultimate high score.&quot;</string>
     <string name="quote_esport_lose_1">&quot;Input lag fatal. You have been permanently deleted.&quot;</string>
     <string name="quote_esport_lose_2">&quot;System critical failure. Opponent out-scaled your defense.&quot;</string>
     <string name="quote_esport_lose_3">&quot;Skill issue. Your defensive algorithm completely crashed.&quot;</string>
-
     <string name="quote_winter_win_1">&quot;Like a single footprint in fresh snow. Clean and perfect.&quot;</string>
     <string name="quote_winter_win_2">&quot;The blizzard passes. Only you and your blade remain.&quot;</string>
     <string name="quote_winter_win_3">&quot;Cold, precise, and utterly inevitable. A masterful strike.&quot;</string>
     <string name="quote_winter_lose_1">&quot;You froze for a single heartbeat. It was more than enough.&quot;</string>
     <string name="quote_winter_lose_2">&quot;A bitter wind. Your blade was too slow to catch the falling flake.&quot;</string>
     <string name="quote_winter_lose_3">&quot;The ice cracks beneath your feet. A cold and silent end.&quot;</string>
-
     <string name="quote_datura_win_1">&quot;Beautiful but deadly. The venom takes its toll.&quot;</string>
     <string name="quote_datura_win_2">&quot;A subtle, silent sting, and the duel quietly ends.&quot;</string>
     <string name="quote_datura_win_3">&quot;The final petal falls. A beautiful and toxic demise.&quot;</string>
     <string name="quote_datura_lose_1">&quot;Intoxicated by the dance, you completely missed the hidden thorn.&quot;</string>
     <string name="quote_datura_lose_2">&quot;The blossom wilts. You were outmaneuvered and outlived.&quot;</string>
     <string name="quote_datura_lose_3">&quot;You succumbed to the sweet, lethal perfume of absolute defeat.&quot;</string>
-
     <string name="quote_mayan_win_1">&quot;The gods smile upon your tribute. A fierce, primal victory.&quot;</string>
     <string name="quote_mayan_win_2">&quot;Like the jaguar, you struck flawlessly from the deep shadows.&quot;</string>
     <string name="quote_mayan_win_3">&quot;The ancestors roar in approval! A true warrior&apos;s triumph.&quot;</string>
     <string name="quote_mayan_lose_1">&quot;Your blood waters the sacred earth. Absolute defeat.&quot;</string>
     <string name="quote_mayan_lose_2">&quot;The sun sets on your reign. The opponent claims the sacrifice.&quot;</string>
     <string name="quote_mayan_lose_3">&quot;The jungle reclaims the weak. You are no exception to the rule.&quot;</string>
-
     <string name="quote_african_win_1">&quot;Absolute patience in the heat. A sudden, lethal strike.&quot;</string>
     <string name="quote_african_win_2">&quot;The lion does not miss twice. The savanna is yours.&quot;</string>
     <string name="quote_african_win_3">&quot;The apex predator claims its rightful, hard-earned prize.&quot;</string>
     <string name="quote_african_lose_1">&quot;You struck too soon, exhausted yourself, and missed the prey.&quot;</string>
     <string name="quote_african_lose_2">&quot;The unforgiving sun blinded you. The opponent did not hesitate.&quot;</string>
     <string name="quote_african_lose_3">&quot;The heat took your strength, the opponent took whatever was left.&quot;</string>
+
     <string name="btn_review_board">REVIEW GAME</string>
     <string name="btn_return_to_summary">RETURN TO SUMMARY</string>
 
@@ -204,118 +199,156 @@
     <string name="opp_1_era">Unknown</string>
     <string name="opp_1_desc">The perfect fencer. Legends say he has never been touched by a blade. Those who face him do not seek glory, only survival.</string>
     <string name="opp_1_quote">&quot;The blade is merely a tool. The true weapon is the flaw in your mind.&quot;</string>
+    <string name="opp_1_win">&quot;The flaw was in my mind this time. You are the new Master.&quot;</string>
+    <string name="opp_1_lose">&quot;You sought glory, but you found only the edge of my blade.&quot;</string>
 
     <string name="opp_2_name">Fiore dei Liberi</string>
     <string name="opp_2_title">Father of Martial Arts</string>
     <string name="opp_2_era">14th Century, Italy</string>
     <string name="opp_2_desc">Author of the &apos;Flos Duellatorum&apos;. His defense is built on impenetrable mathematical formulas and absolute control of distance.</string>
     <string name="opp_2_quote">&quot;I am as motionless as the tower, and my strike cannot be evaded.&quot;</string>
+    <string name="opp_2_win">&quot;You move with the grace of the lynx. I have much to learn from you.&quot;</string>
+    <string name="opp_2_lose">&quot;Motionless as the tower... you could not find the opening.&quot;</string>
 
     <string name="opp_3_name">Aladár Gerevich</string>
     <string name="opp_3_title">The Seven-Time Champion</string>
     <string name="opp_3_era">20th Century, Hungary</string>
     <string name="opp_3_desc">Arguably the greatest swordsman in modern history. His speed, footwork, and mastery of the riposte are considered superhuman.</string>
     <string name="opp_3_quote">&quot;Fencing is calculation. And I calculate faster than you.&quot;</string>
+    <string name="opp_3_win">&quot;Hungarian fencing is safe in your hands. A legendary performance.&quot;</string>
+    <string name="opp_3_lose">&quot;My calculation was 0.2 seconds faster. Keep practicing.&quot;</string>
 
     <string name="opp_4_name">Ridolfo Capo Ferro</string>
     <string name="opp_4_title">Grandmaster of the Rapier</string>
     <string name="opp_4_era">17th Century, Italy</string>
     <string name="opp_4_desc">A founder of modern linear fencing. His genius lies in maintaining the perfect measure and executing flawless lunges.</string>
     <string name="opp_4_quote">&quot;Do not attack until your defense is absolute.&quot;</string>
+    <string name="opp_4_win">&quot;A perfect lunge. Your defense was indeed absolute.&quot;</string>
+    <string name="opp_4_lose">&quot;You attacked out of measure. A fatal mistake.&quot;</string>
 
     <string name="opp_5_name">Julie d&apos;Aubigny</string>
     <string name="opp_5_title">La Maupin</string>
     <string name="opp_5_era">17th Century, France</string>
     <string name="opp_5_desc">Opera singer, duelist, and absolute force of nature. She fought multiple men at once and left a trail of defeated duelists across France.</string>
     <string name="opp_5_quote">&quot;I sing for the King, but my blade sings only for me.&quot;</string>
+    <string name="opp_5_win">&quot;Brava! You have stolen the show and my heart!&quot;</string>
+    <string name="opp_5_lose">&quot;The final act is mine! The curtain falls on your defeat.&quot;</string>
 
     <string name="opp_6_name">Jerónimo de Carranza</string>
     <string name="opp_6_title">The True Path</string>
     <string name="opp_6_era">16th Century, Spain</string>
     <string name="opp_6_desc">The creator of &apos;La Verdadera Destreza&apos;. He treats the duel not as a brawl, but as an elegant application of geometry and philosophy.</string>
     <string name="opp_6_quote">&quot;A circle surrounds us both. Step out of line, and you step into your demise.&quot;</string>
+    <string name="opp_6_win">&quot;Flawless geometry. You have mastered the magic circle.&quot;</string>
+    <string name="opp_6_lose">&quot;You stepped off the true path and paid the ultimate price.&quot;</string>
 
-    <string name="opp_7_name">Miyamoto Musashi</string>
-    <string name="opp_7_title">The Sword Saint</string>
-    <string name="opp_7_era">17th Century, Japan</string>
-    <string name="opp_7_desc">An undefeated legend who authored &apos;The Book of Five Rings&apos;. Though far from his homeland, his relentless offensive philosophy adapts to any blade.</string>
-    <string name="opp_7_quote">&quot;There is nothing outside of yourself that can ever enable you to get better.&quot;</string>
+    <string name="opp_7_name">Beatrice Vio</string>
+    <string name="opp_7_title">Bebe</string>
+    <string name="opp_7_era">Present Day, Italy</string>
+    <string name="opp_7_desc">A world-class foil fencer and Paralympic champion. Her incredible speed and relentless spirit prove that the only real limits are the ones we place on ourselves.</string>
+    <string name="opp_7_quote">&quot;If it seems impossible, then it can be done.&quot;</string>
+    <string name="opp_7_win">&quot;That was amazing! Your energy on the piste is truly unstoppable.&quot;</string>
+    <string name="opp_7_lose">&quot;Never stop fighting. The next bout is yours if you believe it!&quot;</string>
 
     <string name="opp_8_name">Johannes Liechtenauer</string>
     <string name="opp_8_title">The Grand Master</string>
     <string name="opp_8_era">14th Century, Germany</string>
     <string name="opp_8_desc">The central figure of the German school of fencing. His teachings were cryptic verses meant to hide deadly defensive secrets from the uninitiated.</string>
     <string name="opp_8_quote">&quot;Before, after, weak, strong. Understand these, and the duel is yours.&quot;</string>
+    <string name="opp_8_win">&quot;You understood the Before and the After. The victory is yours.&quot;</string>
+    <string name="opp_8_lose">&quot;You lingered in the After, and my blade found its mark.&quot;</string>
 
     <string name="opp_9_name">Cyrano de Bergerac</string>
     <string name="opp_9_title">The Poet Duelist</string>
     <string name="opp_9_era">17th Century, France</string>
     <string name="opp_9_desc">A master of both the pen and the sword. He famously defeated a hundred men in a single night. Proud, aggressive, and incredibly dangerous.</string>
     <string name="opp_9_quote">&quot;I will thrust home at the end of the refrain!&quot;</string>
+    <string name="opp_9_win">&quot;A poet with the blade! I yield to your superior verse.&quot;</string>
+    <string name="opp_9_lose">&quot;And as I end the refrain... thrust home!&quot;</string>
 
     <string name="opp_10_name">Salvator Fabris</string>
     <string name="opp_10_title">Supreme Fencing Master</string>
     <string name="opp_10_era">17th Century, Italy</string>
     <string name="opp_10_desc">Known for his extreme leaning postures that keep his body out of reach while maximizing the threat of his blade. Patience is his greatest weapon.</string>
     <string name="opp_10_quote">&quot;Let the enemy exhaust their spirit against empty air.&quot;</string>
+    <string name="opp_10_win">&quot;Incredible patience. You found the gap in my guard.&quot;</string>
+    <string name="opp_10_lose">&quot;You exhausted yourself against my blade. An inevitable end.&quot;</string>
 
     <string name="opp_11_name">Don Diego de la Vega</string>
     <string name="opp_11_title">El Zorro</string>
     <string name="opp_11_era">19th Century, Legend</string>
     <string name="opp_11_desc">Though a fictional vigilante, his impact on the sport of fencing is profound. Generations of modern masters first picked up a blade—or a wooden stick on a playground—inspired by his daring, acrobatic style.</string>
     <string name="opp_11_quote">&quot;A mask hides the face, but the blade reveals the soul.&quot;</string>
+    <string name="opp_11_win">&quot;A magnificent display! You are a true champion of the people.&quot;</string>
+    <string name="opp_11_lose">&quot;You fight with passion, but lack the necessary discipline.&quot;</string>
 
     <string name="opp_12_name">Donald McBane</string>
     <string name="opp_12_title">The Highlander</string>
     <string name="opp_12_era">18th Century, Scotland</string>
     <string name="opp_12_desc">A battle-hardened soldier, gladiator, and fencing master. He survived countless duels across Europe using dirty but highly effective defensive tricks.</string>
     <string name="opp_12_quote">&quot;I have fought for money and I have fought for blood. Both spend the same.&quot;</string>
+    <string name="opp_12_win">&quot;Aye, you fight like a true Highlander. Well earned.&quot;</string>
+    <string name="opp_12_lose">&quot;A dirty trick is only dirty if it fails. You're dead, I'm alive.&quot;</string>
 
     <string name="opp_13_name">Charles de Batz</string>
     <string name="opp_13_title">Comte d&apos;Artagnan</string>
     <string name="opp_13_era">17th Century, France</string>
     <string name="opp_13_desc">Captain of the King&apos;s Musketeers. His real-life military exploits, espionage missions, and daring duels inspired Alexandre Dumas&apos; legendary hero. A fiercely loyal, fast, and aggressive fighter.</string>
     <string name="opp_13_quote">&quot;I have only my sword and my cloak, but my honor is worth more than a kingdom.&quot;</string>
+    <string name="opp_13_win">&quot;By my honor, that was a strike worthy of a Musketeer!&quot;</string>
+    <string name="opp_13_lose">&quot;Too slow, my friend! The King's guards put up a better fight.&quot;</string>
 
     <string name="opp_14_name">Joseph Bologne</string>
     <string name="opp_14_title">Chevalier de Saint-Georges</string>
     <string name="opp_14_era">18th Century, France</string>
     <string name="opp_14_desc">A virtuoso violinist and champion fencer. His speed and elegance on the piste were unmatched in his time.</string>
     <string name="opp_14_quote">&quot;My music captivates, but my blade conquers.&quot;</string>
+    <string name="opp_14_win">&quot;A beautiful tempo! Your blade sings a sweeter melody than mine.&quot;</string>
+    <string name="opp_14_lose">&quot;Your rhythm was entirely off. A discordant performance.&quot;</string>
 
     <string name="opp_15_name">Bartholomew Roberts</string>
     <string name="opp_15_title">Black Bart</string>
     <string name="opp_15_era">18th Century, Caribbean</string>
     <string name="opp_15_desc">The most successful pirate of the Golden Age. Famous for his strict pirate code, elegant crimson coats, and the terrifying, overwhelming speed of his boarding parties in close-quarters sword combat.</string>
     <string name="opp_15_quote">&quot;A merry life and a short one shall be my motto!&quot;</string>
+    <string name="opp_15_win">&quot;A fair fight and a clean kill! The ship is yours, Captain.&quot;</string>
+    <string name="opp_15_lose">&quot;Dead men tell no tales! Over the side with you!&quot;</string>
 
     <string name="opp_16_name">Catalina de Erauso</string>
     <string name="opp_16_title">The Lieutenant Nun</string>
     <string name="opp_16_era">17th Century, Spain</string>
     <string name="opp_16_desc">Fierce, unyielding, and utterly fearless. She survived the harshest environments and won countless duels across two continents.</string>
     <string name="opp_16_quote">&quot;God may forgive you, but my steel will not.&quot;</string>
+    <string name="opp_16_win">&quot;By the saints, you strike like a demon! I am bested.&quot;</string>
+    <string name="opp_16_lose">&quot;I've survived the Andes and the jungle. You were merely a distraction.&quot;</string>
 
     <string name="opp_17_name">The Royal Guardsman</string>
     <string name="opp_17_title">Defender of the Crown</string>
     <string name="opp_17_era">18th Century</string>
     <string name="opp_17_desc">A highly disciplined soldier trained in classical academy fencing. Predictable, but solid and deeply defensive.</string>
     <string name="opp_17_quote">&quot;Hold the line. Show no weakness.&quot;</string>
+    <string name="opp_17_win">&quot;My guard is broken. The crown is exposed.&quot;</string>
+    <string name="opp_17_lose">&quot;The line holds. You shall not pass.&quot;</string>
 
     <string name="opp_18_name">The Academy Novice</string>
     <string name="opp_18_title">Eager Student</string>
     <string name="opp_18_era">Present Day</string>
     <string name="opp_18_desc">Fresh out of training. Knows the basic footwork but completely lacks combat experience.</string>
     <string name="opp_18_quote">&quot;En garde! I am ready to prove myself!&quot;</string>
+    <string name="opp_18_win">&quot;Wow! I have so much to learn from you!&quot;</string>
+    <string name="opp_18_lose">&quot;I... I actually won? The academy training works!&quot;</string>
 
     <string name="opp_19_name">The Young Cadet</string>
     <string name="opp_19_title">The Eager Challenger</string>
     <string name="opp_19_era">Present Day</string>
     <string name="opp_19_desc">The newest prodigy of the fencing academy. Knows all the textbook rules but lacks the tactical restraint of the masters.</string>
     <string name="opp_19_quote">&quot;En garde! I am ready for my first bout.&quot;</string>
+    <string name="opp_19_win">&quot;I underestimated you. I must return to my studies.&quot;</string>
+    <string name="opp_19_lose">&quot;Just as the textbook described! A perfect parry-riposte.&quot;</string>
 
-    <!-- ========================================== -->
-    <!-- DAILY TIPS: USEFUL GAME INFO               -->
-    <!-- ========================================== -->
+    <string name="quote_tourney_generic_win">&quot;A massive leap in the rankings. The Hall of Legends remembers your name.&quot;</string>
+    <string name="quote_tourney_generic_lose">&quot;A bitter defeat, but a warrior is forged in the fire of loss.&quot;</string>
+    
     <string-array name="daily_tips_useful">
         <item>DID YOU KNOW?\nThe bottom dock icons allow you to easily change settings or switch visual themes. Remember, choosing night mode always improves visibility, even in day time!</item>
         <item>WARNING\nIn Tournament mode, there is no Undo and no Hint option. Plan your moves carefully!</item>
@@ -326,9 +359,6 @@
         <item>PRO TIP\nA heavy cut may look impressive, but a quick thrust travels a shorter distance. In Riposte, as in reality, speed and precision often defeat brute force.</item>
     </string-array>
 
-    <!-- ========================================== -->
-    <!-- DAILY TIPS: STRATEGY                       -->
-    <!-- ========================================== -->
     <string-array name="daily_tips_strategy">
         <item>STRATEGY\nThe Riposte game requires two touches to win. Beware of counter-attacks, and play cautiously before your first hit!</item>
         <item>STRATEGY\n&quot;In combat, your state of mind should not be different from your normal state of mind.&quot; - Miyamoto Musashi. Stay calm, even when the Chess Clock is ticking down in a Tournament!</item>
@@ -338,9 +368,6 @@
         <item>STRATEGY\n&quot;He who attacks first has the advantage of the initiative, but he who attacks second has the advantage of knowing the enemy&apos;s intention.&quot; - Classic fencing proverb. Choose your timing wisely.</item>
         <item>STRATEGY\nIn modern foil and sabre fencing, there is a rule called &apos;Right of Way&apos;. It prevents double-kills by dictating that the fencer who initiates the attack first must be defended against before the defender can counter-attack.</item>
     </string-array>
-    <!-- ========================================== -->
-    <!-- DAILY TIPS: LORE & FUN FACTS               -->
-    <!-- ========================================== -->
     <string-array name="daily_tips_lore">
         <item>FUN FACT\n&apos;Flèche&apos; is a French fencing term meaning &apos;arrow&apos;. In Riposte, diagonal strikes are called Flèche.</item>
         <item>FUN FACT\nFrench cavalry officers Dupont and Fournier fought over 30 sword and pistol duels against each other over a span of 19 years, inspiring Joseph Conrad&apos;s story &apos;The Duel&apos;.</item>
@@ -353,9 +380,6 @@
         <item>FUN FACT\nToday, Paralympic fencers compete in wheelchairs that are securely fastened to a heavy metal frame on the floor at a 110-degree angle. Since they cannot retreat, bouts are incredibly fast, relying entirely on upper-body evasion and lightning-fast parries.</item>
         <item>DID YOU KNOW?\nIn wheelchair fencing, hits to the legs are completely invalid. In Épée bouts, competitors even wear a special conductive metal apron over their legs to ensure touches strictly below the waist do not register on the electronic scoring system.</item>
     </string-array>
-    <!-- ========================================== -->
-    <!-- DAILY TIPS: LEGENDARY                      -->
-    <!-- ========================================== -->
     <string-array name="daily_tips_legendary">
         <item>LEGEND\nLegendary Japanese swordsman Miyamoto Musashi fought 61 duels and remained undefeated, famously winning many of them using only a wooden sword (bokken) against live steel.</item>
         <item>LEGEND\nIn 1695, French opera singer Julie d&apos;Aubigny (La Maupin) was insulted by three noblemen at a royal ball. She challenged all three to a sword duel outside and defeated them one by one.</item>
@@ -368,11 +392,8 @@
         <item>LEGEND\nJoseph Bologne, Chevalier de Saint-Georges, often called the &apos;Black Mozart&apos;, was not only a genius composer but also the greatest fencer of 18th-century Europe. His blinding speed with the foil was considered supernatural.</item>
         <item>LITERATURE\n"I am not left-handed either." - The Princess Bride. A legendary cinematic duel that references real historical fencing styles like &apos;Agrippa&apos; and &apos;Capo Ferro&apos;.</item>
         <item>LEGEND\nFiore dei Liberi, a 14th-century Italian master, wrote one of the oldest surviving martial arts manuals, &apos;The Flower of Battle&apos;. He stated that a swordsman must possess four qualities: Caution, Speed, Strength, and Audacity.</item>
-</string-array>
+    </string-array>
 
-    <!-- ========================================== -->
-    <!-- DAILY TIPS: HISTORY AND SCHOOLS            -->
-    <!-- ========================================== -->
     <string-array name="daily_tips_history">
         <item>HISTORY\nThe 1578 &apos;Duel of the Mignons&apos; was a brutal 3-on-3 rapier fight between the favorites of King Henry III and a rival faction. It lasted only minutes but left four men dead or dying, cementing the deadly reputation of the rapier.</item>
         <item>HISTORY\nDuring the Renaissance, duels of honor were so common in France that King Louis XIII had to issue strict edicts banning them. Naturally, fencers simply started dueling in secret, usually at dawn.</item>
