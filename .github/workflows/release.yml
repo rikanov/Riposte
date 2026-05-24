@@ -117,6 +117,6 @@ jobs:
         env:
           BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
         run: |
-          Invoke-WebRequest -Uri "https://broth.itch.ovh/butler/windows-amd64/LATEST/archive/default" -OutFile "butler.zip"
+          curl.exe -L -o butler.zip https://broth.itch.ovh/butler/windows-amd64/LATEST/archive/default
           Expand-Archive -Path "butler.zip" -DestinationPath "."
           .\butler.exe push app/build/compose/binaries/main/exe rikanov/riposte:windows --userversion ${{ github.ref_name }}
