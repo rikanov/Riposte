@@ -99,24 +99,24 @@ jobs:
             app/build/outputs/apk/release/*.apk
             app/build/outputs/bundle/release/*.aab
 
-      # --- ITCH.IO BUTLER DEPLOYMENT (LINUX BUILDS) ---
-      - name: Deploy Linux Builds to Itch.io
+      # --- ITCH.IO BUTLER SETUP (AUTOMATIC FOR ALL OS) ---
+      - name: Install Itch.io Butler
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: jdno/setup-butler@v2
+
+      # --- ITCH.IO DEPLOYMENT (LINUX & ANDROID) ---
+      - name: Deploy Linux & Android Builds to Itch.io
         if: startsWith(github.ref, 'refs/tags/v') && matrix.os == 'ubuntu-latest'
         env:
           BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
         run: |
-          curl -L -o butler.zip https://broth.itch.ovh/butler/linux-amd64/LATEST/archive/default
-          unzip butler.zip
-          chmod +x butler
-          ./butler push app/build/compose/binaries/main/deb rikanov/riposte:linux --userversion ${{ github.ref_name }}
-          ./butler push app/build/outputs/apk/release rikanov/riposte:android --userversion ${{ github.ref_name }}
+          butler push app/build/compose/binaries/main/deb rikanov/riposte:linux --userversion ${{ github.ref_name }}
+          butler push app/build/outputs/apk/release rikanov/riposte:android --userversion ${{ github.ref_name }}
 
-      # --- ITCH.IO BUTLER DEPLOYMENT (WINDOWS BUILDS) ---
+      # --- ITCH.IO DEPLOYMENT (WINDOWS) ---
       - name: Deploy Windows Builds to Itch.io
         if: startsWith(github.ref, 'refs/tags/v') && matrix.os == 'windows-latest'
         env:
           BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
         run: |
-          curl.exe -L -o butler.zip https://broth.itch.ovh/butler/windows-amd64/LATEST/archive/default
-          Expand-Archive -Path "butler.zip" -DestinationPath "."
-          .\butler.exe push app/build/compose/binaries/main/exe rikanov/riposte:windows --userversion ${{ github.ref_name }}
+          butler push app/build/compose/binaries/main/exe rikanov/riposte:windows --userversion ${{ github.ref_name }}
