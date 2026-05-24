@@ -110,8 +110,9 @@ jobs:
         env:
           BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
         run: |
-          butler push app/build/compose/binaries/main/deb rikanov/riposte:linux --userversion ${{ github.ref_name }}
-          butler push app/build/outputs/apk/release rikanov/riposte:android --userversion ${{ github.ref_name }}
+          butler push app/build/outputs/apk/release/*.apk rikanov/riposte:android --userversion ${{ github.ref_name }}
+          butler push app/build/compose/binaries/main/deb/*.deb rikanov/riposte:linux-deb --userversion ${{ github.ref_name }}
+          butler push app/build/compose/binaries/main/rpm/*.rpm rikanov/riposte:linux-rpm --userversion ${{ github.ref_name }}
 
       # --- ITCH.IO DEPLOYMENT (WINDOWS) ---
       - name: Deploy Windows Builds to Itch.io
@@ -119,4 +120,8 @@ jobs:
         env:
           BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
         run: |
-          butler push app/build/compose/binaries/main/exe rikanov/riposte:windows --userversion ${{ github.ref_name }}
+          $ExeFile = Get-ChildItem -Path app/build/compose/binaries/main/exe -Filter *.exe | Select-Object -First 1
+          butler push $ExeFile.FullName rikanov/riposte:windows-exe --userversion ${{ github.ref_name }}
+
+          $MsiFile = Get-ChildItem -Path app/build/compose/binaries/main/msi -Filter *.msi | Select-Object -First 1
+          butler push $MsiFile.FullName rikanov/riposte:windows-msi --userversion ${{ github.ref_name }}
